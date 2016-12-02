@@ -158,7 +158,7 @@ public:
         m_carrier.insert(typename T::value_type(key, std::make_pair(value, isBaggage)));
     }
 
-    virtual void forEachPair(const PairReadCallback & callback) const
+    virtual void forEachPair(const ReadCallback & callback) const
     {
         for (typename T::const_iterator i = m_carrier.begin(); i != m_carrier.end(); ++i)
         {
