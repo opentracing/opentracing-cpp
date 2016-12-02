@@ -250,7 +250,7 @@ public:
     struct ReadCallback
     {
         virtual ~ReadCallback();
-        virtual void read(const std::string& key, const std::string& value, bool isBaggage) = 0;
+        virtual void operator() (const std::string& key, const std::string& value, bool isBaggage) = 0;
     };
 
     /**
