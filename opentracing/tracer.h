@@ -247,12 +247,16 @@ public:
     /**
      * The type of callback which will be called for each key.
      */
-    typedef void (*PairReadCallback)(const std::string& key, const std::string& value, bool isBaggage);
+    struct ReadCallback
+    {
+        virtual ~ReadCallback();
+        virtual void read(const std::string& key, const std::string& value, bool isBaggage) = 0;
+    };
 
     /**
      * Reads from the carrier and calls the `callback()` for each key-value pair.
      */
-    virtual void forEachPair(const PairReadCallback & callback) const = 0;
+    virtual void forEachPair(const ReadCallback & callback) const = 0;
 };
 
 /**
