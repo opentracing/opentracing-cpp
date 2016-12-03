@@ -58,6 +58,10 @@ TextMapReader::~TextMapReader()
 {
 }
 
+TextMapReader::ReadCallback::~ReadCallback()
+{
+}
+
 namespace {
 
 class NoopSpan : public virtual Span

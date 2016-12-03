@@ -245,14 +245,26 @@ public:
     virtual ~TextMapReader();
 
     /**
-     * The type of callback which will be called for each key.
+     * Callback functor typically implemented from the tracer in order to retrieve
+     * key-value pairs from the `TextMapReader`.
      */
-    typedef void (*PairReadCallback)(const std::string& key, const std::string& value, bool isBaggage);
+    struct ReadCallback
+    {
+        /**
+         *  Destroys this ReadCallback.
+         */
+        virtual ~ReadCallback();
+
+        /**
+         *  Will be called for each key-value pair.
+         */
+        virtual void operator() (const std::string& key, const std::string& value, bool isBaggage) const = 0;
+    };
 
     /**
      * Reads from the carrier and calls the `callback()` for each key-value pair.
      */
-    virtual void forEachPair(const PairReadCallback & callback) const = 0;
+    virtual void forEachPair(const ReadCallback & callback) const = 0;
 };
 
 /**
