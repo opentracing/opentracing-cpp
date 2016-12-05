@@ -82,6 +82,11 @@ public:
         return m_noopTracer;
     }
 
+    virtual std::ostream & print(std::ostream & os) const
+    {
+        return os << "NoopSpan: N/A";
+    }
+
 private:
 
     const NoopTracer & m_noopTracer;

@@ -115,6 +115,12 @@ TEST(opentracing, span_ops)
     ASSERT_FALSE(span->getBaggageItem("key2"));
     ASSERT_FALSE(span->getBaggageItem("key3", &target));
 
+    // One can print trace identifiers by using the `print()` method.
+    std::ostringstream oss;
+    span->print(oss);
+    ASSERT_EQ("NoopSpan: N/A", oss.str());
+
+
     // Exercise getTracer()
     ASSERT_EQ(&span->getTracer(), globalTracer());
 

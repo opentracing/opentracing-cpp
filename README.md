@@ -30,6 +30,12 @@ make
 ./test
 ```
 
+Note - You might have to set your `LD_LIBRARY_PATH`:
+
+```
+LD_LIBRARY_PATH=/usr/local/lib ./test
+```
+
 ## API overview for those adding instrumentation
 
 Everyday consumers of this `opentracing` package really only need to worry
