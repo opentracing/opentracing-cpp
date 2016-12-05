@@ -135,6 +135,11 @@ public:
      * implementation-specific error if the format is supported but injection
      * fails anyway.
      *
+     * There's not specific reason for `Writer` being const. It's just to support
+     * the nice inline form described above. This might mean that you might have
+     * to use `mutable` in some cases. This `const` will be revised if there prove
+     * to be issues.
+     *
      * See also `Tracer::join()`.
      */
     virtual Result inject(const Span & sp, const Writer & writer, std::string & error) const = 0;
