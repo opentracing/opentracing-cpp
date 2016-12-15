@@ -1,5 +1,5 @@
-AC_INIT([libdinner], [0.0.1])
-#AC_CONFIG_SRCDIR(libdinner.cc)
+AC_INIT([libopentracing], [0.0.1])
+#AC_CONFIG_SRCDIR(libopentracing.cc)
 #AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AM_INIT_AUTOMAKE([subdir-objects])
 
