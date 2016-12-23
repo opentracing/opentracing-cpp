@@ -11,6 +11,9 @@ libopentracing_la_LDFLAGS = -version-info 1:0:0
 
 ACLOCAL_AMFLAGS = -I m4
 
-AM_CXXFLAGS=  -Wall -fno-elide-constructors -pedantic-errors -ansi -Wextra -Wall
-AM_CXXFLAGS+= -Winit-self -Wold-style-cast -Woverloaded-virtual -Winit-self
-AM_CXXFLAGS+= -Wuninitialized -Wmissing-declarations -Werror -std=c++98
+AM_CXXFLAGS=  -fno-elide-constructors -pedantic-errors -ansi -std=c++98
+
+if COMPILER_IS_GCC
+AM_CXXFLAGS+= -Wall -Werror -Wextra -Winit-self -Wold-style-cast 
+AM_CXXFLAGS+= -Woverloaded-virtual -Wuninitialized -Wmissing-declarations 
+endif
