@@ -3,6 +3,8 @@ AC_INIT([libopentracing], [1.0.0])
 #AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AM_INIT_AUTOMAKE([subdir-objects])
 
+AM_CONDITIONAL(COMPILER_IS_GCC, test "x$GCC" = "xyes")
+
 AC_CONFIG_MACRO_DIR([m4])
 
 #AC_CONFIG_HEADERS([config.h])
