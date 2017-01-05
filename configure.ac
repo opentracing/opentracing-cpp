@@ -1,29 +1,26 @@
-AC_INIT([libopentracing], [1.0.0])
-#AC_CONFIG_SRCDIR(libopentracing.cc)
-#AM_INIT_AUTOMAKE([-Wall -Werror foreign])
-AM_INIT_AUTOMAKE([subdir-objects])
+AC_INIT([libopentracing], [2.0.0])
 
+AC_PACKAGE_URL([https://github.com/opentracing/opentracing-cpp])
+AC_PACKAGE_BUGREPORT([https://github.com/opentracing/opentracing-cpp/issues])
+AC_CONFIG_HEADERS([opentracing/config.h])
+
+AM_INIT_AUTOMAKE([subdir-objects])
 AM_CONDITIONAL(COMPILER_IS_GCC, test "x$GCC" = "xyes")
 
 AC_CONFIG_MACRO_DIR([m4])
-
-#AC_CONFIG_HEADERS([config.h])
-
 AM_PROG_LIBTOOL
-
 AC_PROG_INSTALL
 
-AC_LANG_C
-AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_MAKE_SET
 
-AC_HEADER_STDC
+AC_INCLUDES_DEFAULT
+AC_HEADER_ASSERT
+AC_TYPE_INT32_T
+AC_TYPE_INT64_T
+AC_TYPE_UINT64_T
+AC_TYPE_UINT64_T
+AC_TYPE_SIZE_T
 
-#AC_CHECK_HEADERS(unistd.h netdb.h netinet/in.h sys/types.h sys/socket.h,,AC_MSG_ERROR([required header file missing]))
-#AC_CHECK_FUNCS(gethostbyname socket htons connect shutdown,,AC_MSG_ERROR([required standard library function missing]))
-
-AC_CONFIG_FILES([
- Makefile
-])
+AC_CONFIG_FILES([ Makefile ])
 AC_OUTPUT
