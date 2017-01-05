@@ -8,58 +8,70 @@
 #endif
 
 #include <opentracing/carriers.h>
+#include <opentracing/span.h>
 #include <opentracing/stringref.h>
 
 namespace opentracing {
 
-template <typename IMPL>
+template <typename IMPL, typename SPAN, typename CONTEXT, typename ADAPTER>
 class GenericTracer {
-    typedef IMPL              Tracer;
-    typedef Tracer::Span      Span;
-    typedef Span::SpanContext SpanContext;
+  public:
+    typedef GenericSpan<SPAN, CONTEXT, ADAPTER> Span;
+    typedef GenericSpanContext<CONTEXT, ADAPTER> SpanContext;
 
-    int start(Span* const sp, const StringRef& operation);
-    int start(Span* const sp, const StringRef& operation, const uint64_t tsp);
+    static void install(GenericTracer* const tracer);
+    // Install 'tracer' to be referenced globally. This method is not thread
+    // safe.
+    // It should be called once, in main, before any other thread or trace work
+    // is performed. Undefined behavior otherwise.
 
-    int start(Span* const        sp,
-              const StringRef&   operation,
-              const SpanContext& parent);
+    static void uninstall();
+    // Uninstall any 'tracer' that may have been previously installed. This
+    // method
+    // is not thread safe. It should only be called in test environments.
 
-    int start(Span* const        sp,
-              const StringRef&   operation,
-              const SpanContext& parent,
-              const uint64_t     tsp);
+    static GenericTracer* instance();
+    // Return an instance to the globally installed tracer. Returns null if a
+    // tracer has not been previously installed. It is undefined behavior
+    // to call this method without previously calling 'install()'.
+
+    virtual ~GenericTracer();
+
+    Span* start(const StringRef& op);
+    Span* start(const StringRef& op, const uint64_t tsp);
+
+    Span* start(const StringRef& op, const SpanContext& parent);
+
+    Span* start(const StringRef&   op,
+                const SpanContext& parent,
+                const uint64_t     tsp);
 
     template <typename ITER>
-    int start(Span* const      sp,
-              const StringRef& operation,
-              const ITER       begin,
-              const ITER       end);
+    Span* start(const StringRef& op, const ITER& pbegin, const ITER& pend);
 
     template <typename ITER>
-    int start(Span* const      sp,
-              const StringRef& operation,
-              const ITER       begin,
-              const ITER       end,
-              const uint64_t   tsp);
-    // The 'start' methods are used to load a new 'Span'. The only required
-    // parameter is the 'operation' description, which should outline the
-    // work being performed during the Span.
+    Span* start(const StringRef& op,
+                const ITER&      pbegin,
+                const ITER&      pend,
+                const uint64_t   tsp);
+    // The 'start' methods are used to create a new 'Span'. The only required
+    // parameter is the operation string 'op', which should describe the work
+    // being performed during the span.
     //
     // The optional arguments are:
     //   parent:
-    //      Reference a single parent Span's context, establishing this
-    //      Span's trace id
+    //      Refer a SpanContext, establishing the new span as a child of the
+    //      supplied context
     //
-    //   begin/end:
-    //      A set of iterators that outline a range of parent Span contexts.
-    //      This Span should be marked as a child of all the supplied
-    //      parents. ITER must be a forward iterator, that when dereferenced,
-    //      can be stored in a `const SpanContext&`.
+    //   pbegin/pend:
+    //      Supply a range of iterators, which when dereferenced refer to
+    //      a SpanContext&. The new span would be a child of all of the
+    //      supplied parents.
     //
     //   tsp:
-    //      The time-stamp marking the start of the Span, in microseconds.
-    //      If not supplied, the current wall-time should be used.
+    //      The time-stamp marking the start of the new Span. 'tsp' should
+    //      represent the number of microseconds that have elapsed since
+    //      the Unix epoch.
 
     template <typename CIMPL>
     int inject(GenericTextWriter<CIMPL>* const carrier,
@@ -67,8 +79,7 @@ class GenericTracer {
     // Inject the supplied 'context' into the text map writer 'carrier'.
 
     template <typename CIMPL>
-    int extract(SpanContext* const              context,
-                const GenericTextReader<CIMPL>& carrier);
+    SpanContext* extract(const GenericTextReader<CIMPL>& carrier);
     // Extract the supplied 'context' from the text map reader 'carrier'.
 
     template <typename CIMPL>
@@ -77,143 +88,184 @@ class GenericTracer {
     // Inject the supplied 'context' into the binary writer 'carrier'.
 
     template <typename CIMPL>
-    int extract(SpanContext* const                context,
-                const GenericBinaryReader<CIMPL>& carrier);
+    SpanContext* extract(const GenericBinaryReader<CIMPL>& carrier);
     // Extract the supplied 'context' from the binary reader 'carrier'.
 
     template <typename CIMPL>
-    int inject(GenericWriter<CIMPL>* const carrier,
-               const SpanContext&          context) const;
+    int inject(GenericWriter<CIMPL, CONTEXT>* const carrier,
+               const SpanContext& context) const;
     // Inject the SpanContext directly into the specialized 'carrier'.
     //
-    // Note: The carrier will be passed the 'SpanContext' directly. Using
-    // this may make your carrier code more efficient, but it removes
-    // flexibility if you want to swap Tracer/Span implementations later.
+    // Note: The carrier will be passed the 'SpanContext' directly.
+    // Using this may make your carrier code more efficient, but it
+    // removes flexibility if you want to swap Tracer/Span
+    // implementations.
 
     template <typename CIMPL>
-    int extract(SpanContext* const          context,
-                const GenericReader<CIMPL>& carrier);
+    SpanContext* extract(const GenericReader<CIMPL, CONTEXT>& carrier);
     // Extract the SpanContext from the specialized 'carrier'.
     //
-    // Note: The carrier will be passed the 'SpanContext' directly. Using
-    // this may make your carrier code more efficient, but it removes
-    // flexibility if you want to swap Tracer/Span implementations later.
+    // Note: The carrier will be passed the 'SpanContext' directly.
+    // Using this may make your carrier code more efficient, but it
+    // removes flexibility if you want to swap Tracer/Span implementations
+    // later.
 
   protected:
     GenericTracer();
     GenericTracer(const GenericTracer&);
     // Protected to avoid direct construction
+
+  private:
+    static GenericTracer* s_tracer;
 };
 
-template<typename IMPL>
-GenericTracer::GenericTracer()
+template <typename IMPL, typename SPAN, typename CONTEXT, typename ADAPTER>
+GenericTracer<IMPL, SPAN, CONTEXT, ADAPTER>*
+    GenericTracer<IMPL, SPAN, CONTEXT, ADAPTER>::s_tracer = 0;
+
+template <typename IMPL, typename SPAN, typename CONTEXT, typename ADAPTER>
+void
+GenericTracer<IMPL, SPAN, CONTEXT, ADAPTER>::install(
+    GenericTracer* const tracer)
+{
+    s_tracer = tracer;
+}
+
+template <typename IMPL, typename SPAN, typename CONTEXT, typename ADAPTER>
+void
+GenericTracer<IMPL, SPAN, CONTEXT, ADAPTER>::uninstall()
+{
+    s_tracer = 0;
+}
+
+template <typename IMPL, typename SPAN, typename CONTEXT, typename ADAPTER>
+GenericTracer<IMPL, SPAN, CONTEXT, ADAPTER>*
+GenericTracer<IMPL, SPAN, CONTEXT, ADAPTER>::instance()
+{
+    return s_tracer;
+}
+
+template <typename IMPL, typename SPAN, typename CONTEXT, typename ADAPTER>
+GenericTracer<IMPL, SPAN, CONTEXT, ADAPTER>::~GenericTracer()
 {
 }
 
-template <typename IMPL>
-GenericTracer::GenericTracer(const GenericTracer&)
+template <typename IMPL, typename SPAN, typename CONTEXT, typename ADAPTER>
+GenericTracer<IMPL, SPAN, CONTEXT, ADAPTER>::GenericTracer()
 {
 }
 
-template <typename IMPL>
-int
-GenericTracer::start(Span* const Span)
+template <typename IMPL, typename SPAN, typename CONTEXT, typename ADAPTER>
+GenericTracer<IMPL, SPAN, CONTEXT, ADAPTER>::GenericTracer(const GenericTracer&)
 {
-    return static_cast<Tracer*>(this)->start(Span);
 }
 
-template <typename IMPL>
-int
-GenericTracer::start(Span* const sp, const uint64_t tsp)
+template <typename IMPL, typename SPAN, typename CONTEXT, typename ADAPTER>
+typename GenericTracer<IMPL, SPAN, CONTEXT, ADAPTER>::Span*
+GenericTracer<IMPL, SPAN, CONTEXT, ADAPTER>::start(const StringRef& op)
 {
-    return static_cast<Tracer*>(this)->start(sp, tsp);
+    return static_cast<IMPL*>(this)->startImp(op);
 }
 
-template <typename IMPL>
-int
-GenericTracer::start(Span* const sp, const SpanContext& parent)
+template <typename IMPL, typename SPAN, typename CONTEXT, typename ADAPTER>
+typename GenericTracer<IMPL, SPAN, CONTEXT, ADAPTER>::Span*
+GenericTracer<IMPL, SPAN, CONTEXT, ADAPTER>::start(const StringRef& op,
+                                                   const uint64_t tsp)
 {
-    return static_cast<Tracer*>(this)->start(sp, parent);
+    return static_cast<IMPL*>(this)->startImp(op, tsp);
 }
 
-template <typename IMPL>
-int
-GenericTracer::start(Span* const        sp,
-                     const SpanContext& parent,
-                     const uint64_t     tsp)
+template <typename IMPL, typename SPAN, typename CONTEXT, typename ADAPTER>
+typename GenericTracer<IMPL, SPAN, CONTEXT, ADAPTER>::Span*
+GenericTracer<IMPL, SPAN, CONTEXT, ADAPTER>::start(const StringRef& op,
+                                                   const SpanContext& parent)
 {
-    return static_cast<Tracer*>(this)->start(sp, parent, tsp);
+    return static_cast<IMPL*>(this)->startImp(op, parent);
 }
 
+template <typename IMPL, typename SPAN, typename CONTEXT, typename ADAPTER>
+typename GenericTracer<IMPL, SPAN, CONTEXT, ADAPTER>::Span*
+GenericTracer<IMPL, SPAN, CONTEXT, ADAPTER>::start(const StringRef& op,
+                                                   const SpanContext& parent,
+                                                   const uint64_t     tsp)
+{
+    return static_cast<IMPL*>(this)->startImp(op, parent, tsp);
+}
+
+template <typename IMPL, typename SPAN, typename CONTEXT, typename ADAPTER>
 template <typename ITER>
-int
-GenericTracer::start(Span* const sp, const ITER begin, const ITER end)
+typename GenericTracer<IMPL, SPAN, CONTEXT, ADAPTER>::Span*
+GenericTracer<IMPL, SPAN, CONTEXT, ADAPTER>::start(const StringRef& op,
+                                                   const ITER& begin,
+                                                   const ITER& end)
 {
-    return static_cast<Tracer*>(this)->start(sp, begin, end);
+    return static_cast<IMPL*>(this)->startImp(op, begin, end);
 }
 
+template <typename IMPL, typename SPAN, typename CONTEXT, typename ADAPTER>
 template <typename ITER>
-int
-GenericTracer::start(Span* const    sp,
-                     const ITER     begin,
-                     const ITER     end,
-                     const uint64_t tsp)
+typename GenericTracer<IMPL, SPAN, CONTEXT, ADAPTER>::Span*
+GenericTracer<IMPL, SPAN, CONTEXT, ADAPTER>::start(const StringRef& op,
+                                                   const ITER&    begin,
+                                                   const ITER&    end,
+                                                   const uint64_t tsp)
 {
-    return static_cast<Tracer*>(this)->start(sp, begin, end, tsp);
+    return static_cast<IMPL*>(this)->startImp(op, begin, end, tsp);
 }
 
-template <typename IMPL>
+template <typename IMPL, typename SPAN, typename CONTEXT, typename ADAPTER>
 template <typename CIMPL>
 int
-GenericTracer::inject(GenericTextWriter<CIMPL>* const carrier,
-                      const SpanContext&              context) const
+GenericTracer<IMPL, SPAN, CONTEXT, ADAPTER>::inject(
+    GenericTextWriter<CIMPL>* const carrier, const SpanContext& context) const
 {
-    return static_cast<Tracer*>(this)->inject(carrier, context);
+    return static_cast<const IMPL*>(this)->injectImp(carrier, context);
 }
 
-template <typename IMPL>
+template <typename IMPL, typename SPAN, typename CONTEXT, typename ADAPTER>
 template <typename CIMPL>
-int
-GenericTracer::extract(SpanContext* const              context,
-                       const GenericTextReader<CIMPL>& carrier)
+typename GenericTracer<IMPL, SPAN, CONTEXT, ADAPTER>::SpanContext*
+GenericTracer<IMPL, SPAN, CONTEXT, ADAPTER>::extract(
+    const GenericTextReader<CIMPL>& carrier)
 {
-    return static_cast<Tracer*>(this)->extract(context, carrier);
+    return static_cast<IMPL*>(this)->extractImp(carrier);
 }
 
-template <typename IMPL>
+template <typename IMPL, typename SPAN, typename CONTEXT, typename ADAPTER>
 template <typename CIMPL>
 int
-GenericTracer::inject(GenericBinaryWriter<CIMPL>* const carrier,
-                      const SpanContext&                context) const
+GenericTracer<IMPL, SPAN, CONTEXT, ADAPTER>::inject(
+    GenericBinaryWriter<CIMPL>* const carrier, const SpanContext& context) const
 {
-    return static_cast<Tracer*>(this)->inject(carrier, context);
+    return static_cast<const IMPL*>(this)->injectImp(carrier, context);
 }
 
-template <typename IMPL>
+template <typename IMPL, typename SPAN, typename CONTEXT, typename ADAPTER>
 template <typename CIMPL>
-int
-GenericTracer::extract(SpanContext* const                context,
-                       const GenericBinaryReader<CIMPL>& carrier)
+typename GenericTracer<IMPL, SPAN, CONTEXT, ADAPTER>::SpanContext*
+GenericTracer<IMPL, SPAN, CONTEXT, ADAPTER>::extract(
+    const GenericBinaryReader<CIMPL>& carrier)
 {
-    return static_cast<Tracer*>(this)->extract(context, carrier);
+    return static_cast<IMPL*>(this)->extractImp(carrier);
 }
 
-template <typename IMPL>
+template <typename IMPL, typename SPAN, typename CONTEXT, typename ADAPTER>
 template <typename CIMPL>
 int
-GenericTracer::inject(GenericWriter<CIMPL>* const carrier,
-                      const SpanContext&          context) const
+GenericTracer<IMPL, SPAN, CONTEXT, ADAPTER>::inject(
+    GenericWriter<CIMPL, CONTEXT>* const carrier,
+    const SpanContext& context) const
 {
-    return static_cast<Tracer*>(this)->inject(carrier, context);
+    return static_cast<const IMPL*>(this)->injectImp(carrier, context);
 }
 
-template <typename IMPL>
+template <typename IMPL, typename SPAN, typename CONTEXT, typename ADAPTER>
 template <typename CIMPL>
-int
-GenericTracer::extract(SpanContext* const          context,
-                       const GenericReader<CIMPL>& carrier)
+typename GenericTracer<IMPL, SPAN, CONTEXT, ADAPTER>::SpanContext*
+GenericTracer<IMPL, SPAN, CONTEXT, ADAPTER>::extract(
+    const GenericReader<CIMPL, CONTEXT>& carrier)
 {
-    return static_cast<Tracer*>(this)->extract(context, carrier);
+    return static_cast<IMPL*>(this)->extractImp(carrier);
 }
 }
 #endif

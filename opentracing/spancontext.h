@@ -6,70 +6,74 @@
 
 namespace opentracing {
 
-template <typename IMPL>
+template <typename IMPL, typename ADAPTER>
 class GenericSpanContext {
   public:
-    typedef IMPL                             SpanContext;
-    typedef SpanContext::BaggageIteratorImpl IteratorImpl;
-    typedef SpanContext::BaggageHandler      BaggageHandler;
+    typedef IMPL                     SpanContext;
+    typedef ADAPTER                  BaggageAdapter;
+    typedef BaggageIterator<ADAPTER> const_iterator;
 
-    typedef BaggageIterator<BaggageHandler, IteratorImpl> const_iterator;
-
-    typedef BaggageIterator const_iterator;
+    virtual ~GenericSpanContext();
 
     const_iterator begin() const;
     const_iterator end() const;
-    // Return iterators to baggage managed by this span_context.
+    // Return iterators to baggage managed by this SpanContext.
 
     int setBaggage(const StringRef& key, const StringRef& baggage);
     // Associate the supplied 'key' with the 'baggage'.
 
-    int getBaggage(StringRef* const baggage, const StringRef& key);
+    int getBaggage(StringRef* const baggage, const StringRef& key) const;
     // Load the 'baggage' associated with 'key'.
 
-  private:
+  protected:
     GenericSpanContext();
     GenericSpanContext(const GenericSpanContext&);
     // Protected to avoid direct construction
 };
 
-template <typename IMPL>
-GenericSpanContext::GenericSpanContext()
+template <typename IMPL, typename ADAPTER>
+GenericSpanContext<IMPL, ADAPTER>::~GenericSpanContext()
 {
 }
 
-template <typename IMPL>
-GenericSpanContext::GenericSpanContext(const GenericSpanContext&)
+template <typename IMPL, typename ADAPTER>
+GenericSpanContext<IMPL, ADAPTER>::GenericSpanContext()
 {
 }
 
-template <typename IMPL>
-GenericSpanContext::const_iterator
-GenericSpanContext::begin() const
+template <typename IMPL, typename ADAPTER>
+GenericSpanContext<IMPL, ADAPTER>::GenericSpanContext(const GenericSpanContext&)
 {
-    return const_iterator(static_cast<span_context*>(this)->begin());
 }
 
-template <typename IMPL>
-GenericSpanContext::const_iterator
-GenericSpanContext::end() const
+template <typename IMPL, typename ADAPTER>
+typename GenericSpanContext<IMPL, ADAPTER>::const_iterator
+GenericSpanContext<IMPL, ADAPTER>::begin() const
 {
-    return const_iterator(static_cast<span_context*>(this)->end());
+    return const_iterator(static_cast<const IMPL*>(this)->beginImp());
 }
 
-template <typename IMPL>
+template <typename IMPL, typename ADAPTER>
+typename GenericSpanContext<IMPL, ADAPTER>::const_iterator
+GenericSpanContext<IMPL, ADAPTER>::end() const
+{
+    return const_iterator(static_cast<const IMPL*>(this)->endImp());
+}
+
+template <typename IMPL, typename ADAPTER>
 int
-GenericSpanContext::setBaggage(const StringRef& key, const StringRef& baggage)
+GenericSpanContext<IMPL, ADAPTER>::setBaggage(const StringRef& key,
+                                              const StringRef& baggage)
 {
-    return static_cast<span_context*>(this)->setBaggage(key, baggage);
+    return static_cast<IMPL*>(this)->setBaggageImp(key, baggage);
 }
 
-template <typename IMPL>
+template <typename IMPL, typename ADAPTER>
 int
-GenericSpanContext::get_baggage(StringRef* const baggage,
-                                const StringRef& key) const
+GenericSpanContext<IMPL, ADAPTER>::getBaggage(StringRef* const baggage,
+                                              const StringRef& key) const
 {
-    return static_cast<span_context*>(this)->get_baggage(baggage, key);
+    return static_cast<const IMPL*>(this)->getBaggageImp(baggage, key);
 }
 }  // namespace opentracing
 #endif  // INCLUDED_OPENTRACING_SPANCONTEXT_H

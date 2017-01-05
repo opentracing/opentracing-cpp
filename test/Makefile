@@ -1,10 +1,10 @@
 CC=g++
 
 OPENTRACING_INCLUDE=../
-OPENTRACING_SRC=$(wildcard ${OPENTRACING_INCLUDED}/*.h)
+OPENTRACING_SRC=$(wildcard ${OPENTRACING_INCLUDE}/*.h)
 OPENTRACING_HEADERS= $(wildcard ${OPENTRACING_INCLUDE}
-THIRDPARTY_ROOT=../thirdparty
 
+THIRDPARTY_ROOT=../thirdparty
 GTEST_INCLUDE=${THIRDPARTY_ROOT}/googletest/googletest/include
 GTEST_LIBS=${THIRDPARTY_ROOT}/
 
@@ -23,10 +23,10 @@ LDIR =${GTEST_LIBS}
 
 LIBS=-L${GTEST_LIBS} -lgtest -lpthread
 
-_OBJ = baggage.t.o stringref.t.o unittest.t.o
+_OBJ = tracer.t.o carriers.t.o span.t.o spancontext.t.o baggage.t.o stringref.t.o unittest.t.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
-$(ODIR)/%.o: %.cc ${OPENTRACING_SRC}
+$(ODIR)/%.o: %.cc %.h ${OPENTRACING_SRC}
 	$(CC) -c -o $@ $< $(CXXFLAGS)
 
 test: $(OBJ)

@@ -19,6 +19,8 @@ namespace opentracing {
 
 struct StringRef {
   public:
+    StringRef();
+
     template <size_t N>
     StringRef(const char (&str)[N]);
     // Explicitly create string reference from a const character array
@@ -35,6 +37,19 @@ struct StringRef {
     operator const char*() const;
     // Implicit conversion to plain char *
 
+    template <size_t N>
+    void             reset(const char (&str)[N]);
+    // Reset the string reference given a const character array
+
+    void reset(const char* const str);
+    // Reset this string ref to point at the supplied c-string
+
+    void reset(const std::string& str);
+    // Reset the string reference given a std::string
+
+    void reset(const char* const str, const size_t length);
+    // Reset this string ref to point at the supplied 'str' of 'length' bytes.
+
     const char* data() const;
     // Return address of the referenced string
 
@@ -46,9 +61,17 @@ struct StringRef {
     StringRef(char (&str)[N]);
     // Disallow construction from non-const array
 
+    template <size_t N>
+    void             reset(char (&str)[N]);
+    // Disallow reset from non-const array
+
     const char* m_data;
     size_t      m_length;
 };
+
+inline StringRef::StringRef() : m_data(0), m_length(0)
+{
+}
 
 template <size_t N>
 inline StringRef::StringRef(const char (&str)[N]) : m_data(str), m_length(N - 1)
@@ -73,6 +96,35 @@ inline StringRef::StringRef(const char* str, size_t len)
 inline StringRef::operator const char*() const
 {
     return m_data;
+}
+
+inline void
+StringRef::reset(const char* const str, const size_t length)
+{
+    m_data   = str;
+    m_length = length;
+}
+
+template <size_t N>
+inline void
+StringRef::reset(const char (&str)[N])
+{
+    m_data   = str;
+    m_length = N;
+}
+
+inline void
+StringRef::reset(const char* const str)
+{
+    m_data   = str;
+    m_length = std::strlen(str);
+}
+
+inline void
+StringRef::reset(const std::string& str)
+{
+    m_data   = str.data();
+    m_length = str.length();
 }
 
 inline const char*
