@@ -212,6 +212,10 @@ class GenericSpan {
     // Protected to avoid direct construction
 };
 
+// -----------------
+// class GenericSpan
+// -----------------
+
 // Protected Constructors
 
 template <typename SPAN, typename CONTEXT, typename ADAPTER>
@@ -626,5 +630,5 @@ GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key,
     return static_cast<SPAN*>(this)->logImp(key, val, tsp);
 }
 
-}  // end namespace opentracing
+}  // namespace opentracing
 #endif  // INCLUDED_OPENTRACING_SPAN_H
