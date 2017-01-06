@@ -48,13 +48,27 @@ TEST(BaggageRef, Assignment)
 }
 
 // BaggageIterator adapter for map<string, string>
-struct MapBaggage {
+class MapBaggage {
+  public:
     typedef std::map<std::string, std::string> Map;
-    typedef Map::iterator iterator;
+    typedef Map::iterator       iterator;
     typedef Map::const_iterator const_iterator;
 
-    BaggageRef
-    operator()(const Map::const_iterator& iter) const
+    Baggage narrow(const Map::const_iterator& iter) const
+    {
+        return Baggage(iter->first, iter->second);
+    }
+    BaggageWide wide(const Map::const_iterator& iter) const
+    {
+        std::wstring first;
+        std::wstring second;
+
+        test_widen(&first, iter->first);
+        test_widen(&second, iter->second);
+
+        return BaggageWide(first, second);
+    }
+    BaggageRef ref(const Map::const_iterator& iter) const
     {
         return BaggageRef(iter->first, iter->second);
     }
@@ -71,10 +85,10 @@ TEST(BaggageIterator, MapBaggageAdapter)
     BaggageIterator<MapBaggage> end(m.end());
 
     ASSERT_FALSE(end == it);
-    BaggageRef ref = *it;
+    Baggage ref = *it;
 
-    ASSERT_STREQ("animal", ref.key());
-    ASSERT_STREQ("dog", ref.value());
+    ASSERT_EQ("animal", ref.key());
+    ASSERT_EQ("dog", ref.value());
 
     BaggageIterator<MapBaggage> prev = it++;
     ASSERT_FALSE(prev == end);
@@ -82,21 +96,21 @@ TEST(BaggageIterator, MapBaggageAdapter)
 
     ref = *prev;
 
-    ASSERT_STREQ("animal", ref.key());
-    ASSERT_STREQ("dog", ref.value());
+    ASSERT_EQ("animal", ref.key());
+    ASSERT_EQ("dog", ref.value());
 
     ref = *it;
 
-    ASSERT_STREQ("fruit", ref.key());
-    ASSERT_STREQ("apple", ref.value());
+    ASSERT_EQ("fruit", ref.key());
+    ASSERT_EQ("apple", ref.value());
 
     ++it;
     ASSERT_FALSE(end == it);
 
     ref = *it;
 
-    ASSERT_STREQ("veggie", ref.key());
-    ASSERT_STREQ("carrot", ref.value());
+    ASSERT_EQ("veggie", ref.key());
+    ASSERT_EQ("carrot", ref.value());
 
     ++it;
 
@@ -128,13 +142,14 @@ TEST(BaggageIterator, ForLoopSyntax)
          ++it, ++index)
     {
 	// Test the -> syntax works
-        ASSERT_STREQ(expectedKeys[index], it->key());
-        ASSERT_STREQ(expectedVals[index], it->value());
+        ASSERT_EQ(expectedKeys[index], it->key());
+        ASSERT_EQ(expectedVals[index], it->value());
     }
 }
 
 // Adapter for BaggageIterator, wrapping a stl list
-struct ListBaggageAdapter {
+class ListBaggageAdapter {
+  public:
     struct KVP {
         std::string key;
         std::string val;
@@ -144,8 +159,21 @@ struct ListBaggageAdapter {
     typedef List::iterator       iterator;
     typedef List::const_iterator const_iterator;
 
-    BaggageRef
-    operator()(const const_iterator& iter) const
+    Baggage narrow(const List::const_iterator& iter) const
+    {
+        return Baggage(iter->key, iter->val);
+    }
+    BaggageWide wide(const List::const_iterator& iter) const
+    {
+        std::wstring first;
+        std::wstring second;
+
+        test_widen(&first, iter->key);
+        test_widen(&second, iter->val);
+
+        return BaggageWide(first, second);
+    }
+    BaggageRef ref(const List::const_iterator& iter) const
     {
         return BaggageRef(iter->key, iter->val);
     }
@@ -172,10 +200,10 @@ TEST(BaggageIterator, ListBaggageAdapter)
     BaggageIterator<ListBaggageAdapter> end(seq.end());
 
     ASSERT_FALSE(end == it);
-    BaggageRef ref = *it;
+    Baggage ref = *it;
 
-    ASSERT_STREQ("animal", ref.key());
-    ASSERT_STREQ("dog", it->value());
+    ASSERT_EQ("animal", ref.key());
+    ASSERT_EQ("dog", it->value());
 
     BaggageIterator<ListBaggageAdapter> prev = it++;
     ASSERT_FALSE(prev == end);
@@ -183,21 +211,21 @@ TEST(BaggageIterator, ListBaggageAdapter)
 
     ref = *prev;
 
-    ASSERT_STREQ("animal", ref.key());
-    ASSERT_STREQ("dog", ref.value());
+    ASSERT_EQ("animal", ref.key());
+    ASSERT_EQ("dog", ref.value());
 
     ref = *it;
 
-    ASSERT_STREQ("fruit", ref.key());
-    ASSERT_STREQ("apple", ref.value());
+    ASSERT_EQ("fruit", ref.key());
+    ASSERT_EQ("apple", ref.value());
 
     ++it;
     ASSERT_FALSE(end == it);
 
     ref = *it;
 
-    ASSERT_STREQ("veggie", ref.key());
-    ASSERT_STREQ("carrot", ref.value());
+    ASSERT_EQ("veggie", ref.key());
+    ASSERT_EQ("carrot", ref.value());
 
     ++it;
 

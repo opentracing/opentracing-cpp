@@ -15,8 +15,21 @@ struct TestContextBaggageAdapter {
     typedef TestBaggageContainer::iterator       iterator;
     typedef TestBaggageContainer::const_iterator const_iterator;
 
-    BaggageRef
-    operator()(const const_iterator& it) const
+    Baggage narrow(const const_iterator& it) const
+    {
+        return Baggage(it->first, it->second);
+    }
+    BaggageWide wide(const const_iterator& it) const
+    {
+        std::wstring key;
+        std::wstring value;
+
+        test_widen(&key, it->first);
+        test_widen(&value, it->second);
+
+        return BaggageWide(key, value);
+    }
+    BaggageRef ref(const const_iterator& it) const
     {
         return BaggageRef(it->first, it->second);
     }

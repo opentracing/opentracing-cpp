@@ -10,8 +10,16 @@
 
 #include <cstring>
 #include <cwchar>
+#include <string>
 
-namespace opentracing{};
+namespace opentracing{
+inline void
+test_widen(std::wstring* const dest, const std::string& src)
+{
+    dest->resize(src.size());
+    std::mbstowcs(&(*dest)[0], src.c_str(), src.size());
+}
+}
 
 using namespace opentracing;
 

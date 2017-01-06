@@ -4,7 +4,14 @@
 // =========
 // baggage.h
 // =========
-// class BaggageRef      - Client wrapper for referencing key:value pairs
+// class BaggageImp      - Client wrapper for copies of key:value pairs
+// class Baggage         - Typedef for Baggage working with char
+// class BaggageWide     - Typedef for Baggage working with wchar_t
+//
+// class BaggageRefImp   - Client wrapper for referencing key:value pairs
+// class BaggageRef      - Typedef for BaggageRef working with char
+// class BaggageRefWide  - Typedef for BaggageRef working with wchar_t
+//
 // class BaggageIterator - Client interface to traverse span baggage
 //
 // -------------------
@@ -15,9 +22,9 @@
 // Span. That is, baggage items propagate in-band along with the trace itself.
 //
 // Baggage items enable powerful functionality given a full-stack OpenTracing
-// integration (for example, arbitrary application data from a mobile app can
-// make it, transparently, all the way into the depths of a storage system), and
-// with it some powerful costs: use this feature with care.
+// integration (for example, arbitrary application data from a mobile
+// application can make it, transparently, all the way into the depths of a
+// storage system), and with it some powerful costs: use this feature with care.
 //
 // Use this feature thoughtfully and with care. Every key and value is copied
 // into every local and remote child of the associated Span, and that can add up
@@ -30,40 +37,86 @@
 namespace opentracing {
 
 // ================
-// class BaggageRef
+// class BaggageImp
 // ================
-//
+// This class copies to the key:value pairs that make up 'baggage'. Once they
+// value is returned, clients are free to move it around as they see fit.
+// Baggage is the default value returned by iterators when they are
+// dereferenced.
+
+template <typename CHAR>
+class BaggageImp {
+  public:
+    BaggageImp();
+    // Construct a Baggage with empty values.
+
+    BaggageImp(const StringRefImp<CHAR>& key, const StringRefImp<CHAR>& value);
+    // Construct a Baggage referencing 'key' and 'value'
+
+    std::basic_string<CHAR>& key();
+    // Mutable reference to the underlying 'key'.
+
+    std::basic_string<CHAR>& value();
+    // Mutable reference to the underlying 'value'.
+
+    const std::basic_string<CHAR>& key() const;
+    // Return the non-modifiable 'key' associated with this baggage.
+
+    const std::basic_string<CHAR>& value() const;
+    // Return the non-modifiable 'value' associated with this baggage.
+
+    BaggageImp* operator->();
+    const BaggageImp* operator->() const;
+    // Syntactic sugar to support dereferencing BaggageIterator's with
+    // the '->' operator: this method only returns 'this'.
+
+  private:
+    std::basic_string<CHAR> m_key;
+    std::basic_string<CHAR> m_value;
+};
+
+typedef BaggageImp<char>    Baggage;
+typedef BaggageImp<wchar_t> BaggageWide;
+
+// ===================
+// class BaggageRefImp
+// ===================
 // This class wraps references to the key:value pairs that make up 'baggage'.
 // The references themselves refer to data managed by SpanContext
 // implementations.
 //
 // Since the implementations of SpanContexts is deferred, it is impossible to
-// make strong gurantees on the liftetime of the references. At a minimum, the
+// make strong guarantees on the lifetime of the references. At a minimum, the
 // references should be valid until the iterator is destroyed, or until
 // 'setBaggage' is called again on a SpanContext.
 
-class BaggageRef {
+template <typename CHAR>
+class BaggageRefImp {
   public:
-    BaggageRef();
-    // Construct a 'BaggageRef' with empty references.
+    BaggageRefImp();
+    // Construct a BaggageRef with empty references.
 
-    BaggageRef(const StringRef& key, const StringRef& value);
-    // Construct a 'BaggageRef' referencing 'key' and 'value'
+    BaggageRefImp(const StringRefImp<CHAR>& key,
+                  const StringRefImp<CHAR>& value);
+    // Construct a BaggageRef referencing 'key' and 'value'
 
-    const StringRef& key() const;
+    const StringRefImp<CHAR>& key() const;
     // Return the non-modifiable 'key' associated with this baggage.
 
-    const StringRef& value() const;
+    const StringRefImp<CHAR>& value() const;
     // Return the non-modifiable 'value' associated with this baggage.
 
-    const BaggageRef* operator->() const;
-    // Syntatic sugar to support dereferencing BaggageIterator's with
+    const BaggageRefImp* operator->() const;
+    // Syntactic sugar to support dereferencing BaggageIterator's with
     // the '->' operator: this method only returns 'this'.
 
   private:
-    StringRef m_key;
-    StringRef m_value;
+    StringRefImp<CHAR> m_key;
+    StringRefImp<CHAR> m_value;
 };
+
+typedef BaggageRefImp<char> BaggageRef;
+typedef BaggageRefImp<wchar_t> BaggageRefWide;
 
 // =====================
 // class BaggageIterator
@@ -71,18 +124,20 @@ class BaggageRef {
 // -------
 // Clients
 // -------
-// For flexibility between implementations, 'BaggageIterator' classes should
-// never be created directly. Instead, a typedef is provided by 'SpanContext's
+// For flexibility between implementations, BaggageIterator classes should
+// never be created directly. Instead, a typedef is provided by SpanContexts
 // which allow callers to be agnostic of the underlying implementation.
 // By using 'SpanContext::const_iterator', the call sites will be unaffected
 // if implementations change in the future.
 //
 // The iterators themselves satisfy the requirements of C++ "Input Iterators".
-// They can read from the pointed-to baggage element, returning 'BaggageRef' for
+// They can read from the pointed-to baggage element, returning Baggage for
 // the key:value pairs.
 //
-// Those references only guarantee validity for a single pass: once an iterator
-// has been incremented, all copies of its previous value may be invalidated.
+// BaggageRef objects may be returned instead of copying the Baggage with
+// calls to 'ref()'. Those references only guarantee validity for a single pass:
+// once an iterator has been incremented, all copies of its previous value may
+// be invalidated.
 //
 // See http://en.cppreference.com/w/cpp/concept/InputIterator for more details
 // on semantics input iterators.
@@ -90,39 +145,44 @@ class BaggageRef {
 // ------------
 // Implementors
 // ------------
-// 'BaggageIterator' is used to obscure the data structure(s) used to store
-// and traverse span baggage. Implementors are free to store the key:value
-// baggage pairs however they see fit, so long as they provide an
-// "Input Iterator" to traverse the structure.
+// BaggageIterator is used to obscure the data structure(s) used to store
+// and traverse span baggage. Implementors should store the values as
+// std::string types. The underlying data structure decision is left to
+// implementors.
 //
 // We do not want to expose the details of these data structure(s) to clients;
 // If their code were to rely on any detail, it would make it difficult
-// to change opentracing implementations. Instead, we define an 'Adapter'
+// to change OpenTracing implementations. Instead, we define an 'Adapter'
 // class, to translate the implementation's iterator into baggage references.
 //
 // The 'Adapter' class must satisfy the following:
-//   1) Provide an 'iterator' typedef, potentially used during construction
-//   2) Provide a 'const_iterator' typedef, potentially used during
+//   * Provide an iterator typedef, potentially used during construction
+//   * Provide a const_iterator typedef, potentially used during
 //      construction.
-//   3) Overload operator() to convert a const_iterator into a BaggageRef
+//   * Provide narrow() to convert a const_iterator into Baggage
+//   * Provide wide() to convert a const_iterator into BaggageWide
+//   * Provide ref() to convert a const_iterator into a BaggageRef
 //
 // To achieve this, implementors define a class like so:
 //
 //  struct AdapterClass {
 //      typedef ImplementationIterator iterator;
 //      typedef ImplementationIterator const_iterator;
-//      BaggageRef operator()(const const_iterator& it) const;
+//
+//      Baggage narrow()(const const_iterator& it) const;
+//      Baggage wide()(const const_iterator& it) const;
+//      BaggageRef ref()(const const_iterator& it) const;
 //  };
 //
-// Now, when clients create a 'BaggageIterator' through 'SpanContext::begin()',
+// Now, when clients create a BaggageIterator through 'SpanContext::begin()',
 // the BaggageIterator should be created with an iterator to the underlying
 // baggage implementation. It caches the iterator, incrementing it as
 // clients move forward through the sequence.
 //
-// When clients dreference the baggage iterator, the 'Adapter' is invoked,
+// When clients dereference the baggage iterator, the 'Adapter' is invoked,
 // passing the implementation's iterator to the adapter. It is expected that the
-// 'Adapter' can convert the iterator into a BaggageRef that client code can
-// use in a read-only fashion.
+// 'Adapter' can convert the iterator into a Baggage, BaggageWide, or BaggageRef
+// object that client code can use in a read-only fashion.
 
 template <typename ADAPTER>
 class BaggageIterator {
@@ -132,13 +192,22 @@ class BaggageIterator {
 
     BaggageIterator(const iterator& iter);
     BaggageIterator(const const_iterator& iter);
-    // Construct a 'BaggageIterator' object which will be used to traverse the
+    // Construct a BaggageIterator object which will be used to traverse the
     // sequence pointed to by the input iterator 'iter'.
 
-    BaggageRef operator*() const;
-    BaggageRef operator->() const;
-    // Returns a 'BaggageRef' to return the key:value pair pointed to by this
+    Baggage operator*() const;
+    Baggage operator->() const;
+    // Returns a Baggage to return the key:value pair pointed to by this
     // iterator.
+
+    BaggageWide wide() const;
+    // Returns a BaggageWide object, containing wide versions of the key:value
+    // pairs pointed to by this iterator.
+
+    BaggageRef ref() const;
+    // Returns a BaggageRef object, containing references to the underlying
+    // storage of the key:value pairs. References are invalided if the
+    // associated SpanContext is destoryed or modified.
 
     BaggageIterator operator++(int);
     // Return a copy of this iterator, then post-increment this iterator to
@@ -162,31 +231,93 @@ class BaggageIterator {
 };
 
 // ----------------
-// class BaggageRef
+// class BaggageImp
 // ----------------
 
-inline BaggageRef::BaggageRef() : m_key(), m_value()
+template <typename CHAR>
+inline BaggageImp<CHAR>::BaggageImp() : m_key(), m_value()
 {
 }
 
-inline BaggageRef::BaggageRef(const StringRef& key, const StringRef& value)
-: m_key(key), m_value(value)
+template <typename CHAR>
+inline BaggageImp<CHAR>::BaggageImp(const StringRefImp<CHAR>& key,
+                                    const StringRefImp<CHAR>& value)
+: m_key(key.data(), key.length()), m_value(value.data(), value.length())
 {
 }
 
-inline const StringRef&
-BaggageRef::key() const
+template <typename CHAR>
+inline std::basic_string<CHAR>&
+BaggageImp<CHAR>::key()
 {
     return m_key;
 }
 
-inline const StringRef&
-BaggageRef::value() const
+template <typename CHAR>
+inline std::basic_string<CHAR>&
+BaggageImp<CHAR>::value()
 {
     return m_value;
 }
 
-inline const BaggageRef* BaggageRef::operator->() const
+template <typename CHAR>
+inline const std::basic_string<CHAR>&
+BaggageImp<CHAR>::key() const
+{
+    return m_key;
+}
+
+template <typename CHAR>
+inline const std::basic_string<CHAR>&
+BaggageImp<CHAR>::value() const
+{
+    return m_value;
+}
+
+template <typename CHAR>
+BaggageImp<CHAR>* BaggageImp<CHAR>::operator->()
+{
+    return this;
+}
+
+template <typename CHAR>
+const BaggageImp<CHAR>* BaggageImp<CHAR>::operator->() const
+{
+    return this;
+}
+
+// -------------------
+// class BaggageRefImp
+// -------------------
+
+template <typename CHAR>
+inline BaggageRefImp<CHAR>::BaggageRefImp() : m_key(), m_value()
+{
+}
+
+template <typename CHAR>
+inline BaggageRefImp<CHAR>::BaggageRefImp(const StringRefImp<CHAR>& key,
+                                          const StringRefImp<CHAR>& value)
+: m_key(key), m_value(value)
+{
+}
+
+template <typename CHAR>
+inline const StringRefImp<CHAR>&
+BaggageRefImp<CHAR>::key() const
+{
+    return m_key;
+}
+
+template <typename CHAR>
+inline const StringRefImp<CHAR>&
+BaggageRefImp<CHAR>::value() const
+{
+    return m_value;
+}
+
+template <typename CHAR>
+inline const BaggageRefImp<CHAR>* BaggageRefImp<CHAR>::operator->() const
 {
     return this;
 }
@@ -208,15 +339,27 @@ BaggageIterator<ADAPTER>::BaggageIterator(const const_iterator& iter)
 }
 
 template <typename ADAPTER>
-BaggageRef BaggageIterator<ADAPTER>::operator*() const
+Baggage BaggageIterator<ADAPTER>::operator*() const
 {
-    return d_handler(d_iterator);
+    return d_handler.narrow(d_iterator);
 }
 
 template <typename ADAPTER>
-BaggageRef BaggageIterator<ADAPTER>::operator->() const
+Baggage BaggageIterator<ADAPTER>::operator->() const
 {
-    return d_handler(d_iterator);
+    return d_handler.narrow(d_iterator);
+}
+
+template <typename ADAPTER>
+BaggageWide BaggageIterator<ADAPTER>::wide() const
+{
+    return d_handler.wide(d_iterator);
+}
+
+template <typename ADAPTER>
+BaggageRef BaggageIterator<ADAPTER>::ref() const
+{
+    return d_handler.ref(d_iterator);
 }
 
 template <typename ADAPTER>
