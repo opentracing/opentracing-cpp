@@ -1,6 +1,20 @@
 #ifndef INCLUDED_OPENTRACING_SPAN_H
 #define INCLUDED_OPENTRACING_SPAN_H
 
+// ======
+// span.h
+// ======
+// class GenericSpan - CRTP interface for Spans
+//
+// ----
+// Span
+// ----
+// Every Trace is made up of one or more Spans. Spans are used to:
+//   * TODO
+//
+// See the specification for more details:
+// https://github.com/opentracing/specification/blob/master/specification.md#span
+
 #include <opentracing/config.h>
 
 #ifdef HAVE_STDINT_H
@@ -12,32 +26,120 @@
 
 namespace opentracing {
 
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
+// =================
+// class GenericSpan
+// =================
+// GenericSpan is a static, polymorphic interface for interacting with
+// Spans. It uses the Curiously Repeating Template Patttern (CRTP) to
+// avoid unnecessary v-table hits we would encounter with traditional
+// polymorphism.
+//
+// See this CRTP article for more details on the design pattern:
+// https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern
+//
+// -------
+// Clients
+// -------
+// GenericSpans are not created directly by clients. They are instead
+// created and cleaned up through the installed Tracer interface.
+//
+// Clients should never need to reference the GenericSpan type explicitly.
+// Instead, clients should use the Tracer::Span typedef. By using the typedef,
+// clients will avoid code changes necessary if a different Tracer
+// implementation is installed later.
+//
+// Once clients have access to a Span, they can:
+//   * Access the underlying SpanContext via 'context()'
+//   * 'log()' timestamped key:value pairs
+//   * 'tag()' a span, with key:value pairs
+//   * 'finish()' a span
+//
+// After 'finish()' is called, it is undefined behavior to invoke any other
+// method on the Span, except for accessing 'context()' in a read-only fashion.
+// When clients are finished with a Span, it should be passed back to the
+// Tracer via 'Tracer::cleanup()'.
+//
+// For more details on:
+//   * Accessing/retrieving Baggage, see 'spancontext.h'
+//   * Creating/Cleaning up Spans, see 'tracer.h'
+//
+// ------------
+// Implementors
+// ------------
+// The GenericSpan has three template parameters:
+//   * SPAN    - A Span implementation derived class (CRTP)
+//   * CONTEXT - A SpanContext implementation derived class (CRTP)
+//   * ADAPTER - A Baggage iterator adapter
+//
+// The CONTEXT and ADAPTER are only used to establish the GenericSpanContext
+// interface used for the SpanContext typedef.
+//
+// SPAN implementations have to support the following:
+//
+// class SpanImpl: GenericSpan<SpanImpl, ContextImpl, Adapter>
+// {
+//   public:
+//      SpanContext& contextImp();
+//      const SpanContext& contextImp() const;
+//
+//      int finishImp();
+//      int finishImp(const uint64_t);
+//
+//      int tagImp(const StringRef& key, const Fundamental val);
+//      int tagImp(const StringRef& key, const StringRef& val);
+//
+//      int logImp(const StringRef& key, const Fundamental val);
+//      int logImp(const StringRef& key, const StringRef& val);
+//
+//      int logImp(const StringRef& key, const Fundamental val, const uint64_t
+//      tsp);
+//      int logImp(const StringRef& key, const StringRef& val, const uint64_t
+//      tsp);
+// };
+//
+// For brevities sake, the above example collapses the overloads on fundamental
+// C++ types for 'tagImp()' and 'logImp()' into a single declaration on the
+// 'Fundamental' type. For actual implementations, overloads must be supplied
+// for each of the following fundamental types.
+//
+// http://en.cppreference.com/w/cpp/language/types:
+//      * float        * int16_t  * uint16_t  * char          * wchar_t
+//      * double       * int32_t  * uint32_t  * signed char   * bool
+//      * long double  * int64_t  * uint64_t  * unsigned char
+//
+// The overloads are used instead of a single template to:
+//      * Avoid passing references larger than the types they refer to (64-bit)
+//      * Avoid ambiguities at compile time when clients use the overloads
+
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
 class GenericSpan {
   public:
-    virtual ~GenericSpan();
-
-    typedef IMPL Span;
     typedef GenericSpanContext<CONTEXT, ADAPTER> SpanContext;
 
     SpanContext&       context();
     const SpanContext& context() const;
-
     // Return the SpanContext associated with this span. Baggage can
-    // be set or accessed through the underlying context directly.
+    // be retrieved/modified through the SpanContext.
 
     int finish();
     int finish(const uint64_t tsp);
-    // Finish this span. Mark the end of the span (in microseconds since epoch)
-    // using the 'tsp' time-stamp. If 'tsp' is not supplied, the internal
-    // wall-time should be used to mark the end of the span instead. It is
-    // undefined behavior to call any method on this span after 'finish' is
-    // called, except for 'context()'.
+    // This should be the last method called on the Span. It marks the end of
+    // this Span (in microseconds since epoch) using the current wall-time, or
+    // an explicit timestamp 'tsp'. It is undefined behavior to call any method
+    // on this span after 'finish' is called, except for 'context()'.
+    // Returns 0 upon success and a non-zero value otherwise.
 
+    int tag(const StringRef& key, const StringRef& val);
     int tag(const StringRef& key, const bool val);
+
     int tag(const StringRef& key, const float val);
     int tag(const StringRef& key, const double val);
-    int tag(const StringRef& key, const StringRef& val);
+    int tag(const StringRef& key, const long double val);
+
+    int tag(const StringRef& key, const char val);
+    int tag(const StringRef& key, const signed char val);
+    int tag(const StringRef& key, const unsigned char val);
+    int tag(const StringRef& key, const wchar_t val);
 
     int tag(const StringRef& key, const int16_t val);
     int tag(const StringRef& key, const int32_t val);
@@ -46,15 +148,21 @@ class GenericSpan {
     int tag(const StringRef& key, const uint16_t val);
     int tag(const StringRef& key, const uint32_t val);
     int tag(const StringRef& key, const uint64_t val);
+    // Set a tag on this span, associating the supplied 'key' to the supplied
+    // 'val'. Overloads are supplied for common primitive types and a string
+    // blob. Returns 0 upon success and a non-zero value otherwise.
 
-    // Set a tag on this span, associating the supplied 'key' characters to
-    // the supplied value. Overloads are supplied for common primitive types,
-    // and a string blob
-
+    int log(const StringRef& key, const StringRef& val);
     int log(const StringRef& key, const bool val);
+
     int log(const StringRef& key, const float val);
     int log(const StringRef& key, const double val);
-    int log(const StringRef& key, const StringRef& val);
+    int log(const StringRef& key, const long double val);
+
+    int log(const StringRef& key, const char val);
+    int log(const StringRef& key, const signed char val);
+    int log(const StringRef& key, const unsigned char val);
+    int log(const StringRef& key, const wchar_t val);
 
     int log(const StringRef& key, const int16_t val);
     int log(const StringRef& key, const int32_t val);
@@ -63,11 +171,21 @@ class GenericSpan {
     int log(const StringRef& key, const uint16_t val);
     int log(const StringRef& key, const uint32_t val);
     int log(const StringRef& key, const uint64_t val);
+    // Log structured data for this span, associating the current wall-time
+    // with the supplied key:val pair. Returns 0 upon success and a non-zero
+    // value otherwise.
 
+    int log(const StringRef& key, const StringRef& val, const uint64_t tsp);
     int log(const StringRef& key, const bool val, const uint64_t tsp);
+
     int log(const StringRef& key, const float val, const uint64_t tsp);
     int log(const StringRef& key, const double val, const uint64_t tsp);
-    int log(const StringRef& key, const StringRef& val, const uint64_t tsp);
+    int log(const StringRef& key, const long double val, const uint64_t tsp);
+
+    int log(const StringRef& key, const char val, const uint64_t tsp);
+    int log(const StringRef& key, const signed char val, const uint64_t tsp);
+    int log(const StringRef& key, const unsigned char val, const uint64_t tsp);
+    int log(const StringRef& key, const wchar_t val, const uint64_t tsp);
 
     int log(const StringRef& key, const int16_t val, const uint64_t tsp);
     int log(const StringRef& key, const int32_t val, const uint64_t tsp);
@@ -76,14 +194,10 @@ class GenericSpan {
     int log(const StringRef& key, const uint16_t val, const uint64_t tsp);
     int log(const StringRef& key, const uint32_t val, const uint64_t tsp);
     int log(const StringRef& key, const uint64_t val, const uint64_t tsp);
-
-    // Structured data should be logged through one of the calls to 'log'. From
-    // this point forward, this span will associate 'key' with the supplied
-    // 'value'. This is similar to 'tag()', but additionally includes a
-    // time-stamp noting the number of microseconds that have elapsed since
-    // the Unix epoch. If time-stamp is not supplied, the current wall-time
-    // is used, otherwise the explicit time-stamp is used. The time-stamp
-    // should be between the start and finish times for this span.
+    // Log structured data for this span, associating the explicit timestamp
+    // 'tsp' with the supplied 'key':'val' pair. Timestamp should be the
+    // number of microseconds since the Unix Epoch. Returns 0 upon success and a
+    // non-zero value otherwise.
 
   protected:
     GenericSpan();
@@ -91,303 +205,418 @@ class GenericSpan {
     // Protected to avoid direct construction
 };
 
-// Virtual destructor
-
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
-GenericSpan<IMPL, CONTEXT, ADAPTER>::~GenericSpan()
-{
-}
-
 // Protected Constructors
 
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
-GenericSpan<IMPL, CONTEXT, ADAPTER>::GenericSpan()
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+GenericSpan<SPAN, CONTEXT, ADAPTER>::GenericSpan()
 {
 }
 
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
-GenericSpan<IMPL, CONTEXT, ADAPTER>::GenericSpan(const GenericSpan&)
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+GenericSpan<SPAN, CONTEXT, ADAPTER>::GenericSpan(const GenericSpan&)
 {
 }
 
 // Context Accessors
 
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
-typename GenericSpan<IMPL, CONTEXT, ADAPTER>::SpanContext&
-GenericSpan<IMPL, CONTEXT, ADAPTER>::context()
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+typename GenericSpan<SPAN, CONTEXT, ADAPTER>::SpanContext&
+GenericSpan<SPAN, CONTEXT, ADAPTER>::context()
 {
-    return static_cast<Span*>(this)->contextImp();
+    return static_cast<SPAN*>(this)->contextImp();
 }
 
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
-const typename GenericSpan<IMPL, CONTEXT, ADAPTER>::SpanContext&
-GenericSpan<IMPL, CONTEXT, ADAPTER>::context() const
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+const typename GenericSpan<SPAN, CONTEXT, ADAPTER>::SpanContext&
+GenericSpan<SPAN, CONTEXT, ADAPTER>::context() const
 {
-    return static_cast<const Span*>(this)->contextImp();
+    return static_cast<const SPAN*>(this)->contextImp();
 }
 
 // Tags
 
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
 int
-GenericSpan<IMPL, CONTEXT, ADAPTER>::finish()
+GenericSpan<SPAN, CONTEXT, ADAPTER>::finish()
 {
-    return static_cast<Span*>(this)->finishImp();
+    return static_cast<SPAN*>(this)->finishImp();
 }
 
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
 int
-GenericSpan<IMPL, CONTEXT, ADAPTER>::finish(const uint64_t tsp)
+GenericSpan<SPAN, CONTEXT, ADAPTER>::finish(const uint64_t tsp)
 {
-    return static_cast<Span*>(this)->finishImp(tsp);
+    return static_cast<SPAN*>(this)->finishImp(tsp);
 }
 
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
 int
-GenericSpan<IMPL, CONTEXT, ADAPTER>::tag(const StringRef& key, const bool val)
-{
-    return static_cast<Span*>(this)->tagImp(key, val);
-}
-
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
-int
-GenericSpan<IMPL, CONTEXT, ADAPTER>::tag(const StringRef& key, const float val)
-{
-    return static_cast<Span*>(this)->tagImp(key, val);
-}
-
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
-int
-GenericSpan<IMPL, CONTEXT, ADAPTER>::tag(const StringRef& key, const double val)
-{
-    return static_cast<Span*>(this)->tagImp(key, val);
-}
-
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
-int
-GenericSpan<IMPL, CONTEXT, ADAPTER>::tag(const StringRef& key,
+GenericSpan<SPAN, CONTEXT, ADAPTER>::tag(const StringRef& key,
                                          const StringRef& val)
 {
-    return static_cast<Span*>(this)->tagImp(key, val);
+    return static_cast<SPAN*>(this)->tagImp(key, val);
 }
 
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
 int
-GenericSpan<IMPL, CONTEXT, ADAPTER>::tag(const StringRef& key,
+GenericSpan<SPAN, CONTEXT, ADAPTER>::tag(const StringRef& key, const bool val)
+{
+    return static_cast<SPAN*>(this)->tagImp(key, val);
+}
+
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::tag(const StringRef& key, const float val)
+{
+    return static_cast<SPAN*>(this)->tagImp(key, val);
+}
+
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::tag(const StringRef& key, const double val)
+{
+    return static_cast<SPAN*>(this)->tagImp(key, val);
+}
+
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::tag(const StringRef& key,
+                                         const long double val)
+{
+    return static_cast<SPAN*>(this)->tagImp(key, val);
+}
+
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::tag(const StringRef& key, const char val)
+{
+    return static_cast<SPAN*>(this)->tagImp(key, val);
+}
+
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::tag(const StringRef& key,
+                                         const signed char val)
+{
+    return static_cast<SPAN*>(this)->tagImp(key, val);
+}
+
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::tag(const StringRef& key,
+                                         const unsigned char val)
+{
+    return static_cast<SPAN*>(this)->tagImp(key, val);
+}
+
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::tag(const StringRef& key,
+                                         const wchar_t val)
+{
+    return static_cast<SPAN*>(this)->tagImp(key, val);
+}
+
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::tag(const StringRef& key,
                                          const int16_t val)
 {
-    return static_cast<Span*>(this)->tagImp(key, val);
+    return static_cast<SPAN*>(this)->tagImp(key, val);
 }
 
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
 int
-GenericSpan<IMPL, CONTEXT, ADAPTER>::tag(const StringRef& key,
+GenericSpan<SPAN, CONTEXT, ADAPTER>::tag(const StringRef& key,
                                          const int32_t val)
 {
-    return static_cast<Span*>(this)->tagImp(key, val);
+    return static_cast<SPAN*>(this)->tagImp(key, val);
 }
 
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
 int
-GenericSpan<IMPL, CONTEXT, ADAPTER>::tag(const StringRef& key,
+GenericSpan<SPAN, CONTEXT, ADAPTER>::tag(const StringRef& key,
                                          const int64_t val)
 {
-    return static_cast<Span*>(this)->tagImp(key, val);
+    return static_cast<SPAN*>(this)->tagImp(key, val);
 }
 
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
 int
-GenericSpan<IMPL, CONTEXT, ADAPTER>::tag(const StringRef& key,
+GenericSpan<SPAN, CONTEXT, ADAPTER>::tag(const StringRef& key,
                                          const uint16_t val)
 {
-    return static_cast<Span*>(this)->tagImp(key, val);
+    return static_cast<SPAN*>(this)->tagImp(key, val);
 }
 
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
 int
-GenericSpan<IMPL, CONTEXT, ADAPTER>::tag(const StringRef& key,
+GenericSpan<SPAN, CONTEXT, ADAPTER>::tag(const StringRef& key,
                                          const uint32_t val)
 {
-    return static_cast<Span*>(this)->tagImp(key, val);
+    return static_cast<SPAN*>(this)->tagImp(key, val);
 }
 
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
 int
-GenericSpan<IMPL, CONTEXT, ADAPTER>::tag(const StringRef& key,
+GenericSpan<SPAN, CONTEXT, ADAPTER>::tag(const StringRef& key,
                                          const uint64_t val)
 {
-    return static_cast<Span*>(this)->tagImp(key, val);
+    return static_cast<SPAN*>(this)->tagImp(key, val);
 }
 
 // Logs
 
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
 int
-GenericSpan<IMPL, CONTEXT, ADAPTER>::log(const StringRef& key, const bool val)
-{
-    return static_cast<Span*>(this)->logImp(key, val);
-}
-
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
-int
-GenericSpan<IMPL, CONTEXT, ADAPTER>::log(const StringRef& key, const float val)
-{
-    return static_cast<Span*>(this)->logImp(key, val);
-}
-
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
-int
-GenericSpan<IMPL, CONTEXT, ADAPTER>::log(const StringRef& key, const double val)
-{
-    return static_cast<Span*>(this)->logImp(key, val);
-}
-
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
-int
-GenericSpan<IMPL, CONTEXT, ADAPTER>::log(const StringRef& key,
+GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key,
                                          const StringRef& val)
 {
-    return static_cast<Span*>(this)->logImp(key, val);
+    return static_cast<SPAN*>(this)->logImp(key, val);
 }
 
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
 int
-GenericSpan<IMPL, CONTEXT, ADAPTER>::log(const StringRef& key,
+GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key, const bool val)
+{
+    return static_cast<SPAN*>(this)->logImp(key, val);
+}
+
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key, const float val)
+{
+    return static_cast<SPAN*>(this)->logImp(key, val);
+}
+
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key, const double val)
+{
+    return static_cast<SPAN*>(this)->logImp(key, val);
+}
+
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key,
+                                         const long double val)
+{
+    return static_cast<SPAN*>(this)->logImp(key, val);
+}
+
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key, const char val)
+{
+    return static_cast<SPAN*>(this)->logImp(key, val);
+}
+
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key,
+                                         const signed char val)
+{
+    return static_cast<SPAN*>(this)->logImp(key, val);
+}
+
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key,
+                                         const unsigned char val)
+{
+    return static_cast<SPAN*>(this)->logImp(key, val);
+}
+
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key,
+                                         const wchar_t val)
+{
+    return static_cast<SPAN*>(this)->logImp(key, val);
+}
+
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key,
                                          const int16_t val)
 {
-    return static_cast<Span*>(this)->logImp(key, val);
+    return static_cast<SPAN*>(this)->logImp(key, val);
 }
 
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
 int
-GenericSpan<IMPL, CONTEXT, ADAPTER>::log(const StringRef& key,
+GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key,
                                          const int32_t val)
 {
-    return static_cast<Span*>(this)->logImp(key, val);
+    return static_cast<SPAN*>(this)->logImp(key, val);
 }
 
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
 int
-GenericSpan<IMPL, CONTEXT, ADAPTER>::log(const StringRef& key,
+GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key,
                                          const int64_t val)
 {
-    return static_cast<Span*>(this)->logImp(key, val);
+    return static_cast<SPAN*>(this)->logImp(key, val);
 }
 
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
 int
-GenericSpan<IMPL, CONTEXT, ADAPTER>::log(const StringRef& key,
+GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key,
                                          const uint16_t val)
 {
-    return static_cast<Span*>(this)->logImp(key, val);
+    return static_cast<SPAN*>(this)->logImp(key, val);
 }
 
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
 int
-GenericSpan<IMPL, CONTEXT, ADAPTER>::log(const StringRef& key,
+GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key,
                                          const uint32_t val)
 {
-    return static_cast<Span*>(this)->logImp(key, val);
+    return static_cast<SPAN*>(this)->logImp(key, val);
 }
 
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
 int
-GenericSpan<IMPL, CONTEXT, ADAPTER>::log(const StringRef& key,
+GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key,
                                          const uint64_t val)
 {
-    return static_cast<Span*>(this)->logImp(key, val);
+    return static_cast<SPAN*>(this)->logImp(key, val);
 }
 
 // Logs with timestamps
-//
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
 int
-GenericSpan<IMPL, CONTEXT, ADAPTER>::log(const StringRef& key,
-                                         const bool     val,
-                                         const uint64_t tsp)
-{
-    return static_cast<Span*>(this)->logImp(key, val, tsp);
-}
-
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
-int
-GenericSpan<IMPL, CONTEXT, ADAPTER>::log(const StringRef& key,
-                                         const float    val,
-                                         const uint64_t tsp)
-{
-    return static_cast<Span*>(this)->logImp(key, val, tsp);
-}
-
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
-int
-GenericSpan<IMPL, CONTEXT, ADAPTER>::log(const StringRef& key,
-                                         const double   val,
-                                         const uint64_t tsp)
-{
-    return static_cast<Span*>(this)->logImp(key, val, tsp);
-}
-
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
-int
-GenericSpan<IMPL, CONTEXT, ADAPTER>::log(const StringRef& key,
+GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key,
                                          const StringRef& val,
                                          const uint64_t   tsp)
 {
-    return static_cast<Span*>(this)->logImp(key, val, tsp);
+    return static_cast<SPAN*>(this)->logImp(key, val, tsp);
 }
 
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
 int
-GenericSpan<IMPL, CONTEXT, ADAPTER>::log(const StringRef& key,
+GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key,
+                                         const bool     val,
+                                         const uint64_t tsp)
+{
+    return static_cast<SPAN*>(this)->logImp(key, val, tsp);
+}
+
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key,
+                                         const float    val,
+                                         const uint64_t tsp)
+{
+    return static_cast<SPAN*>(this)->logImp(key, val, tsp);
+}
+
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key,
+                                         const double   val,
+                                         const uint64_t tsp)
+{
+    return static_cast<SPAN*>(this)->logImp(key, val, tsp);
+}
+
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key,
+                                         const long double val,
+                                         const uint64_t    tsp)
+{
+    return static_cast<SPAN*>(this)->logImp(key, val, tsp);
+}
+
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key,
+                                         const char     val,
+                                         const uint64_t tsp)
+{
+    return static_cast<SPAN*>(this)->logImp(key, val, tsp);
+}
+
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key,
+                                         const signed char val,
+                                         const uint64_t    tsp)
+{
+    return static_cast<SPAN*>(this)->logImp(key, val, tsp);
+}
+
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key,
+                                         const unsigned char val,
+                                         const uint64_t      tsp)
+{
+    return static_cast<SPAN*>(this)->logImp(key, val, tsp);
+}
+
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key,
+                                         const wchar_t  val,
+                                         const uint64_t tsp)
+{
+    return static_cast<SPAN*>(this)->logImp(key, val, tsp);
+}
+
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key,
                                          const int16_t  val,
                                          const uint64_t tsp)
 {
-    return static_cast<Span*>(this)->logImp(key, val, tsp);
+    return static_cast<SPAN*>(this)->logImp(key, val, tsp);
 }
 
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
 int
-GenericSpan<IMPL, CONTEXT, ADAPTER>::log(const StringRef& key,
+GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key,
                                          const int32_t  val,
                                          const uint64_t tsp)
 {
-    return static_cast<Span*>(this)->logImp(key, val, tsp);
+    return static_cast<SPAN*>(this)->logImp(key, val, tsp);
 }
 
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
 int
-GenericSpan<IMPL, CONTEXT, ADAPTER>::log(const StringRef& key,
+GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key,
                                          const int64_t  val,
                                          const uint64_t tsp)
 {
-    return static_cast<Span*>(this)->logImp(key, val, tsp);
+    return static_cast<SPAN*>(this)->logImp(key, val, tsp);
 }
 
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
 int
-GenericSpan<IMPL, CONTEXT, ADAPTER>::log(const StringRef& key,
+GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key,
                                          const uint16_t val,
                                          const uint64_t tsp)
 {
-    return static_cast<Span*>(this)->logImp(key, val, tsp);
+    return static_cast<SPAN*>(this)->logImp(key, val, tsp);
 }
 
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
 int
-GenericSpan<IMPL, CONTEXT, ADAPTER>::log(const StringRef& key,
+GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key,
                                          const uint32_t val,
                                          const uint64_t tsp)
 {
-    return static_cast<Span*>(this)->logImp(key, val, tsp);
+    return static_cast<SPAN*>(this)->logImp(key, val, tsp);
 }
 
-template <typename IMPL, typename CONTEXT, typename ADAPTER>
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
 int
-GenericSpan<IMPL, CONTEXT, ADAPTER>::log(const StringRef& key,
+GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key,
                                          const uint64_t val,
                                          const uint64_t tsp)
 {
-    return static_cast<Span*>(this)->logImp(key, val, tsp);
+    return static_cast<SPAN*>(this)->logImp(key, val, tsp);
 }
 
 }  // end namespace opentracing

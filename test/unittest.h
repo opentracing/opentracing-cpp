@@ -9,6 +9,7 @@
 #endif
 
 #include <cstring>
+#include <cwchar>
 
 namespace opentracing{};
 

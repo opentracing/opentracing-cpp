@@ -24,7 +24,7 @@ TEST(GenericSpanContext, Baggage)
 
     TestContext::const_iterator it = t.begin();
 
-    ASSERT_STREQ("hello", it->name().data());
+    ASSERT_STREQ("hello", it->key().data());
     ASSERT_STREQ("world", it->value().data());
 
     ++it;

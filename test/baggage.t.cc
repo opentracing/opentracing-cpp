@@ -14,7 +14,7 @@ TEST(BaggageRef, Constructor)
 
     BaggageRef ref(n, v);
 
-    ASSERT_EQ(n, ref.name().data());
+    ASSERT_EQ(n, ref.key().data());
     ASSERT_EQ(v, ref.value().data());
 }
 
@@ -26,7 +26,7 @@ TEST(BaggageRef, CopyConstructor)
     BaggageRef ref(n, v);
     BaggageRef cpy(ref);
 
-    ASSERT_EQ(n, cpy.name().data());
+    ASSERT_EQ(n, cpy.key().data());
     ASSERT_EQ(v, cpy.value().data());
 }
 
@@ -43,7 +43,7 @@ TEST(BaggageRef, Assignment)
 
     ref = ref2;
 
-    ASSERT_EQ(n2, ref.name().data());
+    ASSERT_EQ(n2, ref.key().data());
     ASSERT_EQ(v2, ref.value().data());
 }
 
@@ -73,7 +73,7 @@ TEST(BaggageIterator, MapBaggageAdapter)
     ASSERT_FALSE(end == it);
     BaggageRef ref = *it;
 
-    ASSERT_STREQ("animal", ref.name());
+    ASSERT_STREQ("animal", ref.key());
     ASSERT_STREQ("dog", ref.value());
 
     BaggageIterator<MapBaggage> prev = it++;
@@ -82,12 +82,12 @@ TEST(BaggageIterator, MapBaggageAdapter)
 
     ref = *prev;
 
-    ASSERT_STREQ("animal", ref.name());
+    ASSERT_STREQ("animal", ref.key());
     ASSERT_STREQ("dog", ref.value());
 
     ref = *it;
 
-    ASSERT_STREQ("fruit", ref.name());
+    ASSERT_STREQ("fruit", ref.key());
     ASSERT_STREQ("apple", ref.value());
 
     ++it;
@@ -95,7 +95,7 @@ TEST(BaggageIterator, MapBaggageAdapter)
 
     ref = *it;
 
-    ASSERT_STREQ("veggie", ref.name());
+    ASSERT_STREQ("veggie", ref.key());
     ASSERT_STREQ("carrot", ref.value());
 
     ++it;
@@ -128,7 +128,7 @@ TEST(BaggageIterator, ForLoopSyntax)
          ++it, ++index)
     {
 	// Test the -> syntax works
-        ASSERT_STREQ(expectedKeys[index], it->name());
+        ASSERT_STREQ(expectedKeys[index], it->key());
         ASSERT_STREQ(expectedVals[index], it->value());
     }
 }
@@ -174,7 +174,7 @@ TEST(BaggageIterator, ListBaggageAdapter)
     ASSERT_FALSE(end == it);
     BaggageRef ref = *it;
 
-    ASSERT_STREQ("animal", ref.name());
+    ASSERT_STREQ("animal", ref.key());
     ASSERT_STREQ("dog", it->value());
 
     BaggageIterator<ListBaggageAdapter> prev = it++;
@@ -183,12 +183,12 @@ TEST(BaggageIterator, ListBaggageAdapter)
 
     ref = *prev;
 
-    ASSERT_STREQ("animal", ref.name());
+    ASSERT_STREQ("animal", ref.key());
     ASSERT_STREQ("dog", ref.value());
 
     ref = *it;
 
-    ASSERT_STREQ("fruit", ref.name());
+    ASSERT_STREQ("fruit", ref.key());
     ASSERT_STREQ("apple", ref.value());
 
     ++it;
@@ -196,7 +196,7 @@ TEST(BaggageIterator, ListBaggageAdapter)
 
     ref = *it;
 
-    ASSERT_STREQ("veggie", ref.name());
+    ASSERT_STREQ("veggie", ref.key());
     ASSERT_STREQ("carrot", ref.value());
 
     ++it;

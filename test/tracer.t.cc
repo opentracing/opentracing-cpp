@@ -170,7 +170,7 @@ TEST(Tracer, ExtractText)
 
     for(Tracer::SpanContext::const_iterator it = g.sp->begin(); it != g.sp->end(); ++it)
     {
-        ASSERT_STREQ(names[index], it->name());
+        ASSERT_STREQ(names[index], it->key());
         ASSERT_STREQ(values[index], it->value());
         ++index;
     }
