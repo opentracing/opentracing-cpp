@@ -32,6 +32,12 @@ class TestSpanImpl : public GenericSpan<TestSpanImpl,
     }
 
     int
+    tagImp(const StringRef&, const StringRef&)
+    {
+        return 0;
+    }
+
+    int
     tagImp(const StringRef&, const bool)
     {
         return 0;
@@ -42,19 +48,36 @@ class TestSpanImpl : public GenericSpan<TestSpanImpl,
     {
         return 0;
     }
-
     int
     tagImp(const StringRef&, const double)
     {
         return 0;
     }
-
     int
-    tagImp(const StringRef&, const StringRef&)
+    tagImp(const StringRef&, const long double)
     {
         return 0;
     }
-
+    int
+    tagImp(const StringRef&, const char)
+    {
+        return 0;
+    }
+    int
+    tagImp(const StringRef&, const signed char)
+    {
+        return 0;
+    }
+    int
+    tagImp(const StringRef&, const unsigned char)
+    {
+        return 0;
+    }
+    int
+    tagImp(const StringRef&, const wchar_t)
+    {
+        return 0;
+    }
     int
     tagImp(const StringRef&, const int16_t)
     {
@@ -75,33 +98,13 @@ class TestSpanImpl : public GenericSpan<TestSpanImpl,
     {
         return 0;
     }
-
     int
     tagImp(const StringRef&, const uint32_t)
     {
         return 0;
     }
-
     int
     tagImp(const StringRef&, const uint64_t)
-    {
-        return 0;
-    }
-
-    int
-    logImp(const StringRef&, const bool)
-    {
-        return 0;
-    }
-
-    int
-    logImp(const StringRef&, const float)
-    {
-        return 0;
-    }
-
-    int
-    logImp(const StringRef&, const double)
     {
         return 0;
     }
@@ -111,7 +114,46 @@ class TestSpanImpl : public GenericSpan<TestSpanImpl,
     {
         return 0;
     }
-
+    int
+    logImp(const StringRef&, const bool)
+    {
+        return 0;
+    }
+    int
+    logImp(const StringRef&, const float)
+    {
+        return 0;
+    }
+    int
+    logImp(const StringRef&, const double)
+    {
+        return 0;
+    }
+    int
+    logImp(const StringRef&, const long double)
+    {
+        return 0;
+    }
+    int
+    logImp(const StringRef&, const char)
+    {
+        return 0;
+    }
+    int
+    logImp(const StringRef&, const signed char)
+    {
+        return 0;
+    }
+    int
+    logImp(const StringRef&, const unsigned char)
+    {
+        return 0;
+    }
+    int
+    logImp(const StringRef&, const wchar_t)
+    {
+        return 0;
+    }
     int
     logImp(const StringRef&, const int16_t)
     {
@@ -132,43 +174,61 @@ class TestSpanImpl : public GenericSpan<TestSpanImpl,
     {
         return 0;
     }
-
     int
     logImp(const StringRef&, const uint32_t)
     {
         return 0;
     }
-
     int
     logImp(const StringRef&, const uint64_t)
     {
         return 0;
     }
-
-    int
-    logImp(const StringRef&, const bool, const uint64_t)
-    {
-        return 0;
-    }
-
-    int
-    logImp(const StringRef&, const float, const uint64_t)
-    {
-        return 0;
-    }
-
-    int
-    logImp(const StringRef&, const double, const uint64_t)
-    {
-        return 0;
-    }
-
     int
     logImp(const StringRef&, const StringRef&, const uint64_t)
     {
         return 0;
     }
-
+    int
+    logImp(const StringRef&, const bool, const uint64_t)
+    {
+        return 0;
+    }
+    int
+    logImp(const StringRef&, const float, const uint64_t)
+    {
+        return 0;
+    }
+    int
+    logImp(const StringRef&, const double, const uint64_t)
+    {
+        return 0;
+    }
+    int
+    logImp(const StringRef&, const long double, const uint64_t)
+    {
+        return 0;
+    }
+    int
+    logImp(const StringRef&, const char, const uint64_t)
+    {
+        return 0;
+    }
+    int
+    logImp(const StringRef&, const signed char, const uint64_t)
+    {
+        return 0;
+    }
+    int
+    logImp(const StringRef&, const unsigned char, const uint64_t)
+    {
+        return 0;
+    }
+    int
+    logImp(const StringRef&, const wchar_t, const uint64_t)
+    {
+        return 0;
+    }
     int
     logImp(const StringRef&, const int16_t, const uint64_t)
     {
@@ -189,13 +249,11 @@ class TestSpanImpl : public GenericSpan<TestSpanImpl,
     {
         return 0;
     }
-
     int
     logImp(const StringRef&, const uint32_t, const uint64_t)
     {
         return 0;
     }
-
     int
     logImp(const StringRef&, const uint64_t, const uint64_t)
     {

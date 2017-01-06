@@ -35,10 +35,15 @@ template<typename T>
 class SpanTypeTests : public ::testing::Test {
 };
 
-typedef ::testing::Types<bool,
+typedef ::testing::Types<StringRef,
+                         bool,
                          float,
                          double,
-                         StringRef,
+                         long double,
+                         char,
+                         signed char,
+                         unsigned char,
+                         wchar_t,
                          int16_t,
                          int32_t,
                          int64_t,

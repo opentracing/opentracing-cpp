@@ -39,7 +39,7 @@ namespace opentracing {
 // ================
 // class BaggageImp
 // ================
-// This class copies to the key:value pairs that make up 'baggage'. Once they
+// This class copies to the key:value pairs stored in SpanContexts. Once the
 // value is returned, clients are free to move it around as they see fit.
 // Baggage is the default value returned by iterators when they are
 // dereferenced.
@@ -81,14 +81,15 @@ typedef BaggageImp<wchar_t> BaggageWide;
 // ===================
 // class BaggageRefImp
 // ===================
-// This class wraps references to the key:value pairs that make up 'baggage'.
+// This class wraps references to the key:value pairs stored in SpanContexts.
 // The references themselves refer to data managed by SpanContext
-// implementations.
+// implementations, but make them available in a read-only fashion to avoid
+// unnecessary copies.
 //
 // Since the implementations of SpanContexts is deferred, it is impossible to
 // make strong guarantees on the lifetime of the references. At a minimum, the
-// references should be valid until the iterator is destroyed, or until
-// 'setBaggage' is called again on a SpanContext.
+// references should be valid until the iterator is destroyed, the SpanContext
+// is destoryed, or until 'setBaggage' is called on the SpanContext.
 
 template <typename CHAR>
 class BaggageRefImp {
@@ -107,7 +108,7 @@ class BaggageRefImp {
     // Return the non-modifiable 'value' associated with this baggage.
 
     const BaggageRefImp* operator->() const;
-    // Syntactic sugar to support dereferencing BaggageIterator's with
+    // Syntactic sugar to support dereferencing BaggageIterators with
     // the '->' operator: this method only returns 'this'.
 
   private:
@@ -195,19 +196,24 @@ class BaggageIterator {
     // Construct a BaggageIterator object which will be used to traverse the
     // sequence pointed to by the input iterator 'iter'.
 
-    Baggage operator*() const;
-    Baggage operator->() const;
-    // Returns a Baggage to return the key:value pair pointed to by this
-    // iterator.
+    BaggageRef operator*() const;
+    BaggageRef operator->() const;
+    // Returns a BaggageRef to return references to the key:value pair pointed
+    // to by this iterator. Undefined behavior if the iterator is equal to
+    // 'end()'.
+
+    Baggage narrow() const;
+    // Returns a copy of the key:value pairs pointed at by this iterator.
+    // Undefined behavior if the iterator is equal to 'end()'.
 
     BaggageWide wide() const;
-    // Returns a BaggageWide object, containing wide versions of the key:value
-    // pairs pointed to by this iterator.
+    // Returns a wide copies of the key:value pairs pointed at by this iterator.
+    // Undefined behavior if the iterator is equal to 'end()'.
 
     BaggageRef ref() const;
     // Returns a BaggageRef object, containing references to the underlying
     // storage of the key:value pairs. References are invalided if the
-    // associated SpanContext is destoryed or modified.
+    // associated SpanContext is destroyed or modified.
 
     BaggageIterator operator++(int);
     // Return a copy of this iterator, then post-increment this iterator to
@@ -215,7 +221,7 @@ class BaggageIterator {
 
     BaggageIterator& operator++();
     // Increment this iterator, pointing to the next key:value pair in the
-    // sequence.
+    // sequence, then return a reference to this iterator.
 
     bool operator==(const BaggageIterator& other) const;
     // Returns true if this iterator points to the same key:value pair as
@@ -227,7 +233,7 @@ class BaggageIterator {
 
   private:
     const_iterator d_iterator;  // Traverses implementation storage
-    ADAPTER        d_handler;   // Converts 'd_iterator' to BaggageRef
+    ADAPTER        d_handler;   // Converts d_iterator to Baggage wrappers
 };
 
 // ----------------
@@ -339,13 +345,19 @@ BaggageIterator<ADAPTER>::BaggageIterator(const const_iterator& iter)
 }
 
 template <typename ADAPTER>
-Baggage BaggageIterator<ADAPTER>::operator*() const
+BaggageRef BaggageIterator<ADAPTER>::operator*() const
 {
-    return d_handler.narrow(d_iterator);
+    return d_handler.ref(d_iterator);
 }
 
 template <typename ADAPTER>
-Baggage BaggageIterator<ADAPTER>::operator->() const
+BaggageRef BaggageIterator<ADAPTER>::operator->() const
+{
+    return d_handler.ref(d_iterator);
+}
+
+template <typename ADAPTER>
+Baggage BaggageIterator<ADAPTER>::narrow() const
 {
     return d_handler.narrow(d_iterator);
 }

@@ -4,13 +4,23 @@
 // ======
 // span.h
 // ======
+//
 // class GenericSpan - CRTP interface for Spans
 //
 // ----
 // Span
 // ----
-// Every Trace is made up of one or more Spans. Spans are used to:
-//   * TODO
+// Every Trace is made up of one or more Spans. Spans are used encapuslate:
+//   * An operation name
+//   * A start timestamp
+//   * A finish timestamp
+//   * A set of zero or more key:value SpanTags
+//   * A set of zero or more timestamped key:value SpanLogs
+//   * A SpanContext (see spancontext.h)
+//   * References to zero or more causally-related Spans
+//
+// The installed Tracer acts as a factory for Spans, keeping clients agnostic
+// of the implementation.
 //
 // See the specification for more details:
 // https://github.com/opentracing/specification/blob/master/specification.md#span
@@ -85,16 +95,14 @@ namespace opentracing {
 //      int finishImp();
 //      int finishImp(const uint64_t);
 //
-//      int tagImp(const StringRef& key, const Fundamental val);
-//      int tagImp(const StringRef& key, const StringRef& val);
+//      int tagImp(const StringRef&, const Fundamental);
+//      int tagImp(const StringRef&, const StringRef&);
 //
-//      int logImp(const StringRef& key, const Fundamental val);
-//      int logImp(const StringRef& key, const StringRef& val);
+//      int logImp(const StringRef&, const Fundamental);
+//      int logImp(const StringRef&, const StringRef&);
 //
-//      int logImp(const StringRef& key, const Fundamental val, const uint64_t
-//      tsp);
-//      int logImp(const StringRef& key, const StringRef& val, const uint64_t
-//      tsp);
+//      int logImp(const StringRef&, const Fundamental, const uint64_t);
+//      int logImp(const StringRef&, const StringRef&, const uint64_t);
 // };
 //
 // For brevities sake, the above example collapses the overloads on fundamental
@@ -102,10 +110,10 @@ namespace opentracing {
 // 'Fundamental' type. For actual implementations, overloads must be supplied
 // for each of the following fundamental types.
 //
-// http://en.cppreference.com/w/cpp/language/types:
 //      * float        * int16_t  * uint16_t  * char          * wchar_t
 //      * double       * int32_t  * uint32_t  * signed char   * bool
 //      * long double  * int64_t  * uint64_t  * unsigned char
+//      (http://en.cppreference.com/w/cpp/language/types)
 //
 // The overloads are used instead of a single template to:
 //      * Avoid passing references larger than the types they refer to (64-bit)

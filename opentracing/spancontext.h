@@ -4,6 +4,7 @@
 // =============
 // spancontext.h
 // =============
+//
 // class GenericSpanContext - CRTP interface for SpanContexts
 //
 // -----------
