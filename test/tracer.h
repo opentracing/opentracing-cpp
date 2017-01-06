@@ -44,8 +44,9 @@ class TestTracerImpl : public GenericTracer<TestTracerImpl,
     {
         for (ITER it = pbegin; it != pend; ++it)
         {
-            const TestContextImpl * ctx = static_cast<TestContextImpl*>(&(*it));
-            // Output is ignored, but I want to flex the compiler here. Let's force
+            const TestContextImpl* ctx = static_cast<TestContextImpl*>(&(*it));
+            // Output is ignored, but I want to flex the compiler here. Let's
+            // force
             // a dereference to make sure the types are okay
 
             StringRef ref;
@@ -56,11 +57,14 @@ class TestTracerImpl : public GenericTracer<TestTracerImpl,
 
     template <typename ITER>
     Span*
-    startImp(const StringRef&, const ITER pbegin, const ITER pend, const uint64_t)
+    startImp(const StringRef&,
+             const ITER pbegin,
+             const ITER pend,
+             const uint64_t)
     {
         for (ITER it = pbegin; it != pend; ++it)
         {
-            const TestContextImpl * ctx = static_cast<TestContextImpl*>(&(*it));
+            const TestContextImpl* ctx = static_cast<TestContextImpl*>(&(*it));
 
             StringRef ref;
             ctx->getBaggageImp(&ref, "hello");
@@ -68,13 +72,25 @@ class TestTracerImpl : public GenericTracer<TestTracerImpl,
 
         return new TestSpanImpl();
     }
+    void
+    cleanupImp(Span* const sp)
+    {
+        delete static_cast<TestSpanImpl*>(sp);
+    }
+
+    void
+    cleanupImp(SpanContext* const spc)
+    {
+        delete static_cast<TestContextImpl*>(spc);
+    }
 
     template <typename CIMPL>
     int
     injectImp(GenericTextWriter<CIMPL>* const carrier,
               const TestContext&              context) const
     {
-        const TestContextImpl& imp = static_cast<const TestContextImpl&>(context);
+        const TestContextImpl& imp =
+            static_cast<const TestContextImpl&>(context);
 
         std::vector<TextMapPair> pairs;
         pairs.reserve(imp.baggageMap().size());
@@ -128,7 +144,7 @@ class TestTracerImpl : public GenericTracer<TestTracerImpl,
     extractImp(const GenericBinaryReader<CIMPL>& carrier)
     {
         size_t written = 0;
-        int output = 0;
+        int    output  = 0;
 
         if (int rc = carrier.extract(&output, &written, sizeof(output)))
         {

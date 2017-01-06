@@ -4,7 +4,6 @@
 // ======
 // span.h
 // ======
-//
 // class GenericSpan - CRTP interface for Spans
 //
 // ----

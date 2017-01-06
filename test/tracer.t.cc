@@ -3,17 +3,8 @@
 
 #include "carriers.h"
 
-struct SpanGuard {
-    SpanGuard(Tracer::Span* s) : sp(s) {}
-    ~SpanGuard() { delete sp; }
-    Tracer::Span * sp;
-};
-
-struct SpanContextGuard {
-    SpanContextGuard(Tracer::SpanContext* s) : sp(s) {}
-    ~SpanContextGuard() { delete sp; }
-    Tracer::SpanContext * sp;
-};
+typedef GenericSpanGuard<Tracer> SpanGuard;
+typedef GenericSpanContextGuard<Tracer> SpanContextGuard;
 
 TEST(Tracer, SingletonTests)
 {
@@ -30,7 +21,7 @@ TEST(Tracer, StartWithOp)
     TestTracerImpl imp;
     Tracer& t = imp;
 
-    SpanGuard guard(t.start("hello"));
+    SpanGuard guard(&t, t.start("hello"));
     EXPECT_TRUE(guard.sp);
 
     int rc = 0;
@@ -56,7 +47,7 @@ TEST(Tracer, StartWithOpAndTsp)
     TestTracerImpl imp;
     Tracer& t = imp;
 
-    SpanGuard guard(t.start("hello", 125125));
+    SpanGuard guard(&t, t.start("hello", 125125));
     EXPECT_TRUE(guard.sp);
 }
 
@@ -74,7 +65,7 @@ TEST(Tracer, StartWithOpAndParent)
     TestTracerImpl imp;
     Tracer& t = imp;
 
-    SpanGuard guard(t.start("hello", context));
+    SpanGuard guard(&t, t.start("hello", context));
     EXPECT_TRUE(guard.sp);
 }
 
@@ -92,7 +83,7 @@ TEST(Tracer, StartWithOpAndParentAndTsp)
     TestTracerImpl imp;
     Tracer& t = imp;
 
-    SpanGuard guard(t.start("hello", context, 125125));
+    SpanGuard guard(&t, t.start("hello", context, 125125));
     EXPECT_TRUE(guard.sp);
 }
 
@@ -107,7 +98,7 @@ TEST(Tracer, StartWithOpAndMultipleParents)
     TestTracerImpl imp;
     Tracer& t = imp;
 
-    SpanGuard guard(t.start("hello", contexts.begin(), contexts.end()));
+    SpanGuard guard(&t, t.start("hello", contexts.begin(), contexts.end()));
     EXPECT_TRUE(guard.sp);
 }
 
@@ -122,7 +113,7 @@ TEST(Tracer, StartWithOpAndMultipleParentsAndTsp)
     TestTracerImpl imp;
     Tracer& t = imp;
 
-    SpanGuard guard(t.start("hello", contexts.begin(), contexts.end(), 125125));
+    SpanGuard guard(&t, t.start("hello", contexts.begin(), contexts.end(), 125125));
     EXPECT_TRUE(guard.sp);
 }
 
@@ -133,7 +124,7 @@ TEST(Tracer, InjectText)
 
     Tracer& t = imp;
 
-    SpanGuard g(t.start("op"));
+    SpanGuard g(&t, t.start("op"));
     ASSERT_TRUE(g.sp);
 
     g.sp->context().setBaggage("animal", "tiger");
@@ -160,7 +151,7 @@ TEST(Tracer, ExtractText)
 
     Tracer& t = imp;
 
-    SpanContextGuard g(t.extract(reader));
+    SpanContextGuard g(&t, t.extract(reader));
     ASSERT_TRUE(g.sp);
 
     size_t index = 0;
@@ -183,7 +174,7 @@ TEST(Tracer, InjectBinary)
 
     Tracer& t = imp;
 
-    SpanGuard g(t.start("op"));
+    SpanGuard g(&t, t.start("op"));
     ASSERT_TRUE(g.sp);
 
     int rc = t.inject(&writer, g.sp->context());
@@ -199,7 +190,7 @@ TEST(Tracer, ExtractBinary)
     TestTracerImpl imp;
 
     Tracer& t = imp;
-    SpanContextGuard g(t.extract(reader));
+    SpanContextGuard g(&t, t.extract(reader));
     ASSERT_TRUE(g.sp);
 }
 
@@ -209,7 +200,7 @@ TEST(Tracer, InjectExplicit)
     TestTracerImpl imp;
     Tracer& t = imp;
 
-    SpanGuard g(t.start("span"));
+    SpanGuard g(&t, t.start("span"));
     ASSERT_TRUE(g.sp);
 
     g.sp->context().setBaggage("animal", "tiger");
@@ -232,6 +223,6 @@ TEST(Tracer, ExtractExplicit)
     TestTracerImpl imp;
     Tracer& t = imp;
 
-    SpanContextGuard g(t.extract(reader));
+    SpanContextGuard g(&t, t.extract(reader));
     ASSERT_TRUE(g.sp);
 }

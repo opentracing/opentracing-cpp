@@ -23,7 +23,7 @@ LDIR =${GTEST_LIBS}
 
 LIBS=-L${GTEST_LIBS} -lgtest -lpthread
 
-_OBJ = tracer.t.o carriers.t.o span.t.o spancontext.t.o baggage.t.o stringref.t.o unittest.t.o
+_OBJ = noop.t.o tracer.t.o carriers.t.o span.t.o spancontext.t.o baggage.t.o stringref.t.o unittest.t.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 $(ODIR)/%.o: %.cc %.h ${OPENTRACING_SRC}
