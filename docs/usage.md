@@ -32,9 +32,6 @@ later.
 
 // Include the interface templates
 #include <opentracing/tracer.h>
-#include <opentracing/span.h>
-#include <opentracing/spancontext.h>
-#include <opentracing/spanoptions.h>
 
 // Include the chosen implementation
 #include <opentracing/noop.h>
