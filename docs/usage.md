@@ -111,7 +111,7 @@ Once the `Tracer` is installed, we can begin to instrument the application.
 Say we have a service that acts as a proxy to a number of other HTTP servers.
 We may have a `getAccount` handler that reaches out to a user account service.
 
-To tracer our application, we'll first need to start the span:
+To trace our application, we'll first need to start the span:
 
 ```
 // requesthandler.m.cpp
@@ -139,12 +139,11 @@ spans into and out of our RPC calls. Extending our example, when we make our req
 to the backend HTTP service, we'll need a way to inject the details of the context
 into our outgoing HTTP request.
 
-For this example, we'll define our HttpWriter inline with our request.
-In practice, you'll want the Writers/Readers you use to be consistent
+We'll define our HttpWriter inline with our request to do the `inject` part of this
+process first. In practice, you'll want the Writers/Readers you use to be consistent
 across your organization, so putting them into a library would be ideal.
 
 ```
-
 #include <opentracing/carriers.h>
 
 class HttpWriter : public opentracing::GenericBinaryWriter<HttpWriter>
@@ -237,4 +236,42 @@ int httpGetAccount(const HttpRequest& httpRequest)
     sendResponse(response);
     return 0;
 }
+```
+
+### Tags, Logs, and Baggage
+
+The [OpenTracing specification](https://github.com/opentracing/specification/blob/master/specification.md) outlines how
+users should be able tag their spans, log structured data for a span, or attach arbitrary baggage that propagates
+through the entire system.
+
+The `opentracing-cpp` interface allows you to tag your spans with `key:value` pairs:
+
+```
+acme::SpanGuard span(acme::Tracer::instance()->start("get_bookmarks"));
+span->tag("account", account_id);
+span->tag("site", site);
+```
+
+The `key` must be a string, but the value can be any type that can be externalized via
+`std::ostream& operator<<(std::ostream&, const Type& t)`.
+
+The `log` functions work similarly, but are implicitly associated with the current wall-time as well. Users can
+control the time-stamp behavior if they wish by providing it explicitly:
+
+```
+acme::SpanGuard span(acme::Tracer::instance()->start("get_bookmarks"));
+span->log("db_access", account_id); // Use current wall-time
+span->log("redis_access", site, 1484003943000); // Accessed redis on Jan 9, 2017 at 23:19:2 GMT
+```
+
+Baggage is special. It is a set of text-only, key:value pairs that propagates with traces as they make their way
+through a system. It can be prohibitively expensive if abused. It is also not a replacement for traditional message
+schemas (e.g., protobuf). Care must be taken when adding any baggage.
+
+With all that being said, it can be added directly to any Span you create through the underlying SpanContext.
+
+```
+acme::SpanGuard span(acme::Tracer::instance()->start("get_bookmarks"));
+span->context().setBaggage("database", std::to_string(database_id));
+span->context().setBaggage("user", user);
 ```
