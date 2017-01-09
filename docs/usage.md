@@ -9,6 +9,7 @@ The `opentracing-cpp` interface uses the [Curiously Repeating Template Pattern](
 compile time, polymorphic interfaces to `OpenTracing` implementations.
 
 In order to trace their systems, clients must:
+
     * Select their `opentracing-cpp` implementation
     * Install the selected `Tracer` in their applications in main
     * Use the API's Tracer interface to instrument their applications requests
