@@ -18,10 +18,9 @@ In order to trace their systems, clients must:
 ### Select the implementation
 
 `opentracing-cpp` only defines the interfaces. In order to make any use of the
-API, you will need to install a concrete `Tracer` implementation.
-
-To do so, it is best practice to first create an reusable header you can share
-throughout your organization that declares the implementation you will be using.
+API, you will need to install a concrete `Tracer` implementation. To do so, it is
+best practice to first create an reusable header you can share throughout your
+organization that declares the implementation you will be using.
 
 This header should provide a few typedefs that make it easy to swap implementations
 later.
@@ -82,6 +81,7 @@ will assume that `Tracer` was the chosen name for the Tracer type.
 
 If clients ever require that they swap `OpenTracing` implementations, they
 will need to update only this header file and rebuild applications.
+(Easier said then done for larger organizations...)
 
 ### Installing the Tracer
 
@@ -108,7 +108,6 @@ int main(int argc, const char * argv[])
 ### Creating Spans
 
 Once the `Tracer` is installed, we can begin to instrument the application.
-
 Say we have a service that acts as a proxy to a number of other HTTP servers.
 We may have a `getAccount` handler that reaches out to a user account service.
 
@@ -245,6 +244,7 @@ The [OpenTracing specification](https://github.com/opentracing/specification/blo
 users should be able tag their spans, log structured data for a span, or attach arbitrary baggage that propagates
 through the entire system.
 
+##### Tags
 The `opentracing-cpp` interface allows you to tag your spans with `key:value` pairs:
 
 ```
@@ -254,8 +254,11 @@ span->tag("site", site);
 ```
 
 The `key` must be a string, but the value can be any type that can be externalized via
+
 `std::ostream& operator<<(std::ostream&, const Type& t)`.
 
+
+##### Logs
 The `log` functions work similarly, but are implicitly associated with the current wall-time as well. Users can
 control the time-stamp behavior if they wish by providing it explicitly:
 
@@ -265,6 +268,7 @@ span->log("db_access", account_id); // Use current wall-time
 span->log("redis_access", site, 1484003943000); // Accessed redis on Jan 9, 2017 at 23:19:2 GMT
 ```
 
+##### Baggage
 Baggage is special. It is a set of text-only, key:value pairs that propagates with traces as they make their way
 through a system. It can be prohibitively expensive if abused. It is also not a replacement for traditional message
 schemas (e.g., protobuf). Care must be taken when adding any baggage.
