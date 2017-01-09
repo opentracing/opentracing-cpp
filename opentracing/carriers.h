@@ -1,20 +1,62 @@
 #ifndef INCLUDED_OPENTRACING_CARRIERS_H
 #define INCLUDED_OPENTRACING_CARRIERS_H
 
-#include <opentracing/config.h>
+// ==========
+// carriers.h
+// ==========
+// class TextMapPair         - Struct of std::string name:value pairs
+//
+// class GenericTextWriter   - CRTP interface for text map writers (inject)
+// class GenericBinaryWriter - CRTP interface for binary writers (inject)
+// class GenericWriter       - CRTP interface for explicit writers (inject)
+//
+// class GenericTextReader   - CRTP interface for text map readers (extract)
+// class GenericBinaryReader - CRTP interface for binary readers (extract)
+// class GenericReader       - CRTP interface for explicit readers (extract)
+//
+// ========
+// Carriers
+// ========
+// GenericTextWriter, GenericBinaryWriter, and GenericWriter are static,
+// polymorphic interfaces used by the Tracer's 'inject()' interface. They
+// are used to embed SpanContexts into a carrier object. Those carrier
+// objects are passed between process boundaries by applications as a part
+// of their existing message passing infrastructure.
+//
+// When an RPC call is received, the SpanContext can be 'extract()'ed by
+// the Tracer using the GenericTextReader, GenericBinaryReader, or GenericReader
+// interfaces. If the readers are succesful, an immutable SpanContext is
+// returned to applications. That SpanContext can then be used to create
+// new spans, accessing its baggage or adding it as a reference to in other
+// Spans.
+//
+// All six interfaces are static, polymorphic interfaces for interacting
+// with the installed Tracer. They use the Curiously Repeating Template
+// Pattern (CRTP) to avoid v-table hits we would encounter with tradtional
+// polymorphism.
+//
+// See this CRTP article for more details on the design pattern:
+// https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern
 
+#include <opentracing/stringref.h>
+#include <string>
+#include <vector>
+
+#include <opentracing/config.h>
 #if HAVE_STDINT_H
 #include <stdint.h>
 #endif
 
-#include <opentracing/stringref.h>
-
-#include <string>
-#include <vector>
-
 namespace opentracing {
 
-struct TextMapPair {
+// =================
+// class TextMapPair
+// =================
+// TextMapPair is a struct used to encapsulate name:value pairs going
+// into (inject) and out of (extract) text map carriers.
+
+class TextMapPair {
+  public:
     TextMapPair();
     TextMapPair(const StringRef& name, const StringRef& value);
 
@@ -22,12 +64,27 @@ struct TextMapPair {
     std::string m_value;
 };
 
-// Text map carriers
-template <typename IMPL>
+// =======================
+// class GenericTextWriter
+// =======================
+// GenericTextWriters are used to 'inject' a list of TextMapPair strings
+// into an arbitrary carrier message.
+//
+// It is templated on the implementation only, which must support:
+//
+// class TextWriter : GenericTextWriter<TextWriter>{
+//   public:
+//      int injectImp(const std::vector<TextMapPair>&);
+// };
+//
+// Implementations are responsible for translating the text map passed
+// to them into a carrier object. When constructed, Writers should hold
+// onto any references they may need to populate the outgoing RPC carrier
+// object.
+
+template <typename CARRIER>
 class GenericTextWriter {
   public:
-    virtual ~GenericTextWriter();
-
     int inject(const std::vector<TextMapPair>& textmap);
     // Inject the supplied 'Textmap' into this carrier.
 
@@ -37,25 +94,26 @@ class GenericTextWriter {
     // Protected to avoid direct construction
 };
 
-template <typename IMPL>
-class GenericTextReader {
-  public:
-    virtual ~GenericTextReader();
+// =========================
+// class GenericBinaryWriter
+// =========================
+// GenericBinaryWriters are used to 'inject' a binary blob of data into an
+// arbitrary carrier message.
+//
+// It is templated on the implementation only, which must support:
+//
+// class BinaryWriter : GenericBinaryWriter<BinaryWriter>{
+//   public:
+//      int injectImp(const void * const, const size_t);
+// };
+//
+// Implementations are responsible for passing the blob along with a carrier
+// object. When constructed, Writers should hold onto any references they may
+// need to populate the outgoing RPC carrier object.
 
-    int extract(std::vector<TextMapPair>* const textmap) const;
-    // Extract the supplied 'Textmap' from this carrier.
-
-  protected:
-    GenericTextReader();
-    GenericTextReader(const GenericTextReader&);
-};
-
-// Binary carriers
-template <typename IMPL>
+template <typename CARRIER>
 class GenericBinaryWriter {
   public:
-    virtual ~GenericBinaryWriter();
-
     int inject(const void* const buf, const size_t len);
     // Inject the supplied 'buf' of 'len' bytes into this carrier.
 
@@ -64,11 +122,103 @@ class GenericBinaryWriter {
     GenericBinaryWriter(const GenericBinaryWriter&);
 };
 
-template <typename IMPL>
+// ===================
+// class GenericWriter
+// ===================
+// GenericWriters are used to 'inject' an explicit SpanContext into an
+// arbitrary carrier message.
+//
+// If clients want to rely on the details of a particular SpanContext
+// implementation (for API simplicity, performance reasons, etc.), they can
+// create a GenericWriter that is templated on the *specific* SpanContext
+// implementation that they are using. This removes flexibility, making
+// it harder to change opentracing-cpp implementations, however,
+// it is better to embed the dependency in the type system than rely
+// on workarounds such as run time dynamic_cast/reinterpret_cast checks.
+//
+// For this to work, implementations must support:
+//
+// class ExplicitWriter: GenericWriter<ExplicitWriter, SpanContextImpl>
+// {
+//    public:
+//      int inject(const SpanContextImpl&);
+// };
+//
+// The Tracer will be responsible for all downcasting, and the explicit
+// SpanContextImpl object will be passed directly to the Writer. It can
+// then use any of the public API's that the Tracer may be using, to
+// interact with the SpanContext directly.
+//
+// Implementations are responsible for emebeding the details of the
+// SpanContextImpl into a carrier object. When constructed  of the
+// SpanContextImpl along with a carrier object. When constructed, the outgoing
+// RPC carrier objects.
+
+template <typename CARRIER, typename CONTEXT>
+class GenericWriter {
+  public:
+    int inject(const CONTEXT& context);
+    // Inject the supplied 'context' directly into this carrier.
+
+  protected:
+    GenericWriter();
+    GenericWriter(const GenericWriter&);
+};
+
+// =======================
+// class GenericTextReader
+// =======================
+// GenericTextReaders are used to 'extract' a list of TextMapPair strings
+// out of an arbitrary carrier message.
+//
+// It is templated on the implementation only, which must support:
+//
+// class TextReader : GenericTextReader<TextReader>{
+//   public:
+//      int extractImp(std::vector<TextMapPair>*) const;
+// };
+//
+// Implementations are responsible for translating their carrier object
+// into a text map, loading results into the vector they're passed.
+// When constructed, they should hold onto any references they may need to
+// populate the text map pair. The Tracer then uses that list to populate
+// its SpanContexts appropriately.
+
+template <typename CARRIER>
+class GenericTextReader {
+  public:
+    int extract(std::vector<TextMapPair>* const textmap) const;
+    // Extract the supplied 'Textmap' from this carrier.
+
+  protected:
+    GenericTextReader();
+    GenericTextReader(const GenericTextReader&);
+};
+
+// =========================
+// class GenericBinaryReader
+// =========================
+// GenericBinaryReaders are used to 'extract' a blob out of an arbitrary carrier
+// message.
+//
+// It is templated on the implementation only, which must support:
+//
+// class BinaryReader : GenericBinaryReader<BinaryReader>{
+//   public:
+//      int extractImp(
+//          void *const buf, size_t *const written, const size_t len) const;
+// };
+//
+// Implementations are responsible for:
+//      * Making sure there is enough room in 'buf' for the blob
+//      * Setting the number of bytes actually 'written' to 'buf
+//
+// When constructed, they should hold onto any references they may need to
+// retrieve the blob when 'extractImp()' is invoked.
+
+template <typename CARRIER>
 class GenericBinaryReader {
   public:
-    virtual ~GenericBinaryReader();
-
     int extract(void* const buf, size_t* const written, const size_t len) const;
     // Extract up to 'len' bytes of the binary representation of a span context
     // into 'buf' then store the number of bytes 'written'.
@@ -78,25 +228,36 @@ class GenericBinaryReader {
     GenericBinaryReader(const GenericBinaryReader&);
 };
 
-// Explicit carriers
-template <typename IMPL, typename CONTEXT>
-class GenericWriter {
-  public:
-    virtual ~GenericWriter();
+// ===================
+// class GenericReader
+// ===================
+// GenericReaders are used to 'extract' an explicit SpanContext out of an
+// arbitrary carrier message.
+//
+// If clients want to rely on the details of a particular SpanContext
+// implementation (for API simplicity, performance reasons, etc.), they can
+// create a GenericReader that is templated on the *specific* SpanContext
+// implementation that they are using. This removes flexibility, making
+// it harder to change opentracing-cpp implementations, however,
+// it is better to embed the dependency in the type system than rely
+// on workarounds such as run time dynamic_cast/reinterpret_cast checks.
+//
+// For this to work, implementations must support:
+//
+// class ExplicitReader: GenericReader<ExplicitReader, SpanContextImpl>
+// {
+//    public:
+//      int extractImp(SpanContextImpl* const) const;
+// };
+//
+// The Tracer will be responsible for downcasting, and the explicit
+// SpanContextImpl address will be passed directly to the Reader. The
+// Reader can then use any of the public methods that the SpanContextImpl
+// exposes, which may be much more than the GenericSpanContext interface.
 
-    int inject(const CONTEXT& context);
-    // Inject the supplied 'context' directly into this carrier.
-
-  protected:
-    GenericWriter();
-    GenericWriter(const GenericWriter&);
-};
-
-template <typename IMPL, typename CONTEXT>
+template <typename CARRIER, typename CONTEXT>
 class GenericReader {
   public:
-    virtual ~GenericReader();
-
     int extract(CONTEXT* const context) const;
     // Extract the supplied 'context' directly from this carrier.
 
@@ -105,7 +266,9 @@ class GenericReader {
     GenericReader(const GenericReader&);
 };
 
-// Inline Definitions
+// -----------------
+// class TextMapPair
+// -----------------
 
 inline TextMapPair::TextMapPair() : m_name(), m_value()
 {
@@ -116,137 +279,134 @@ inline TextMapPair::TextMapPair(const StringRef& name, const StringRef& value)
 {
 }
 
-template <typename IMPL>
-int
-GenericTextWriter<IMPL>::inject(const std::vector<TextMapPair>& textmap)
+// -----------------------
+// class GenericTextWriter
+// -----------------------
+
+template <typename CARRIER>
+inline int
+GenericTextWriter<CARRIER>::inject(const std::vector<TextMapPair>& textmap)
 {
-    return static_cast<IMPL*>(this)->injectImp(textmap);
+    return static_cast<CARRIER*>(this)->injectImp(textmap);
 }
 
-template <typename IMPL>
-GenericTextWriter<IMPL>::~GenericTextWriter()
-{
-}
-
-template <typename IMPL>
-GenericTextWriter<IMPL>::GenericTextWriter()
-{
-}
-
-template <typename IMPL>
-GenericTextWriter<IMPL>::GenericTextWriter(const GenericTextWriter&)
+template <typename CARRIER>
+inline GenericTextWriter<CARRIER>::GenericTextWriter()
 {
 }
 
-template <typename IMPL>
-int
-GenericTextReader<IMPL>::extract(std::vector<TextMapPair>* const textmap) const
-{
-    return static_cast<const IMPL*>(this)->extractImp(textmap);
-}
-
-template <typename IMPL>
-GenericTextReader<IMPL>::~GenericTextReader()
+template <typename CARRIER>
+inline GenericTextWriter<CARRIER>::GenericTextWriter(const GenericTextWriter&)
 {
 }
 
-template <typename IMPL>
-GenericTextReader<IMPL>::GenericTextReader()
+// -------------------------
+// class GenericBinaryWriter
+// -------------------------
+
+template <typename CARRIER>
+inline int
+GenericBinaryWriter<CARRIER>::inject(const void* buf, const size_t len)
+{
+    return static_cast<CARRIER*>(this)->injectImp(buf, len);
+}
+
+template <typename CARRIER>
+inline GenericBinaryWriter<CARRIER>::GenericBinaryWriter()
 {
 }
 
-template <typename IMPL>
-GenericTextReader<IMPL>::GenericTextReader(const GenericTextReader&)
+template <typename CARRIER>
+inline GenericBinaryWriter<CARRIER>::GenericBinaryWriter(
+    const GenericBinaryWriter&)
 {
 }
 
-template <typename IMPL>
-int
-GenericBinaryWriter<IMPL>::inject(const void* buf, const size_t len)
+// -------------------
+// class GenericWriter
+// -------------------
+
+template <typename CARRIER, typename CONTEXT>
+inline int
+GenericWriter<CARRIER, CONTEXT>::inject(const CONTEXT& context)
 {
-    return static_cast<IMPL*>(this)->injectImp(buf, len);
+    return static_cast<CARRIER*>(this)->injectImp(context);
 }
 
-template <typename IMPL>
-GenericBinaryWriter<IMPL>::~GenericBinaryWriter()
-{
-}
-
-template <typename IMPL>
-GenericBinaryWriter<IMPL>::GenericBinaryWriter()
-{
-}
-
-template <typename IMPL>
-GenericBinaryWriter<IMPL>::GenericBinaryWriter(const GenericBinaryWriter&)
+template <typename CARRIER, typename CONTEXT>
+inline GenericWriter<CARRIER, CONTEXT>::GenericWriter()
 {
 }
 
-template <typename IMPL>
-int
-GenericBinaryReader<IMPL>::extract(void* const   buf,
-                                   size_t* const written,
-                                   const size_t  len) const
-{
-    return static_cast<const IMPL*>(this)->extractImp(buf, written, len);
-}
-
-template <typename IMPL>
-GenericBinaryReader<IMPL>::~GenericBinaryReader()
+template <typename CARRIER, typename CONTEXT>
+inline GenericWriter<CARRIER, CONTEXT>::GenericWriter(const GenericWriter&)
 {
 }
 
-template <typename IMPL>
-GenericBinaryReader<IMPL>::GenericBinaryReader()
+// -----------------------
+// class GenericTextReader
+// -----------------------
+
+template <typename CARRIER>
+inline int
+GenericTextReader<CARRIER>::extract(
+    std::vector<TextMapPair>* const textmap) const
+{
+    return static_cast<const CARRIER*>(this)->extractImp(textmap);
+}
+
+template <typename CARRIER>
+inline GenericTextReader<CARRIER>::GenericTextReader()
 {
 }
 
-template <typename IMPL>
-GenericBinaryReader<IMPL>::GenericBinaryReader(const GenericBinaryReader&)
+template <typename CARRIER>
+inline GenericTextReader<CARRIER>::GenericTextReader(const GenericTextReader&)
 {
 }
 
-template <typename IMPL, typename CONTEXT>
-int
-GenericWriter<IMPL, CONTEXT>::inject(const CONTEXT& context)
+// -------------------------
+// class GenericBinaryReader
+// -------------------------
+
+template <typename CARRIER>
+inline int
+GenericBinaryReader<CARRIER>::extract(void* const   buf,
+                                      size_t* const written,
+                                      const size_t  len) const
 {
-    return static_cast<IMPL*>(this)->injectImp(context);
+    return static_cast<const CARRIER*>(this)->extractImp(buf, written, len);
 }
 
-template <typename IMPL, typename CONTEXT>
-GenericWriter<IMPL, CONTEXT>::~GenericWriter()
-{
-}
-
-template <typename IMPL, typename CONTEXT>
-GenericWriter<IMPL, CONTEXT>::GenericWriter()
-{
-}
-
-template <typename IMPL, typename CONTEXT>
-GenericWriter<IMPL, CONTEXT>::GenericWriter(const GenericWriter&)
+template <typename CARRIER>
+inline GenericBinaryReader<CARRIER>::GenericBinaryReader()
 {
 }
 
-template <typename IMPL, typename CONTEXT>
-int
-GenericReader<IMPL, CONTEXT>::extract(CONTEXT* const context) const
-{
-    return static_cast<const IMPL*>(this)->extractImp(context);
-}
-
-template <typename IMPL, typename CONTEXT>
-GenericReader<IMPL, CONTEXT>::~GenericReader()
+template <typename CARRIER>
+inline GenericBinaryReader<CARRIER>::GenericBinaryReader(
+    const GenericBinaryReader&)
 {
 }
 
-template <typename IMPL, typename CONTEXT>
-GenericReader<IMPL, CONTEXT>::GenericReader()
+// -------------------
+// class GenericReader
+// -------------------
+
+template <typename CARRIER, typename CONTEXT>
+inline int
+GenericReader<CARRIER, CONTEXT>::extract(CONTEXT* const context) const
+{
+    return static_cast<const CARRIER*>(this)->extractImp(context);
+}
+
+template <typename CARRIER, typename CONTEXT>
+inline GenericReader<CARRIER, CONTEXT>::GenericReader()
 {
 }
 
-template <typename IMPL, typename CONTEXT>
-GenericReader<IMPL, CONTEXT>::GenericReader(const GenericReader&)
+template <typename CARRIER, typename CONTEXT>
+inline GenericReader<CARRIER, CONTEXT>::GenericReader(const GenericReader&)
 {
 }
 
