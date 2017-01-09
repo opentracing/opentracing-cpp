@@ -5,14 +5,14 @@ API. It assumes you have finished the required reading outlined [here](../README
 
 ### Outline
 
-The `opentracing-cpp` interface uses the [Curiously Repeating Template Pattern](https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern) (CRTP) to define a set of
-compile time, polymorphic interfaces to `OpenTracing` implementations.
+The `opentracing-cpp` interface uses the [Curiously Repeating Template Pattern](https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern)
+(CRTP) to define a set of compile time, polymorphic interfaces to `OpenTracing` implementations.
 
 In order to trace their systems, clients must:
 
-    * Select their `opentracing-cpp` implementation
-    * Install the selected `Tracer` in their applications in main
-    * Use the API's Tracer interface to instrument their applications requests
+ - Select their `opentracing-cpp` implementation
+ - Install the selected `Tracer` in their applications in main
+ - Use the API's Tracer interface to instrument their applications requests
 
 
 ### Select the implementation
@@ -63,18 +63,18 @@ namespace acme {
 #endif
 ```
 
-By creating the `Tracer` typedef, we can now rely on the the GenericTracer interface,
+By creating the `Tracer` typedef, we can now rely on the GenericTracer interface,
 but avoid knowing any of the explicit implementation details in client code.
 
 The `Tracer` exposes a number of public typedefs which make it easier to create our
 types:
 
-    * `Tracer::Span`             - Interface to Span objects
-    * `Tracer::SpanContext`      - Interface to SpanContext objects
-    * `Tracer::SpanOptions`      - Interface to SpanOptions objects
-    * `Tracer::SpanGuard`        - RAII Wrappers for Spans
-    * `Tracer::SpanOptionsGuard` - RAII Wrappers for SpanOptions
-    * `Tracer::SpanContextGuard` - RAII Wrappers for SpanContexts
+ - `Tracer::Span`             - Interface to Span objects
+ - `Tracer::SpanContext`      - Interface to SpanContext objects
+ - `Tracer::SpanOptions`      - Interface to SpanOptions objects
+ - `Tracer::SpanGuard`        - RAII Wrappers for Spans
+ - `Tracer::SpanOptionsGuard` - RAII Wrappers for SpanOptions
+ - `Tracer::SpanContextGuard` - RAII Wrappers for SpanContexts
 
 Our theoretical "ACME Inc." organization can use these type names to instrument their applications.
 The `Tracer` typedef is not standardized, but it is recommended. The rest of the documentation
