@@ -275,3 +275,30 @@ acme::SpanGuard span(acme::Tracer::instance()->start("get_bookmarks"));
 span->context().setBaggage("database", std::to_string(database_id));
 span->context().setBaggage("user", user);
 ```
+
+Baggage can also be read back through the original Span or SpanContexts extracted from carriers.
+
+```
+acme::SpanGuard span(acme::Tracer::instance()->start("get_bookmarks"));
+
+span->context().setBaggage("database", std::to_string(database_id));
+span->context().setBaggage("user", user);
+
+for(acme::SpanContext::BaggageIterator it = span->context().baggageBegin();
+                                       it != span->context().baggageEnd();
+                                     ++it)
+{
+    std::cout << "baggage item: " << it->key() << " val: " << it->value() << std::endl;
+}
+```
+
+If you have access to C++11 features, we can use the range based for loop syntax too:
+
+```
+for(const auto& baggage : span->context().baggageRange())
+{
+    std::cout << "baggage item: " << baggage.key() << " val: " << baggage.value() << std::endl;
+}
+```
+
+For details on the semantics of `BaggageIterators` and how they work, see [baggage.h](../opentracing/baggage.h).
