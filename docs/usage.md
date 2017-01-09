@@ -303,7 +303,7 @@ If you have access to C++11 features, we can use the range based for loop syntax
 HttpReader reader(request);
 acme::SpanContextGuard context(Tracer::extract(reader));
 
-for(const auto& baggage : context.baggageRange())
+for(const auto& baggage : context->baggageRange())
 {
     std::cout << "baggage item: " << baggage.key() << " val: " << baggage.value() << std::endl;
 }
