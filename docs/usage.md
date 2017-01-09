@@ -75,20 +75,18 @@ types:
     * `Tracer::SpanOptionsGuard` - RAII Wrappers for SpanOptions
     * `Tracer::SpanContextGuard` - RAII Wrappers for SpanContexts
 
-
-Our theoretical "ACME Inc." organization can use to instrument their applications.
-The `Tracer` typedef is not standardized, but it is recommended. The rest of the
-documentation will assume that `Tracer` was the chosen name for the Tracer type.
+Our theoretical "ACME Inc." organization can use these type names to instrument their applications.
+The `Tracer` typedef is not standardized, but it is recommended. The rest of the documentation
+will assume that `Tracer` was the chosen name for the Tracer type.
 
 If clients ever require that they swap `OpenTracing` implementations, they
 will need to update only this header file and rebuild applications.
 
 ### Installing the Tracer
 
-Now that you have selected your chosen implementation, your applications can rely
-on your global `opentracing-cpp` configuration header to set up the `Tracer`.
-The `Tracer` implementation is installed explicitly as singleton in main. This must
-be done before any other parts of the API can be used:
+Once a implementation is chosen, your applications can rely on your global `opentracing-cpp`
+configuration header to set up the `Tracer`. The `Tracer` implementation singleton is installed
+explicitly in main. This must be done before any other parts of the API can be used:
 
 ```
 // acmetask.m.cpp
@@ -111,9 +109,9 @@ int main(int argc, const char * argv[])
 Once the `Tracer` is installed, we can begin to instrument the application.
 
 Say we have a service that acts as a proxy to a number of other HTTP servers.
-We may have a `getAccount` handler that reaches out to the account service.
+We may have a `getAccount` handler that reaches out to a user account service.
 
-We'll first need to start the span:
+To tracer our application, we'll first need to start the span:
 
 ```
 // requesthandler.m.cpp
@@ -121,14 +119,10 @@ We'll first need to start the span:
 
 int getAccount(Repsonse * resp, const Request& req)
 {
-    static Tracer * const s_tracer = Tracer::instance();
+    static acme::Tracer * const s_tracer = acme::Tracer::instance();
 
     acme::Tracer::SpanGuard span(s_tracer->start("get_account"));
-
-    if (!span.get())
-    { /* log error */
-        ;
-    }
+    assert(span.get());
 
     // When 'span' goes out of scope, the destructor will call s_tracer->cleanup().
     // This will automatically 'finish()' the span and return resources to the
@@ -140,21 +134,20 @@ int getAccount(Repsonse * resp, const Request& req)
 
 ### Defining carriers
 
-For this trace to be distributed across all of our organizations tasks, we need
-a way to `inject` and `extract` the span into our RPC carriers.
+In order to instrument our entire network, we need a way to `inject` and `extract`
+spans into and out of our RPC calls. Extending our example, when we make our request
+to the backend HTTP service, we'll need a way to inject the details of the context
+into our outgoing HTTP request.
 
-For our above example, when we make our request to the backend HTTP service,
-we'll need a way to inject the details of the context into our HTTP request.
+For this example, we'll define our HttpWriter inline with our request.
+In practice, you'll want the Writers/Readers you use to be consistent
+across your organization, so putting them into a library would be ideal.
 
 ```
-// For this example, we'll define our HttpWriter inline with our request.
-// In practice, you'll want the Writers/Readers you use to be consistent
-// across your organization, so putting them into a library would be
-// ideal.
 
 #include <opentracing/carriers.h>
 
-class HttpWriter : public GenericBinaryWriter<HttpWriter>
+class HttpWriter : public opentracing::GenericBinaryWriter<HttpWriter>
 {
   public:
     HttpWriter(HttpRequest * req): m_req(req){}
@@ -172,30 +165,30 @@ class HttpWriter : public GenericBinaryWriter<HttpWriter>
 
 int getAccount(Repsonse * resp, const Request& req)
 {
-    static Tracer * const s_tracer = Tracer::instance();
+    static acme::Tracer * const s_tracer = acme::Tracer::instance();
 
     acme::SpanGuard span(s_tracer->start("get_account"));
+    assert(span.get());
 
-    if(!span.get()){ /* log error */; }
+    HttpResponse httpResponse;
+    HttpRequest httpRequest(req);
 
-    HttpRequest httpRequest;
+    // Embed the details of our span into the outgoing HTTP headers:
     HttpWriter writer(&httpRequest);
     s_tracer->inject(&writer, span->context());
-
-    // Business logic...
-    HttpResponse httpResponse;
     sendHttpRequest(&httpResponse, httpRequest);
 
     return 0;
 }
 ```
 
-On the HTTP servers end, we'll want to create another span as a child:
+On the server side of the HTTP request, we'll want to continue the original Trace by creating
+a new SpanContext as a 'child of' the original:
 
 ```
 #include <opentracing/carriers.h>
 
-struct HttpReader: public GenericBinaryReader<HttpReader>
+struct HttpReader: public opentracing::GenericBinaryReader<HttpReader>
 {
   public:
     int extractImp(void* const buf, size_t* const written, const size_t len)
@@ -218,7 +211,7 @@ struct HttpReader: public GenericBinaryReader<HttpReader>
 
 int httpGetAccount(const HttpRequest& httpRequest)
 {
-    static Tracer* const s_tracer = Tracer::instance();
+    static acme::Tracer* const s_tracer = acme::Tracer::instance();
 
     acme::SpanContextGuard context(s_tracer->extract(HttpReader(httpRequest)));
 
@@ -232,11 +225,16 @@ int httpGetAccount(const HttpRequest& httpRequest)
     {
         acme::SpanOptionsGuard opts(s_tracer->makeSpanOptions());
 
-        opts->addReference(opentracing::SpanRelationship::e_childOf, *context);
-        opts->setOperation("get_account");
+        opts->addReference(opentracing::SpanRelationship::e_ChildOf, *context);
+        opts->setOperation("get_account_server");
+
         span = s_tracer->start(opts);
     }
 
+    HttpResponse response;
+
+    // populate the response using the arguments in our original request...
+    sendResponse(response);
     return 0;
 }
 ```
