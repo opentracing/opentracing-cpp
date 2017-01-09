@@ -1,8 +1,8 @@
 #ifndef INCLUDED_OPENTRACING_TEST_SPAN_H
 #define INCLUDED_OPENTRACING_TEST_SPAN_H
 
-#include "unittest.h"
 #include "spancontext.h"
+#include "unittest.h"
 
 #include <opentracing/span.h>  // test include guard
 #include <opentracing/span.h>
@@ -11,12 +11,28 @@ class TestSpanImpl : public GenericSpan<TestSpanImpl,
                                         TestContextImpl,
                                         TestContextBaggageAdapter> {
   public:
-    TestContextImpl& contextImp() {
+    TestContextImpl&
+    contextImp()
+    {
         return d_context;
     }
 
-    const TestContextImpl& contextImp() const {
+    const TestContextImpl&
+    contextImp() const
+    {
         return d_context;
+    }
+
+    int
+    setOperationImp(const StringRef&)
+    {
+        return 0;
+    }
+
+    int
+    addReferenceImp(const TestContextImpl&, const SpanRelationship::Value)
+    {
+        return 0;
     }
 
     int
@@ -26,236 +42,28 @@ class TestSpanImpl : public GenericSpan<TestSpanImpl,
     }
 
     int
-    finishImp(const uint64_t )
+    finishImp(const uint64_t)
     {
         return 0;
     }
 
+    template <typename T>
     int
-    tagImp(const StringRef&, const StringRef&)
+    tagImp(const StringRef&, const T&)
     {
         return 0;
     }
 
+    template <typename T>
     int
-    tagImp(const StringRef&, const bool)
+    logImp(const StringRef&, const T&)
     {
         return 0;
     }
 
+    template <typename T>
     int
-    tagImp(const StringRef&, const float)
-    {
-        return 0;
-    }
-    int
-    tagImp(const StringRef&, const double)
-    {
-        return 0;
-    }
-    int
-    tagImp(const StringRef&, const long double)
-    {
-        return 0;
-    }
-    int
-    tagImp(const StringRef&, const char)
-    {
-        return 0;
-    }
-    int
-    tagImp(const StringRef&, const signed char)
-    {
-        return 0;
-    }
-    int
-    tagImp(const StringRef&, const unsigned char)
-    {
-        return 0;
-    }
-    int
-    tagImp(const StringRef&, const wchar_t)
-    {
-        return 0;
-    }
-    int
-    tagImp(const StringRef&, const int16_t)
-    {
-        return 0;
-    }
-    int
-    tagImp(const StringRef&, const int32_t)
-    {
-        return 0;
-    }
-    int
-    tagImp(const StringRef&, const int64_t)
-    {
-        return 0;
-    }
-    int
-    tagImp(const StringRef&, const uint16_t)
-    {
-        return 0;
-    }
-    int
-    tagImp(const StringRef&, const uint32_t)
-    {
-        return 0;
-    }
-    int
-    tagImp(const StringRef&, const uint64_t)
-    {
-        return 0;
-    }
-
-    int
-    logImp(const StringRef&, const StringRef&)
-    {
-        return 0;
-    }
-    int
-    logImp(const StringRef&, const bool)
-    {
-        return 0;
-    }
-    int
-    logImp(const StringRef&, const float)
-    {
-        return 0;
-    }
-    int
-    logImp(const StringRef&, const double)
-    {
-        return 0;
-    }
-    int
-    logImp(const StringRef&, const long double)
-    {
-        return 0;
-    }
-    int
-    logImp(const StringRef&, const char)
-    {
-        return 0;
-    }
-    int
-    logImp(const StringRef&, const signed char)
-    {
-        return 0;
-    }
-    int
-    logImp(const StringRef&, const unsigned char)
-    {
-        return 0;
-    }
-    int
-    logImp(const StringRef&, const wchar_t)
-    {
-        return 0;
-    }
-    int
-    logImp(const StringRef&, const int16_t)
-    {
-        return 0;
-    }
-    int
-    logImp(const StringRef&, const int32_t)
-    {
-        return 0;
-    }
-    int
-    logImp(const StringRef&, const int64_t)
-    {
-        return 0;
-    }
-    int
-    logImp(const StringRef&, const uint16_t)
-    {
-        return 0;
-    }
-    int
-    logImp(const StringRef&, const uint32_t)
-    {
-        return 0;
-    }
-    int
-    logImp(const StringRef&, const uint64_t)
-    {
-        return 0;
-    }
-    int
-    logImp(const StringRef&, const StringRef&, const uint64_t)
-    {
-        return 0;
-    }
-    int
-    logImp(const StringRef&, const bool, const uint64_t)
-    {
-        return 0;
-    }
-    int
-    logImp(const StringRef&, const float, const uint64_t)
-    {
-        return 0;
-    }
-    int
-    logImp(const StringRef&, const double, const uint64_t)
-    {
-        return 0;
-    }
-    int
-    logImp(const StringRef&, const long double, const uint64_t)
-    {
-        return 0;
-    }
-    int
-    logImp(const StringRef&, const char, const uint64_t)
-    {
-        return 0;
-    }
-    int
-    logImp(const StringRef&, const signed char, const uint64_t)
-    {
-        return 0;
-    }
-    int
-    logImp(const StringRef&, const unsigned char, const uint64_t)
-    {
-        return 0;
-    }
-    int
-    logImp(const StringRef&, const wchar_t, const uint64_t)
-    {
-        return 0;
-    }
-    int
-    logImp(const StringRef&, const int16_t, const uint64_t)
-    {
-        return 0;
-    }
-    int
-    logImp(const StringRef&, const int32_t, const uint64_t)
-    {
-        return 0;
-    }
-    int
-    logImp(const StringRef&, const int64_t, const uint64_t)
-    {
-        return 0;
-    }
-    int
-    logImp(const StringRef&, const uint16_t, const uint64_t)
-    {
-        return 0;
-    }
-    int
-    logImp(const StringRef&, const uint32_t, const uint64_t)
-    {
-        return 0;
-    }
-    int
-    logImp(const StringRef&, const uint64_t, const uint64_t)
+    logImp(const StringRef&, const T&, const uint64_t)
     {
         return 0;
     }

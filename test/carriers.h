@@ -71,7 +71,7 @@ struct TestWriter : public GenericWriter<TestWriter, TestContextImpl>
         return 0;
     }
 
-    std::map<std::string, std::string> carrier;
+    std::multimap<std::string, std::string> carrier;
 };
 
 struct TestReader : public GenericReader<TestReader, TestContextImpl>
@@ -82,7 +82,7 @@ struct TestReader : public GenericReader<TestReader, TestContextImpl>
         return 0;
     }
 
-    std::map<std::string, std::string> carrier;
+    std::multimap<std::string, std::string> carrier;
 };
 
 typedef GenericTextWriter<TestTextWriter>     TextWriter;

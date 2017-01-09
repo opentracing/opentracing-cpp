@@ -4,16 +4,15 @@
 // =========
 // baggage.h
 // =========
-// class BaggageImp      - Client wrapper for copies of key:value pairs
-// class Baggage         - Typedef for Baggage working with char
-// class BaggageWide     - Typedef for Baggage working with wchar_t
+// class BaggageImp         - Client wrapper for copies of key:value pairs
+// class Baggage            - Typedef for Baggage working with char
 //
-// class BaggageRefImp   - Client wrapper for referencing key:value pairs
-// class BaggageRef      - Typedef for BaggageRef working with char
-// class BaggageRefWide  - Typedef for BaggageRef working with wchar_t
+// class BaggageRefImp      - Client wrapper for referencing key:value pairs
+// class BaggageRef         - Typedef for BaggageRef working with char
 //
-// class BaggageIterator - Client interface to traverse span baggage
-//
+// class BaggageIteratorImp - Client interface to traverse span baggage
+// class BaggageRangeImp    - A range of BaggageIterators
+
 // -------------------
 // OpenTracing Baggage
 // -------------------
@@ -24,7 +23,7 @@
 // Baggage items enable powerful functionality given a full-stack OpenTracing
 // integration (for example, arbitrary application data from a mobile
 // application can make it, transparently, all the way into the depths of a
-// storage system), and with it some powerful costs: use this feature with care.
+// storage system), and with it some powerful costs.
 //
 // Use this feature thoughtfully and with care. Every key and value is copied
 // into every local and remote child of the associated Span, and that can add up
@@ -75,8 +74,7 @@ class BaggageImp {
     std::basic_string<CHAR> m_value;
 };
 
-typedef BaggageImp<char>    Baggage;
-typedef BaggageImp<wchar_t> BaggageWide;
+typedef BaggageImp<char> Baggage;
 
 // ===================
 // class BaggageRefImp
@@ -117,83 +115,49 @@ class BaggageRefImp {
 };
 
 typedef BaggageRefImp<char> BaggageRef;
-typedef BaggageRefImp<wchar_t> BaggageRefWide;
 
-// =====================
-// class BaggageIterator
-// =====================
-// -------
-// Clients
-// -------
-// For flexibility between implementations, BaggageIterator classes should
-// never be created directly. Instead, a typedef is provided by SpanContexts
-// which allow callers to be agnostic of the underlying implementation.
-// By using 'SpanContext::const_iterator', the call sites will be unaffected
-// if implementations change in the future.
-//
-// The iterators themselves satisfy the requirements of C++ "Input Iterators".
-// They can read from the pointed-to baggage element, returning Baggage for
-// the key:value pairs.
-//
-// BaggageRef objects may be returned instead of copying the Baggage with
-// calls to 'ref()'. Those references only guarantee validity for a single pass:
-// once an iterator has been incremented, all copies of its previous value may
-// be invalidated.
-//
-// See http://en.cppreference.com/w/cpp/concept/InputIterator for more details
-// on semantics input iterators.
-//
-// ------------
-// Implementors
-// ------------
-// BaggageIterator is used to obscure the data structure(s) used to store
-// and traverse span baggage. Implementors should store the values as
-// std::string types. The underlying data structure decision is left to
+// ========================
+// class BaggageIteratorImp
+// ========================
+// BaggageIteratorImp is used to obscure the data structure(s) used to store
+// and traverse Span Baggage. Implementors should store the values as
+// std::string types, but the  underlying data structure decision is left to
 // implementors.
 //
 // We do not want to expose the details of these data structure(s) to clients;
 // If their code were to rely on any detail, it would make it difficult
-// to change OpenTracing implementations. Instead, we define an 'Adapter'
-// class, to translate the implementation's iterator into baggage references.
+// to change OpenTracing implementations. Instead, we define an Adapter class,
+// to translate the implementation's iterators into baggage structures
+// which clients can interact with.
 //
-// The 'Adapter' class must satisfy the following:
-//   * Provide an iterator typedef, potentially used during construction
-//   * Provide a const_iterator typedef, potentially used during
-//      construction.
-//   * Provide narrow() to convert a const_iterator into Baggage
-//   * Provide wide() to convert a const_iterator into BaggageWide
-//   * Provide ref() to convert a const_iterator into a BaggageRef
-//
-// To achieve this, implementors define a class like so:
+// Adapter implementations are required to implement the following:
 //
 //  struct AdapterClass {
 //      typedef ImplementationIterator iterator;
 //      typedef ImplementationIterator const_iterator;
 //
-//      Baggage narrow()(const const_iterator& it) const;
-//      Baggage wide()(const const_iterator& it) const;
+//      Baggage copy()(const const_iterator& it) const;
 //      BaggageRef ref()(const const_iterator& it) const;
 //  };
 //
-// Now, when clients create a BaggageIterator through 'SpanContext::begin()',
+// When clients create a BaggageIterator via 'SpanContext::baggageBegin()',
 // the BaggageIterator should be created with an iterator to the underlying
-// baggage implementation. It caches the iterator, incrementing it as
-// clients move forward through the sequence.
+// baggage implementation. The BaggageIterator caches the implementation
+// iterator, incrementing the implementation iterator under the hood as clients
+// move forward through the underlying sequence.
 //
-// When clients dereference the baggage iterator, the 'Adapter' is invoked,
-// passing the implementation's iterator to the adapter. It is expected that the
-// 'Adapter' can convert the iterator into a Baggage, BaggageWide, or BaggageRef
-// object that client code can use in a read-only fashion.
+// When clients dereference the baggage iterator, the Adapter is invoked to
+// convert the implementation iterator into Baggage/BaggageRefs.
 
 template <typename ADAPTER>
-class BaggageIterator {
+class BaggageIteratorImp {
   public:
     typedef typename ADAPTER::iterator       iterator;
     typedef typename ADAPTER::const_iterator const_iterator;
 
-    BaggageIterator(const iterator& iter);
-    BaggageIterator(const const_iterator& iter);
-    // Construct a BaggageIterator object which will be used to traverse the
+    BaggageIteratorImp(const iterator& iter);
+    BaggageIteratorImp(const const_iterator& iter);
+    // Construct a BaggageIteratorImp object which will be used to traverse the
     // sequence pointed to by the input iterator 'iter'.
 
     BaggageRef operator*() const;
@@ -202,12 +166,8 @@ class BaggageIterator {
     // to by this iterator. Undefined behavior if the iterator is equal to
     // 'end()'.
 
-    Baggage narrow() const;
+    Baggage copy() const;
     // Returns a copy of the key:value pairs pointed at by this iterator.
-    // Undefined behavior if the iterator is equal to 'end()'.
-
-    BaggageWide wide() const;
-    // Returns a wide copies of the key:value pairs pointed at by this iterator.
     // Undefined behavior if the iterator is equal to 'end()'.
 
     BaggageRef ref() const;
@@ -215,25 +175,51 @@ class BaggageIterator {
     // storage of the key:value pairs. References are invalided if the
     // associated SpanContext is destroyed or modified.
 
-    BaggageIterator operator++(int);
+    BaggageIteratorImp operator++(int);
     // Return a copy of this iterator, then post-increment this iterator to
     // point to the next key:value pair in the sequence.
 
-    BaggageIterator& operator++();
+    BaggageIteratorImp& operator++();
     // Increment this iterator, pointing to the next key:value pair in the
     // sequence, then return a reference to this iterator.
 
-    bool operator==(const BaggageIterator& other) const;
+    bool operator==(const BaggageIteratorImp& other) const;
     // Returns true if this iterator points to the same key:value pair as
     // 'other', and false otherwise.
 
-    bool operator!=(const BaggageIterator& other) const;
+    bool operator!=(const BaggageIteratorImp& other) const;
     // Returns true if this iterator points at a different key:value pair
     // than 'other', and false otherwise.
 
   private:
     const_iterator d_iterator;  // Traverses implementation storage
     ADAPTER        d_handler;   // Converts d_iterator to Baggage wrappers
+};
+
+// =====================
+// class BaggageRangeImp
+// =====================
+// If clients have access to C++11 features, BaggageRanges are a convenience
+// class that allows an easy way to use range based for loops:
+//
+//   `for(const auto& b: context.baggageRange()){ ... }`
+//
+// They define a 'begin' and 'end' method that allows the compiler to use
+// this syntax. The class is otherwise redundant.
+
+template <typename ADAPTER>
+class BaggageRangeImp {
+  public:
+    typedef BaggageIteratorImp<ADAPTER> BaggageIterator;
+
+    BaggageRangeImp(const BaggageIterator& begin, const BaggageIterator& end);
+
+    BaggageIterator begin() const;
+    BaggageIterator end() const;
+
+  private:
+    const BaggageIterator m_begin;
+    const BaggageIterator m_end;
 };
 
 // ----------------
@@ -281,13 +267,13 @@ BaggageImp<CHAR>::value() const
 }
 
 template <typename CHAR>
-BaggageImp<CHAR>* BaggageImp<CHAR>::operator->()
+inline BaggageImp<CHAR>* BaggageImp<CHAR>::operator->()
 {
     return this;
 }
 
 template <typename CHAR>
-const BaggageImp<CHAR>* BaggageImp<CHAR>::operator->() const
+inline const BaggageImp<CHAR>* BaggageImp<CHAR>::operator->() const
 {
     return this;
 }
@@ -328,81 +314,103 @@ inline const BaggageRefImp<CHAR>* BaggageRefImp<CHAR>::operator->() const
     return this;
 }
 
-// ---------------------
-// class BaggageIterator
-// ---------------------
+// ------------------------
+// class BaggageIteratorImp
+// ------------------------
 
 template <typename ADAPTER>
-BaggageIterator<ADAPTER>::BaggageIterator(const iterator& iter)
+inline BaggageIteratorImp<ADAPTER>::BaggageIteratorImp(const iterator& iter)
 : d_iterator(iter), d_handler()
 {
 }
 
 template <typename ADAPTER>
-BaggageIterator<ADAPTER>::BaggageIterator(const const_iterator& iter)
+inline BaggageIteratorImp<ADAPTER>::BaggageIteratorImp(
+    const const_iterator& iter)
 : d_iterator(iter), d_handler()
 {
 }
 
 template <typename ADAPTER>
-BaggageRef BaggageIterator<ADAPTER>::operator*() const
+inline BaggageRef BaggageIteratorImp<ADAPTER>::operator*() const
 {
     return d_handler.ref(d_iterator);
 }
 
 template <typename ADAPTER>
-BaggageRef BaggageIterator<ADAPTER>::operator->() const
+inline BaggageRef BaggageIteratorImp<ADAPTER>::operator->() const
 {
     return d_handler.ref(d_iterator);
 }
 
 template <typename ADAPTER>
-Baggage BaggageIterator<ADAPTER>::narrow() const
+inline Baggage
+BaggageIteratorImp<ADAPTER>::copy() const
 {
-    return d_handler.narrow(d_iterator);
+    return d_handler.copy(d_iterator);
 }
 
 template <typename ADAPTER>
-BaggageWide BaggageIterator<ADAPTER>::wide() const
-{
-    return d_handler.wide(d_iterator);
-}
-
-template <typename ADAPTER>
-BaggageRef BaggageIterator<ADAPTER>::ref() const
+inline BaggageRef
+BaggageIteratorImp<ADAPTER>::ref() const
 {
     return d_handler.ref(d_iterator);
 }
 
 template <typename ADAPTER>
-BaggageIterator<ADAPTER> BaggageIterator<ADAPTER>::operator++(int)
+inline BaggageIteratorImp<ADAPTER> BaggageIteratorImp<ADAPTER>::operator++(int)
 {
-    BaggageIterator tmp(*this);
+    BaggageIteratorImp tmp(*this);
     ++d_iterator;
     return tmp;
 }
 
 template <typename ADAPTER>
-BaggageIterator<ADAPTER>& BaggageIterator<ADAPTER>::operator++()
+inline BaggageIteratorImp<ADAPTER>& BaggageIteratorImp<ADAPTER>::operator++()
 {
     ++d_iterator;
     return *this;
 }
 
 template <typename ADAPTER>
-bool
-BaggageIterator<ADAPTER>::operator==(
-    const BaggageIterator<ADAPTER>& other) const
+inline bool
+BaggageIteratorImp<ADAPTER>::operator==(
+    const BaggageIteratorImp<ADAPTER>& other) const
 {
     return d_iterator == other.d_iterator;
 }
 
 template <typename ADAPTER>
-bool
-BaggageIterator<ADAPTER>::operator!=(
-    const BaggageIterator<ADAPTER>& other) const
+inline bool
+BaggageIteratorImp<ADAPTER>::operator!=(
+    const BaggageIteratorImp<ADAPTER>& other) const
 {
     return d_iterator != other.d_iterator;
+}
+
+// ---------------------
+// class BaggageRangeImp
+// ---------------------
+
+template <typename ADAPTER>
+inline BaggageRangeImp<ADAPTER>::BaggageRangeImp(const BaggageIterator& begin,
+                                                 const BaggageIterator& end)
+: m_begin(begin), m_end(end)
+{
+}
+
+template <typename ADAPTER>
+inline typename BaggageRangeImp<ADAPTER>::BaggageIterator
+BaggageRangeImp<ADAPTER>::begin() const
+{
+    return m_begin;
+}
+
+template <typename ADAPTER>
+inline typename BaggageRangeImp<ADAPTER>::BaggageIterator
+BaggageRangeImp<ADAPTER>::end() const
+{
+    return m_end;
 }
 
 }  // namespace opentracing

@@ -4,32 +4,39 @@
 #include <opentracing/spancontext.h>  // test include guard
 #include <opentracing/spancontext.h>
 
-TEST(GenericSpanContext, Baggage)
+TEST(GenericSpanContext, BaggageCopies)
 {
     TestContextImpl imp;
     TestContext&    t = imp;
 
     int rc = t.setBaggage("hello", "world");
+    ASSERT_EQ(0, rc);
 
-    StringRef ref;
-    rc = t.getBaggage(&ref, "hello");
+    TestContext::BaggageValues vals;
+    rc = t.getBaggage(&vals, "hello");
 
     ASSERT_EQ(0, rc);
-    ASSERT_STREQ("world", ref.data());
+    ASSERT_EQ(1u, vals.size());
+    ASSERT_EQ("world", vals[0]);
 
-    rc = t.getBaggage(&ref, "unknown");
+    rc = t.getBaggage(&vals, "unknown");
     ASSERT_NE(0, rc);
 
-    ASSERT_TRUE(t.begin() != t.end());
+    ASSERT_TRUE(t.baggageBegin() != t.baggageEnd());
 
-    TestContext::const_iterator it = t.begin();
+    TestContext::BaggageIterator it = t.baggageBegin();
 
-    ASSERT_STREQ("hello", it->key().data());
-    ASSERT_STREQ("world", it->value().data());
+    Baggage b = it.copy();
+    ASSERT_EQ("hello", b.key());
+    ASSERT_EQ("world", b.value());
 
     ++it;
 
-    ASSERT_TRUE(it == t.end());
+    ASSERT_TRUE(it == t.baggageEnd());
+
+    ASSERT_EQ("hello", b.key());
+    ASSERT_EQ("world", b.value());
+
 }
 
 TEST(GenericSpanContext, CopyConstructor)
@@ -43,9 +50,9 @@ TEST(GenericSpanContext, CopyConstructor)
     TestContextImpl implCopy = impl;
     TestContext& tc = implCopy;
 
-    StringRef ref;
-    rc = tc.getBaggage(&ref, "hello");
+    TestContext::BaggageValue val;
+    rc = tc.getBaggage(&val, "hello");
 
     ASSERT_EQ(0, rc);
-    ASSERT_STREQ("world", ref);
+    ASSERT_EQ("world", val);
 }

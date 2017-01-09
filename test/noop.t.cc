@@ -11,9 +11,16 @@
 
 typedef GenericSpanContext<NoopContext, NoopAdapter> GlobalContext;
 typedef GenericSpan<NoopSpan, NoopContext, NoopAdapter> GlobalSpan;
-typedef GenericTracer<NoopTracer, NoopSpan, NoopContext, NoopAdapter> GlobalTracer;
+typedef GenericSpanOptions<NoopOptions, NoopContext, NoopAdapter> GlobalOptions;
+typedef GenericTracer<NoopTracer,
+                      NoopSpan,
+                      NoopOptions,
+                      NoopContext,
+                      NoopAdapter>
+    GlobalTracer;
 
 typedef GenericSpanGuard<GlobalTracer> SpanGuard;
+typedef GenericSpanOptionsGuard<GlobalTracer> SpanOptionsGuard;
 typedef GenericSpanContextGuard<GlobalTracer> SpanContextGuard;
 
 TEST(NoopTracer, Intantiation){
@@ -45,21 +52,31 @@ TEST(NoopTracer, StartWithOp)
     rc = guard.sp->context().setBaggage("apple", "banana");
     ASSERT_EQ(0, rc);
 
-    StringRef ref;
-    rc = guard.sp->context().getBaggage(&ref, "apple");
+    GlobalTracer::SpanContext::BaggageValue val;
+    rc = guard.sp->context().getBaggage(&val, "apple");
 
     ASSERT_NE(0, rc);
 }
 
 TEST(NoopTracer, StartWithOpAndTsp)
 {
+    NoopContext otherContextImp;
+    GlobalContext& othercontext = otherContextImp;
+
     NoopTracer imp;
     GlobalTracer& t = imp;
 
-    SpanGuard guard(&t, t.start("hello", 125125));
+    SpanOptionsGuard optsguard(&t, t.makeSpanOptions());
+
+    optsguard.sp->setOperation("hello");
+    optsguard.sp->setStartTime(1251251);
+    optsguard.sp->addReference(SpanRelationship::e_FollowsFrom, othercontext);
+
+    SpanGuard guard(&t, t.start("hello"));
     EXPECT_TRUE(guard.sp);
 }
 
+/*
 TEST(NoopTracer, StartWithOpAndParent)
 {
     // We create spans, which have contexts or create contexts directly
@@ -282,3 +299,4 @@ TYPED_TEST(NoopSpanTypeTests, LogTspInterface)
     int rc = t.log("key", TypeParam(), 0);
     ASSERT_EQ(0, rc);
 }
+*/

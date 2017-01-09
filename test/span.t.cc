@@ -12,19 +12,19 @@ TEST(Span, BasicTests)
         // Make sure const references work
         const TestSpan& tc = impl;
 
-        StringRef ref;
-        rc = tc.context().getBaggage(&ref, "hello");
+        TestSpan::SpanContext::BaggageValues vals;
+        rc = tc.context().getBaggage(&vals, "hello");
 
         ASSERT_EQ(0, rc);
-        ASSERT_STREQ("world", ref);
+        ASSERT_EQ(1u, vals.size());
+        ASSERT_EQ("world", vals[0]);
 
         const TestSpan::SpanContext& cc = tc.context();
-        rc  = cc.getBaggage(&ref, "miss");
-
+        rc  = cc.getBaggage(&vals, "miss");
         ASSERT_NE(0, rc);
 
-        TestSpan::SpanContext::const_iterator it = cc.begin();
-        ASSERT_FALSE(it == cc.end());
+        TestSpan::SpanContext::BaggageIterator it = cc.baggageBegin();
+        ASSERT_FALSE(it == cc.baggageEnd());
     }
 
     t.finish();

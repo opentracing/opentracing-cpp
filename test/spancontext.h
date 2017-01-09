@@ -9,27 +9,19 @@
 #include <map>
 #include <string>
 
-typedef std::map<std::string, std::string> TestBaggageContainer;
+typedef std::multimap<std::string, std::string> TestBaggageContainer;
 
 struct TestContextBaggageAdapter {
     typedef TestBaggageContainer::iterator       iterator;
     typedef TestBaggageContainer::const_iterator const_iterator;
 
-    Baggage narrow(const const_iterator& it) const
+    Baggage
+    copy(const const_iterator& it) const
     {
         return Baggage(it->first, it->second);
     }
-    BaggageWide wide(const const_iterator& it) const
-    {
-        std::wstring key;
-        std::wstring value;
-
-        test_widen(&key, it->first);
-        test_widen(&value, it->second);
-
-        return BaggageWide(key, value);
-    }
-    BaggageRef ref(const const_iterator& it) const
+    BaggageRef
+    ref(const const_iterator& it) const
     {
         return BaggageRef(it->first, it->second);
     }
@@ -38,27 +30,26 @@ struct TestContextBaggageAdapter {
 class TestContextImpl
     : public GenericSpanContext<TestContextImpl, TestContextBaggageAdapter> {
   public:
-    typedef GenericSpanContext<TestContextImpl, TestContextBaggageAdapter> Base;
-
     int
     setBaggageImp(const StringRef& key, const StringRef& baggage)
     {
-        m_baggage[std::string(key.data(), key.length())] =
-            std::string(baggage.data(), baggage.length());
+        m_baggage.insert(TestBaggageContainer::value_type(
+            std::string(key.data(), key.length()),
+            std::string(baggage.data(), baggage.length())));
 
         return 0;
     }
 
     int
-    getBaggageImp(StringRef* const baggage, const StringRef& key) const
+    getBaggageImp(BaggageValue* const baggage, const StringRef& key) const
     {
-        const std::string mkey(key.data(), key.length());
+        std::vector<std::string> out;
 
-        const TestBaggageContainer::const_iterator it = m_baggage.find(mkey);
+        getBaggageImp(&out, key);
 
-        if (m_baggage.end() != it)
+        if (1u == out.size())
         {
-            baggage->reset(it->second.data(), it->second.length());
+            *baggage = out[0];
             return 0;
         }
         else
@@ -67,16 +58,38 @@ class TestContextImpl
         }
     }
 
-    Base::const_iterator
-    beginImp() const
+    int
+    getBaggageImp(BaggageValues* const baggage, const StringRef& key) const
     {
-        return Base::const_iterator(m_baggage.begin());
+        baggage->clear();
+
+        const std::string mkey(key.data(), key.length());
+
+        const std::pair<TestBaggageContainer::const_iterator,
+                        TestBaggageContainer::const_iterator>
+            range = m_baggage.equal_range(mkey);
+
+        for (TestBaggageContainer::const_iterator it  = range.first,
+                                                  end = range.second;
+             it != end;
+             ++it)
+        {
+            baggage->push_back(it->second);
+        }
+
+        return baggage->empty();
     }
 
-    Base::const_iterator
-    endImp() const
+    BaggageIterator
+    baggageBeginImp() const
     {
-        return Base::const_iterator(m_baggage.end());
+        return BaggageIterator(m_baggage.begin());
+    }
+
+    BaggageIterator
+    baggageEndImp() const
+    {
+        return BaggageIterator(m_baggage.end());
     }
 
     TestBaggageContainer&

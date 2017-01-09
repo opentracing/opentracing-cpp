@@ -9,8 +9,29 @@
 #include "span.h"
 #include "spancontext.h"
 
+class TestOptionsImpl : public GenericSpanOptions<TestOptionsImpl,
+                                                  TestContextImpl,
+                                                  TestContextBaggageAdapter> {
+  public:
+    void
+    setOperationImp(const StringRef&)
+    {
+    }
+
+    void
+    setStartTimeImp(const uint64_t)
+    {
+    }
+
+    void
+    addReferenceImp(const SpanRelationship::Value, const TestContextImpl&)
+    {
+    }
+};
+
 class TestTracerImpl : public GenericTracer<TestTracerImpl,
                                             TestSpanImpl,
+                                            TestOptionsImpl,
                                             TestContextImpl,
                                             TestContextBaggageAdapter> {
   public:
@@ -21,82 +42,26 @@ class TestTracerImpl : public GenericTracer<TestTracerImpl,
     }
 
     Span*
-    startImp(const StringRef&, const uint64_t)
+    startImp(const TestOptionsImpl&)
     {
         return new TestSpanImpl();
-    }
-
-    Span*
-    startImp(const StringRef&, const SpanContext&)
-    {
-        return new TestSpanImpl();
-    }
-
-    Span*
-    startImp(const StringRef&, const SpanContext&, const uint64_t)
-    {
-        return new TestSpanImpl();
-    }
-
-    template <typename ITER>
-    Span*
-    startImp(const StringRef&, const ITER& pbegin, const ITER& pend)
-    {
-        for (ITER it = pbegin; it != pend; ++it)
-        {
-            const TestContextImpl* ctx = static_cast<TestContextImpl*>(&(*it));
-            // Output is ignored, but I want to flex the compiler here. Let's
-            // force
-            // a dereference to make sure the types are okay
-
-            StringRef ref;
-            ctx->getBaggageImp(&ref, "hello");
-        }
-        return new TestSpanImpl();
-    }
-
-    template <typename ITER>
-    Span*
-    startImp(const StringRef&,
-             const ITER pbegin,
-             const ITER pend,
-             const uint64_t)
-    {
-        for (ITER it = pbegin; it != pend; ++it)
-        {
-            const TestContextImpl* ctx = static_cast<TestContextImpl*>(&(*it));
-
-            StringRef ref;
-            ctx->getBaggageImp(&ref, "hello");
-        }
-
-        return new TestSpanImpl();
-    }
-    void
-    cleanupImp(Span* const sp)
-    {
-        delete static_cast<TestSpanImpl*>(sp);
     }
 
     void
-    cleanupImp(SpanContext* const spc)
+    cleanupImp(const TestSpanImpl* const sp)
     {
-        delete static_cast<TestContextImpl*>(spc);
+        delete sp;
     }
 
     template <typename CIMPL>
     int
     injectImp(GenericTextWriter<CIMPL>* const carrier,
-              const TestContext&              context) const
+              const TestContextImpl&          imp) const
     {
-        const TestContextImpl& imp =
-            static_cast<const TestContextImpl&>(context);
-
         std::vector<TextMapPair> pairs;
         pairs.reserve(imp.baggageMap().size());
 
-        for (std::map<std::string, std::string>::const_iterator it =
-                 imp.baggageMap().begin();
+        for (TestBaggageContainer::const_iterator it = imp.baggageMap().begin();
              it != imp.baggageMap().end();
              ++it)
         {
@@ -107,7 +72,26 @@ class TestTracerImpl : public GenericTracer<TestTracerImpl,
     }
 
     template <typename CIMPL>
-    SpanContext*
+    int
+    injectImp(GenericBinaryWriter<CIMPL>* const carrier,
+              const TestContext&) const
+    {
+        // Context unused for test. Implementations should encode
+        // the context for a wire protocol here, most likely
+        const int deadbeef = 0xdeadbeef;
+        return carrier->inject(&deadbeef, sizeof(deadbeef));
+    }
+
+    template <typename CIMPL>
+    int
+    injectImp(GenericWriter<CIMPL, TestContextImpl>* const carrier,
+              const TestContextImpl& context) const
+    {
+        return carrier->inject(context);
+    }
+
+    template <typename CIMPL>
+    TestContextImpl*
     extractImp(const GenericTextReader<CIMPL>& carrier) const
     {
         std::vector<TextMapPair> pairs;
@@ -123,24 +107,14 @@ class TestTracerImpl : public GenericTracer<TestTracerImpl,
              it != pairs.end();
              ++it)
         {
-            imp->baggageMap()[it->m_name] = it->m_value;
+            imp->baggageMap().insert(
+                TestBaggageContainer::value_type(it->m_name, it->m_value));
         }
         return imp;
     }
 
     template <typename CIMPL>
-    int
-    injectImp(GenericBinaryWriter<CIMPL>* const carrier,
-              const TestContext&) const
-    {
-        // Context unused for test. Implementations should encode
-        // the context for a wire protocol here, most likely
-        const int deadbeef = 0xdeadbeef;
-        return carrier->inject(&deadbeef, sizeof(deadbeef));
-    }
-
-    template <typename CIMPL>
-    SpanContext*
+    TestContextImpl*
     extractImp(const GenericBinaryReader<CIMPL>& carrier)
     {
         size_t written = 0;
@@ -161,17 +135,11 @@ class TestTracerImpl : public GenericTracer<TestTracerImpl,
     }
 
     template <typename CIMPL>
-    int
-    injectImp(GenericWriter<CIMPL, TestContextImpl>* const carrier,
-              const TestContext& context) const
-    {
-        return carrier->inject(static_cast<const TestContextImpl&>(context));
-    }
-
-    template <typename CIMPL>
-    SpanContext*
+    TestContextImpl*
     extractImp(const GenericReader<CIMPL, TestContextImpl>& carrier)
     {
+        // Should use a guard here and release it, iff, carrier has
+        // no errors.
         TestContextImpl* imp = new TestContextImpl;
         if (int rc = carrier.extract(imp))
         {
@@ -183,10 +151,22 @@ class TestTracerImpl : public GenericTracer<TestTracerImpl,
             return imp;
         }
     }
+
+    void
+    cleanupImp(const TestContextImpl* const spc)
+    {
+        delete spc;
+    }
 };
+
+typedef GenericSpanOptions<TestOptionsImpl,
+                           TestContextImpl,
+                           TestContextBaggageAdapter>
+    SpanOptions;
 
 typedef GenericTracer<TestTracerImpl,
                       TestSpanImpl,
+                      TestOptionsImpl,
                       TestContextImpl,
                       TestContextBaggageAdapter>
     Tracer;

@@ -4,32 +4,12 @@
 // =============
 // spancontext.h
 // =============
-//
 // class GenericSpanContext - CRTP interface for SpanContexts
-//
-// -----------
-// SpanContext
-// -----------
-// Every Span has a SpanContext. This context is used to:
-//   * Inject Spans into Carriers
-//   * Represent a Span in-band, across process boundaries
-//   * Extract Spans from Carriers
-//   * Create new Spans, related to the SpanContext
-//
-// Since the Span has to represent the entire Span in-band, and baggage must
-// also be propagated across process boundaries, the SpanContext is also
-// responsible for baggage.
-//
-// In most OpenTracing implementations, the SpanContext is made immutable in
-// order to avoid complicated lifetime issues. The C++ interface relaxes those
-// requirements, exposing the 'GenericSpanContext::setBaggage()' method directly
-// on the context.
-//
-// See the specification for more details:
-// https://github.com/opentracing/specification/blob/master/specification.md#Spancontext
 
-#include <opentracing/stringref.h>
 #include <opentracing/baggage.h>
+#include <opentracing/stringref.h>
+#include <string>
+#include <vector>
 
 namespace opentracing {
 
@@ -44,82 +24,67 @@ namespace opentracing {
 // See this CRTP article for more details on the design pattern:
 // https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern
 //
-// -------
-// Clients
-// -------
-// After a Span is created, the 'Span::context()' method is used to access
-// a context that supports the 'GenericSpanContext' interface.
-//
-// Clients should never need to reference the GenericSpanContext type
-// explicitly, but instead, clients should use the Tracer::Span::SpanContext
-// typedef. By using the typedef, clients will avoid code changes necessary if a
-// different Tracer implementation is installed later.
-//
-// Once clients have access to a SpanContext, they can:
-//   * 'setBaggage()' key:value pairs
-//   * 'getBaggage()' for a given key
-//   * Iterate over all Baggage via 'begin()'/'end()'
-//
-// For more details on:
-//   * accessing a SpanContext, see 'span.h'
-//   * iterating over Baggage, see 'baggage.h'
-//   * inject/extract, see 'tracer.h
-//
-// ------------
-// Implementors
-// ------------
 // The 'GenericSpanContext' has two template parameters:
 //   * CONTEXT - A SpanContext implementation derived class (CRTP)
-//   * ADAPTER - A BaggageIterator adapter
+//   * ADAPTER - A BaggageIteratorImp adapter
 //
 // CONTEXT implementations are required to implement the following:
 //
 //   class ContextImpl : GenericSpanContext<ContextImpl, Adapter>
 //   {
 //     public:
-//       const_iterator beginImp() const;
-//       const_iterator endImp() const;
-//       int setBaggageImp(const StringRef& const, const StringRef& baggage);
-//       int getBaggageImp(StringRef *const, const StringRef& key) const;
+//       typename Adapter::const_iterator baggageBeginImp() const;
+//       typename Adapter::const_iterator baggageEndImp() const;
+//
+//       int setBaggageImp(const StringRef&, const StringRef&);
+//
+//       int getBaggageImp(std::string* const, const StringRef&) const;
+//       int getBaggageImp(BaggageValues* const, const StringRef&) const;
 //   };
 //
-// Implementations may choose how they implement Baggage, but the
-// beginImp/endImp iterators should interact with the installed
+// Implementations may choose how they implement storage of Baggage, but the
+// baggageBeginImp/baggageEndImp iterators should interact with the installed
 // BaggageIterator/Adapter correctly.
-//
-// Since the SpanContext implementation type is decided at compile time, Span
-// and Tracer implementations may safely static_cast GenericSpanContext
-// references down to the installed SpanContext implementation. Doing so allows
-// access to methods/members that would be otherwise inaccessible through the
-// base class interface. This is a useful tool when implementing inject/extract
-// in Tracers.
 
 template <typename CONTEXT, typename ADAPTER>
 class GenericSpanContext {
   public:
-    typedef CONTEXT                  SpanContext;
-    typedef ADAPTER                  BaggageAdapter;
-    typedef BaggageIterator<ADAPTER> const_iterator;
+    typedef CONTEXT                     SpanContext;
+    typedef ADAPTER                     BaggageAdapter;
+    typedef BaggageIteratorImp<ADAPTER> BaggageIterator;
+    typedef BaggageRangeImp<ADAPTER>    BaggageRange;
 
-    const_iterator begin() const;
+    typedef std::string               BaggageValue;
+    typedef std::vector<BaggageValue> BaggageValues;
+
+    BaggageIterator baggageBegin() const;
     // Return a BaggageIterator to the beginning of the Baggage maintained
     // by this SpanContext.
 
-    const_iterator end() const;
-    // Return a BaggageIterator to mark the end of the baggage maintained
+    BaggageIterator baggageEnd() const;
+    // Return a BaggageIterator to mark the end of the Baggage maintained
     // by this SpanContext.
 
-    int setBaggage(const StringRef& key, const StringRef& baggage);
-    // Associate the supplied 'key' with the 'baggage'. Returns 0 upon
-    // success and a non-zero value otherwise.
+    BaggageRange baggageRange() const;
+    // Return a structure containing the range of iterators:
+    // [baggageBegin, baggageEnd). The object supports range-based for loops.
 
-    int getBaggage(StringRef* const baggage, const StringRef& key) const;
+    int setBaggage(const StringRef &key, const StringRef &baggage);
+    // Set or append the single 'baggage' value for the given 'key'. Return 0
+    // upon success and a non-zero value otherwise.
+
+    int getBaggage(BaggageValue *const baggage, const StringRef &key) const;
+    // Load a single 'baggage' value associated with 'key'. Returns 0 if there
+    // is only one value associated with 'key' and that value was loaded
+    // succesfully. Return a non-zero value otherwise.
+
+    int getBaggage(BaggageValues *const baggage, const StringRef &key) const;
     // Load the 'baggage' associated with 'key'. Returns 0 if the
     // baggage is loaded succesfully, and a non-zero value otherwise.
 
   protected:
     GenericSpanContext();
-    GenericSpanContext(const GenericSpanContext&);
+    GenericSpanContext(const GenericSpanContext &);
     // Protected to avoid direct construction
 };
 
@@ -128,44 +93,61 @@ class GenericSpanContext {
 // ------------------------
 
 template <typename CONTEXT, typename ADAPTER>
-GenericSpanContext<CONTEXT, ADAPTER>::GenericSpanContext()
+inline GenericSpanContext<CONTEXT, ADAPTER>::GenericSpanContext()
 {
 }
 
 template <typename CONTEXT, typename ADAPTER>
-GenericSpanContext<CONTEXT, ADAPTER>::GenericSpanContext(
-    const GenericSpanContext&)
+inline GenericSpanContext<CONTEXT, ADAPTER>::GenericSpanContext(
+    const GenericSpanContext &)
 {
 }
 
 template <typename CONTEXT, typename ADAPTER>
-typename GenericSpanContext<CONTEXT, ADAPTER>::const_iterator
-GenericSpanContext<CONTEXT, ADAPTER>::begin() const
+inline typename GenericSpanContext<CONTEXT, ADAPTER>::BaggageIterator
+GenericSpanContext<CONTEXT, ADAPTER>::baggageBegin() const
 {
-    return const_iterator(static_cast<const CONTEXT*>(this)->beginImp());
+    return BaggageIterator(
+        static_cast<const CONTEXT *>(this)->baggageBeginImp());
 }
 
 template <typename CONTEXT, typename ADAPTER>
-typename GenericSpanContext<CONTEXT, ADAPTER>::const_iterator
-GenericSpanContext<CONTEXT, ADAPTER>::end() const
+inline typename GenericSpanContext<CONTEXT, ADAPTER>::BaggageIterator
+GenericSpanContext<CONTEXT, ADAPTER>::baggageEnd() const
 {
-    return const_iterator(static_cast<const CONTEXT*>(this)->endImp());
+    return BaggageIterator(static_cast<const CONTEXT *>(this)->baggageEndImp());
 }
 
 template <typename CONTEXT, typename ADAPTER>
-int
-GenericSpanContext<CONTEXT, ADAPTER>::setBaggage(const StringRef& key,
-                                                 const StringRef& baggage)
+inline typename GenericSpanContext<CONTEXT, ADAPTER>::BaggageRange
+GenericSpanContext<CONTEXT, ADAPTER>::baggageRange() const
 {
-    return static_cast<CONTEXT*>(this)->setBaggageImp(key, baggage);
+    return BaggageRange(baggageBegin(), baggageEnd());
 }
 
 template <typename CONTEXT, typename ADAPTER>
-int
-GenericSpanContext<CONTEXT, ADAPTER>::getBaggage(StringRef* const baggage,
-                                                 const StringRef& key) const
+inline int
+GenericSpanContext<CONTEXT, ADAPTER>::setBaggage(const StringRef &key,
+                                                 const StringRef &baggage)
 {
-    return static_cast<const CONTEXT*>(this)->getBaggageImp(baggage, key);
+    return static_cast<CONTEXT *>(this)->setBaggageImp(key, baggage);
 }
+
+template <typename CONTEXT, typename ADAPTER>
+inline int
+GenericSpanContext<CONTEXT, ADAPTER>::getBaggage(BaggageValue *const baggage,
+                                                 const StringRef &key) const
+{
+    return static_cast<const CONTEXT *>(this)->getBaggageImp(baggage, key);
+}
+
+template <typename CONTEXT, typename ADAPTER>
+inline int
+GenericSpanContext<CONTEXT, ADAPTER>::getBaggage(BaggageValues *const baggage,
+                                                 const StringRef &key) const
+{
+    return static_cast<const CONTEXT *>(this)->getBaggageImp(baggage, key);
+}
+
 }  // namespace opentracing
 #endif  // INCLUDED_OPENTRACING_SPANCONTEXT_H

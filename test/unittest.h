@@ -35,8 +35,24 @@ struct GenericSpanGuard {
 };
 
 template <typename TRACER>
+struct GenericSpanOptionsGuard {
+    GenericSpanOptionsGuard(TRACER* tracer, typename TRACER::SpanOptions* s)
+    : t(tracer), sp(s)
+    {
+    }
+    ~GenericSpanOptionsGuard()
+    {
+        t->cleanup(sp);
+    }
+
+    TRACER*                       t;
+    typename TRACER::SpanOptions* sp;
+};
+
+template <typename TRACER>
 struct GenericSpanContextGuard {
-    GenericSpanContextGuard(TRACER* tracer, typename TRACER::SpanContext* s)
+    GenericSpanContextGuard(TRACER*                             tracer,
+                            const typename TRACER::SpanContext* s)
     : t(tracer), sp(s)
     {
     }
@@ -45,8 +61,8 @@ struct GenericSpanContextGuard {
         t->cleanup(sp);
     }
 
-    TRACER*                       t;
-    typename TRACER::SpanContext* sp;
+    TRACER*                             t;
+    const typename TRACER::SpanContext* sp;
 };
 }
 

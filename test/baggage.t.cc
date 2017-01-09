@@ -67,67 +67,6 @@ TEST(Baggage, ConstBehaviorThroughDeref)
     ASSERT_EQ("banana", b->value());
 }
 
-TEST(BaggageWide, Constructor)
-{
-    BaggageWide b;
-    ASSERT_EQ(L"", b.key());
-    ASSERT_EQ(L"", b.value());
-}
-
-TEST(BaggageWide, CopyConstructor)
-{
-    BaggageWide b(L"apple", L"banana");
-    BaggageWide cp(b);
-
-    ASSERT_EQ(L"apple", cp.key());
-    ASSERT_EQ(L"banana", cp.value());
-}
-
-TEST(BaggageWide, Assignment)
-{
-    BaggageWide b(L"apple", L"banana");
-    BaggageWide cp;
-    cp = b;
-
-    ASSERT_EQ(L"apple", cp.key());
-    ASSERT_EQ(L"banana", cp.value());
-}
-
-TEST(BaggageWide, Manipulate)
-{
-    BaggageWide b(L"apple", L"banana");
-    b.key() = L"cranberry";
-    b.value() = L"dates";
-
-    ASSERT_EQ(L"cranberry", b.key());
-    ASSERT_EQ(L"dates", b.value());
-}
-
-TEST(BaggageWide, ManipulateThroughDeref)
-{
-    BaggageWide b(L"apple", L"banana");
-    b->key() = L"cranberry";
-    b->value() = L"dates";
-
-    ASSERT_EQ(L"cranberry", b.key());
-    ASSERT_EQ(L"dates", b.value());
-}
-
-TEST(BaggageWide, ConstBehavior)
-{
-    const BaggageWide b(L"apple", L"banana");
-
-    ASSERT_EQ(L"apple", b.key());
-    ASSERT_EQ(L"banana", b.value());
-}
-
-TEST(BaggageWide, ConstBehaviorThroughDeref)
-{
-    const BaggageWide b(L"apple", L"banana");
-
-    ASSERT_EQ(L"apple", b->key());
-    ASSERT_EQ(L"banana", b->value());
-}
 
 TEST(BaggageRef, Constructor)
 {
@@ -176,19 +115,9 @@ class MapBaggage {
     typedef Map::iterator       iterator;
     typedef Map::const_iterator const_iterator;
 
-    Baggage narrow(const Map::const_iterator& iter) const
+    Baggage copy(const Map::const_iterator& iter) const
     {
         return Baggage(iter->first, iter->second);
-    }
-    BaggageWide wide(const Map::const_iterator& iter) const
-    {
-        std::wstring first;
-        std::wstring second;
-
-        test_widen(&first, iter->first);
-        test_widen(&second, iter->second);
-
-        return BaggageWide(first, second);
     }
     BaggageRef ref(const Map::const_iterator& iter) const
     {
@@ -196,86 +125,43 @@ class MapBaggage {
     }
 };
 
-TEST(BaggageIterator, NarrowAdapter)
+TEST(BaggageIterator, CopyAdapter)
 {
     MapBaggage::Map m;
     m["animal"] = "dog";
     m["fruit"]  = "apple";
     m["veggie"] = "carrot";
 
-    BaggageIterator<MapBaggage> it(m.begin());
-    BaggageIterator<MapBaggage> end(m.end());
+    BaggageIteratorImp<MapBaggage> it(m.begin());
+    BaggageIteratorImp<MapBaggage> end(m.end());
 
     ASSERT_FALSE(end == it);
-    Baggage narrow = it.narrow();;
+    Baggage copy = it.copy();;
 
-    ASSERT_EQ("animal", narrow.key());
-    ASSERT_EQ("dog", narrow.value());
+    ASSERT_EQ("animal", copy.key());
+    ASSERT_EQ("dog", copy.value());
 
-    BaggageIterator<MapBaggage> prev = it++;
+    BaggageIteratorImp<MapBaggage> prev = it++;
     ASSERT_FALSE(prev == end);
     ASSERT_FALSE(it == end);
 
-    narrow = prev.narrow();
+    copy = prev.copy();
 
-    ASSERT_EQ("animal", narrow.key());
-    ASSERT_EQ("dog", narrow.value());
+    ASSERT_EQ("animal", copy.key());
+    ASSERT_EQ("dog", copy.value());
 
-    narrow = it.narrow();
+    copy = it.copy();
 
-    ASSERT_EQ("fruit", narrow.key());
-    ASSERT_EQ("apple", narrow.value());
-
-    ++it;
-    ASSERT_FALSE(end == it);
-
-    narrow = it.narrow();
-
-    ASSERT_EQ("veggie", narrow.key());
-    ASSERT_EQ("carrot", narrow.value());
-
-    ++it;
-
-    ASSERT_TRUE(end == it);
-}
-
-TEST(BaggageIterator, WideAdapter)
-{
-    MapBaggage::Map m;
-    m["animal"] = "dog";
-    m["fruit"]  = "apple";
-    m["veggie"] = "carrot";
-
-    BaggageIterator<MapBaggage> it(m.begin());
-    BaggageIterator<MapBaggage> end(m.end());
-
-    ASSERT_FALSE(end == it);
-    BaggageWide wide = it.wide();
-
-    ASSERT_EQ(L"animal", wide.key());
-    ASSERT_EQ(L"dog", wide.value());
-
-    BaggageIterator<MapBaggage> prev = it++;
-    ASSERT_FALSE(prev == end);
-    ASSERT_FALSE(it == end);
-
-    wide = prev.wide();
-
-    ASSERT_EQ(L"animal", wide.key());
-    ASSERT_EQ(L"dog", wide.value());
-
-    wide = it.wide();
-
-    ASSERT_EQ(L"fruit", wide.key());
-    ASSERT_EQ(L"apple", wide.value());
+    ASSERT_EQ("fruit", copy.key());
+    ASSERT_EQ("apple", copy.value());
 
     ++it;
     ASSERT_FALSE(end == it);
 
-    wide = it.wide();
+    copy = it.copy();
 
-    ASSERT_EQ(L"veggie", wide.key());
-    ASSERT_EQ(L"carrot", wide.value());
+    ASSERT_EQ("veggie", copy.key());
+    ASSERT_EQ("carrot", copy.value());
 
     ++it;
 
@@ -289,8 +175,8 @@ TEST(BaggageIterator, RefAdapter)
     m["fruit"]  = "apple";
     m["veggie"] = "carrot";
 
-    BaggageIterator<MapBaggage> it(m.begin());
-    BaggageIterator<MapBaggage> end(m.end());
+    BaggageIteratorImp<MapBaggage> it(m.begin());
+    BaggageIteratorImp<MapBaggage> end(m.end());
 
     ASSERT_FALSE(end == it);
     BaggageRef ref = it.ref();
@@ -298,7 +184,7 @@ TEST(BaggageIterator, RefAdapter)
     ASSERT_STREQ("animal", ref.key());
     ASSERT_STREQ("dog", ref.value());
 
-    BaggageIterator<MapBaggage> prev = it++;
+    BaggageIteratorImp<MapBaggage> prev = it++;
 
     ASSERT_FALSE(prev == end);
     ASSERT_FALSE(it == end);
@@ -333,8 +219,8 @@ TEST(BaggageIterator, Implicit)
     m["fruit"]  = "apple";
     m["veggie"] = "carrot";
 
-    BaggageIterator<MapBaggage> it(m.begin());
-    BaggageIterator<MapBaggage> end(m.end());
+    BaggageIteratorImp<MapBaggage> it(m.begin());
+    BaggageIteratorImp<MapBaggage> end(m.end());
 
     ASSERT_FALSE(end == it);
     BaggageRef ref = *it;
@@ -342,7 +228,7 @@ TEST(BaggageIterator, Implicit)
     ASSERT_STREQ("animal", ref.key());
     ASSERT_STREQ("dog", ref.value());
 
-    BaggageIterator<MapBaggage> prev = it++;
+    BaggageIteratorImp<MapBaggage> prev = it++;
 
     ASSERT_FALSE(prev == end);
     ASSERT_FALSE(it == end);
@@ -375,8 +261,8 @@ TEST(BaggageIterator, EmptyMapBaggage)
 {
     MapBaggage::Map m;
 
-    BaggageIterator<MapBaggage> it(m.begin());
-    BaggageIterator<MapBaggage> end(m.end());
+    BaggageIteratorImp<MapBaggage> it(m.begin());
+    BaggageIteratorImp<MapBaggage> end(m.end());
 
     ASSERT_TRUE(end == it);
 }
@@ -392,7 +278,7 @@ TEST(BaggageIterator, ForLoopSyntax)
     const char * expectedVals[] = {"dog", "apple", "carrot"};
     size_t index = 0;
 
-    for (BaggageIterator<MapBaggage> it = m.begin(), end = m.end(); it != end;
+    for (BaggageIteratorImp<MapBaggage> it = m.begin(), end = m.end(); it != end;
          ++it, ++index)
     {
 	// Test the -> syntax works

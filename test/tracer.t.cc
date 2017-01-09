@@ -35,85 +35,36 @@ TEST(Tracer, StartWithOp)
     rc = guard.sp->context().setBaggage("apple", "banana");
     ASSERT_EQ(0, rc);
 
-    StringRef ref;
-    rc = guard.sp->context().getBaggage(&ref, "apple");
+    Tracer::SpanContext::BaggageValues vals;
+    rc = guard.sp->context().getBaggage(&vals, "apple");
 
     ASSERT_EQ(0, rc);
-    ASSERT_STREQ("banana", ref);
+    ASSERT_EQ(1u, vals.size());
+    ASSERT_EQ("banana", vals[0]);
+
+    Tracer::SpanContext::BaggageValue val;
+    rc = guard.sp->context().getBaggage(&val, "apple");
+
+    ASSERT_EQ(0, rc);
+    ASSERT_EQ("banana", val);
 }
 
-TEST(Tracer, StartWithOpAndTsp)
+TEST(Tracer, StartWithOptions)
 {
-    TestTracerImpl imp;
-    Tracer& t = imp;
+    TestContextImpl otherContext;
 
-    SpanGuard guard(&t, t.start("hello", 125125));
-    EXPECT_TRUE(guard.sp);
-}
-
-TEST(Tracer, StartWithOpAndParent)
-{
-    // We create spans, which have contexts or create contexts directly
-    // through the 'extract' interface. Either way, clients only deal
-    // with the 'TestContext' type. Rather than make this simple start
-    // test dependent on those other interfaces, I'm going to just pull
-    // a context out of thin air to test the interface.
-
-    TestContextImpl contextImp;
-    TestContext& context = contextImp;
+    TestOptionsImpl optsImp;
 
     TestTracerImpl imp;
     Tracer& t = imp;
 
-    SpanGuard guard(&t, t.start("hello", context));
-    EXPECT_TRUE(guard.sp);
-}
+    SpanOptions& opts = optsImp;
 
-TEST(Tracer, StartWithOpAndParentAndTsp)
-{
-    // We create spans, which have contexts or create contexts directly
-    // through the 'extract' interface. Either way, clients only deal
-    // with the 'TestContext' type. Rather than make this simple start
-    // test dependent on those other interfaces, I'm going to just pull
-    // a context out of thin air to test the interface.
+    opts.setOperation("test");
+    opts.setStartTime(12414);
+    opts.addReference(SpanRelationship::e_ChildOf, otherContext);
 
-    TestContextImpl contextImp;
-    TestContext& context = contextImp;
-
-    TestTracerImpl imp;
-    Tracer& t = imp;
-
-    SpanGuard guard(&t, t.start("hello", context, 125125));
-    EXPECT_TRUE(guard.sp);
-}
-
-TEST(Tracer, StartWithOpAndMultipleParents)
-{
-    TestContextImpl contextImp1;
-    TestContextImpl contextImp2;
-    TestContextImpl contextImp3;
-
-    std::vector<TestContextImpl> contexts(3, TestContextImpl());
-
-    TestTracerImpl imp;
-    Tracer& t = imp;
-
-    SpanGuard guard(&t, t.start("hello", contexts.begin(), contexts.end()));
-    EXPECT_TRUE(guard.sp);
-}
-
-TEST(Tracer, StartWithOpAndMultipleParentsAndTsp)
-{
-    TestContextImpl contextImp1;
-    TestContextImpl contextImp2;
-    TestContextImpl contextImp3;
-
-    std::vector<TestContextImpl> contexts(3, TestContextImpl());
-
-    TestTracerImpl imp;
-    Tracer& t = imp;
-
-    SpanGuard guard(&t, t.start("hello", contexts.begin(), contexts.end(), 125125));
+    SpanGuard guard(&t, t.start("hello"));
     EXPECT_TRUE(guard.sp);
 }
 
@@ -133,11 +84,13 @@ TEST(Tracer, InjectText)
     int rc = t.inject(&writer, g.sp->context());
     ASSERT_EQ(0, rc);
 
-    ASSERT_EQ(1u, writer.pairs.size());
-    // Note there is no requirement that implementation make baggage keys
-    // unique, but the test suite does so its nice to verify that.
+    ASSERT_EQ(2u, writer.pairs.size());
+
     ASSERT_EQ(writer.pairs[0].m_name, "animal");
-    ASSERT_EQ(writer.pairs[0].m_value, "cat");
+    ASSERT_EQ(writer.pairs[1].m_name, "animal");
+
+    ASSERT_TRUE(writer.pairs[0].m_value == "cat" || writer.pairs[0].m_value == "tiger");
+    ASSERT_TRUE(writer.pairs[1].m_value == "cat" || writer.pairs[1].m_value == "tiger");
 }
 
 TEST(Tracer, ExtractText)
@@ -159,7 +112,9 @@ TEST(Tracer, ExtractText)
     const char * names[] = {"animal", "fruit", "veggie"};
     const char * values[] = {"tiger", "apple", "carrot"};
 
-    for(Tracer::SpanContext::const_iterator it = g.sp->begin(); it != g.sp->end(); ++it)
+    for (Tracer::SpanContext::BaggageIterator it = g.sp->baggageBegin();
+         it != g.sp->baggageEnd();
+         ++it)
     {
         ASSERT_STREQ(names[index], it.ref().key());
         ASSERT_STREQ(values[index], it.ref().value());
@@ -210,15 +165,22 @@ TEST(Tracer, InjectExplicit)
     ASSERT_EQ(0, rc);
 
     ASSERT_EQ(2u, w.carrier.size());
-    ASSERT_EQ(w.carrier["animal"], "tiger");
-    ASSERT_EQ(w.carrier["fruit"], "apple");
+
+    TestBaggageContainer::const_iterator cit = w.carrier.find("animal");
+
+    ASSERT_NE(cit, w.carrier.end());
+    ASSERT_EQ("tiger", cit->second);
+
+    cit = w.carrier.find("fruit");
+    ASSERT_NE(cit, w.carrier.end());
+    ASSERT_EQ("apple", cit->second);
 }
 
 TEST(Tracer, ExtractExplicit)
 {
     TestReader reader;
-    reader.carrier["animal"] = "tiger";
-    reader.carrier["fruit"]  = "apple";
+    reader.carrier.insert(TestBaggageContainer::value_type("animal", "tiger"));
+    reader.carrier.insert(TestBaggageContainer::value_type("fruit", "apple"));
 
     TestTracerImpl imp;
     Tracer& t = imp;

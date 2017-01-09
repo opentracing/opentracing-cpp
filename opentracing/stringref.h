@@ -18,10 +18,15 @@
 // See the boost documentation for more background:
 // http://www.boost.org/doc/libs/master/libs/utility/doc/html/string_ref.html
 
-#include <opentracing/config.h>
 #include <cstring>
 #include <cwchar>
 #include <string>
+#include <ostream>
+
+#include <opentracing/config.h>
+#if HAVE_STDING_H
+#include <stdint.h>
+#endif
 
 namespace opentracing {
 
@@ -96,9 +101,22 @@ class StringRefImp {
 // --------
 // Typedefs
 // --------
-
 typedef StringRefImp<char> StringRef;
 typedef StringRefImp<wchar_t> StringRefWide;
+
+// -----
+// Note:
+// -----
+// Although we have the ability to use wide string refs, there are side
+// effects in exposing an OpenTracing interface that works with narrow and wide
+// strings at the same time. Storage on the implmentation will have a 'native'
+// format.
+//
+// Exposing references to that format avoid copies means clients would be
+// dependent on that format. If they're dependent on that detail and then switch
+// out the implementation to a different format, there would be lots of code
+// that breaks if it was expecting wstring and starts receiving string all of a
+// sudden. That design issue still needs to be addressed.
 
 // ------------------
 // Class StringRefImp
@@ -191,9 +209,19 @@ inline size_t
 StringRefImp<CHAR>::getLength(const CHAR* s)
 {
     const CHAR* p = s;
-    while (*p) ++p;
+    while (*p)
+    {
+        ++p;
+    }
     return size_t(p - s);
 }
 
 }  // namespace opentracing
+
+inline
+std::ostream& operator<<(std::ostream& os, const opentracing::StringRef& ref)
+{
+    return os.write(ref.data(), ref.length());
+}
+
 #endif  // INCLUDED_OPENTRACING_STRINGREF_H

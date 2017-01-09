@@ -112,17 +112,30 @@ TEST(Carriers, ExplicitWriter)
     ASSERT_EQ(0, rc);
 
     ASSERT_EQ(3u, imp.carrier.size());
-    ASSERT_EQ(imp.carrier["animal"], "dog");
-    ASSERT_EQ(imp.carrier["fruit"], "apple");
-    ASSERT_EQ(imp.carrier["veggie"], "carrot");
+
+    TestBaggageContainer::const_iterator it =
+        imp.carrier.find("animal");
+
+    ASSERT_NE(imp.carrier.end(), it);
+    ASSERT_EQ("dog", it->second);
+
+    it = imp.carrier.find("fruit");
+    ASSERT_NE(imp.carrier.end(), it);
+    ASSERT_EQ("apple", it->second);
+
+    it = imp.carrier.find("veggie");
+    ASSERT_NE(imp.carrier.end(), it);
+    ASSERT_EQ("carrot", it->second);
 }
 
 TEST(Carriers, ExplicitReader)
 {
+    typedef TestBaggageContainer Map;
+
     TestReader imp;
-    imp.carrier["animal"] = "dog";
-    imp.carrier["fruit"] = "apple";
-    imp.carrier["veggie"] = "carrot";
+    imp.carrier.insert(Map::value_type("animal", "dog"));
+    imp.carrier.insert(Map::value_type("fruit", "apple"));
+    imp.carrier.insert(Map::value_type("veggie", "carrot"));
 
     ExplicitReader& t = imp;
 
@@ -130,11 +143,11 @@ TEST(Carriers, ExplicitReader)
     int rc = t.extract(&context);
     ASSERT_EQ(0, rc);
 
-    const std::map<std::string, std::string>& m = context.baggageMap();
+    TestBaggageContainer& m = context.baggageMap();
 
     ASSERT_EQ(3u, m.size());
 
-    std::map<std::string, std::string>::const_iterator it = m.find("animal");
+    TestBaggageContainer::const_iterator it = m.find("animal");
 
     ASSERT_NE(m.end(), it);
     ASSERT_EQ(it->second, "dog");
