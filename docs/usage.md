@@ -150,7 +150,7 @@ class HttpWriter : public opentracing::GenericBinaryWriter<HttpWriter>
 
     int injectImp(const void* blob, const_size len)
     {
-        std::string blob(static_cast<char*>(blob), len);
+        std::string blob(static_cast<const char*>(blob), len);
         req->addHeader("x-acme-tracing-blob", blob);
         return 0;
     }
