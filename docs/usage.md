@@ -262,7 +262,7 @@ control the time-stamp behavior if they wish by providing it explicitly:
 ```
 acme::SpanGuard span(acme::Tracer::instance()->start("get_bookmarks"));
 span->log("db_access", account_id); // Use current wall-time
-span->log("redis_access", site, 1484003943000); // Accessed redis on Jan 9, 2017 at 23:19:2 GMT
+span->log("redis_access", site, 1484003943000); // Accessed redis on Jan 9, 2017 at 23:19:02 GMT
 ```
 
 ##### Baggage
