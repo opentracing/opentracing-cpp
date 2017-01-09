@@ -44,7 +44,7 @@ class NoopSpan;
 class NoopTracer;
 
 // =================
-// Class NoopAdapter
+// class NoopAdapter
 // =================
 // The NoopAdapter has no container to iterator over. Regardless of what
 // iterator is passed in, it will always return empty baggage objects or
@@ -60,7 +60,7 @@ class NoopAdapter {
 };
 
 // =================
-// Class NoopContext
+// class NoopContext
 // =================
 // The NoopContext implements the GenericSpanContext interface.
 //
@@ -84,7 +84,7 @@ class NoopContext : public GenericSpanContext<NoopContext, NoopAdapter> {
 };
 
 // =================
-// Class NoopOptions
+// class NoopOptions
 // =================
 // NoopOptions implements the GenericSpanOptions interface. It holds
 // onto no references, nor does it manipulate the start time or operation
@@ -99,7 +99,7 @@ class NoopOptions
 };
 
 // ==============
-// Class NoopSpan
+// class NoopSpan
 // ==============
 // The NoopSpan implements the GenericSpan interface. It provides no-op
 // overloads for all of the required Span behaviors.
@@ -129,7 +129,7 @@ class NoopSpan : public GenericSpan<NoopSpan, NoopContext, NoopAdapter> {
 };
 
 // ================
-// Class NoopTracer
+// class NoopTracer
 // ================
 // The NoopTracer implements the GenericTracer interface. It provides no-op
 // overloads for all of the required Tracer behaviors.
@@ -361,21 +361,21 @@ template <typename CARRIER>
 inline NoopContext*
 NoopTracer::extractImp(const GenericTextReader<CARRIER>&)
 {
-    return &m_span.context();
+    return &m_span.contextImp();
 }
 
 template <typename CARRIER>
 inline NoopContext*
 NoopTracer::extractImp(const GenericBinaryReader<CARRIER>&)
 {
-    return &m_span.context();
+    return &m_span.contextImp();
 }
 
 template <typename CARRIER>
 inline NoopContext*
 NoopTracer::extractImp(const GenericReader<CARRIER, NoopContext>&)
 {
-    return &m_span.context();
+    return &m_span.contextImp();
 }
 
 inline void

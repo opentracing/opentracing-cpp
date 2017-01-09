@@ -9,9 +9,6 @@
 // same, however, there may be some differences in return codes due
 // to the differing implementations.
 
-typedef GenericSpanContext<NoopContext, NoopAdapter> GlobalContext;
-typedef GenericSpan<NoopSpan, NoopContext, NoopAdapter> GlobalSpan;
-typedef GenericSpanOptions<NoopOptions, NoopContext, NoopAdapter> GlobalOptions;
 typedef GenericTracer<NoopTracer,
                       NoopSpan,
                       NoopOptions,
@@ -19,11 +16,24 @@ typedef GenericTracer<NoopTracer,
                       NoopAdapter>
     GlobalTracer;
 
-typedef GenericSpanGuard<GlobalTracer> SpanGuard;
-typedef GenericSpanOptionsGuard<GlobalTracer> SpanOptionsGuard;
-typedef GenericSpanContextGuard<GlobalTracer> SpanContextGuard;
+class NoopTracerEnv : public ::testing::Test {
+  public:
+    virtual void
+    SetUp()
+    {
+        GlobalTracer::install(&imp);
+    };
 
-TEST(NoopTracer, Intantiation){
+    virtual void
+    TearDown()
+    {
+        GlobalTracer::uninstall();
+    };
+
+    NoopTracer imp;
+};
+
+TEST_F(NoopTracerEnv, Intantiation){
     NoopTracer noop;
 
     GlobalTracer::install(&noop);
@@ -33,51 +43,29 @@ TEST(NoopTracer, Intantiation){
     ASSERT_FALSE(GlobalTracer::instance());
 }
 
-TEST(NoopTracer, StartWithOp)
+TEST_F(NoopTracerEnv, StartWithOp)
 {
-    NoopTracer imp;
-    GlobalTracer& t = imp;
-
-    SpanGuard guard(&t, t.start("hello"));
-    EXPECT_TRUE(guard.sp);
+    GlobalTracer::SpanGuard guard(GlobalTracer::instance()->start("hello"));
+    EXPECT_TRUE(guard.get());
 
     int rc = 0;
 
-    rc = guard.sp->log("server", "blahblahblah");
+    rc = guard->log("server", "blahblahblah");
     ASSERT_EQ(0, rc);
 
-    rc = guard.sp->context().setBaggage("hello", "world");
+    rc = guard->context().setBaggage("hello", "world");
     ASSERT_EQ(0, rc);
 
-    rc = guard.sp->context().setBaggage("apple", "banana");
+    rc = guard->context().setBaggage("apple", "banana");
     ASSERT_EQ(0, rc);
 
     GlobalTracer::SpanContext::BaggageValue val;
-    rc = guard.sp->context().getBaggage(&val, "apple");
+    rc = guard->context().getBaggage(&val, "apple");
 
     ASSERT_NE(0, rc);
 }
 
-TEST(NoopTracer, StartWithOpAndTsp)
-{
-    NoopContext otherContextImp;
-    GlobalContext& othercontext = otherContextImp;
-
-    NoopTracer imp;
-    GlobalTracer& t = imp;
-
-    SpanOptionsGuard optsguard(&t, t.makeSpanOptions());
-
-    optsguard.sp->setOperation("hello");
-    optsguard.sp->setStartTime(1251251);
-    optsguard.sp->addReference(SpanRelationship::e_FollowsFrom, othercontext);
-
-    SpanGuard guard(&t, t.start("hello"));
-    EXPECT_TRUE(guard.sp);
-}
-
-/*
-TEST(NoopTracer, StartWithOpAndParent)
+TEST_F(NoopTracerEnv, StartWithOpAndParent)
 {
     // We create spans, which have contexts or create contexts directly
     // through the 'extract' interface. Either way, clients only deal
@@ -85,102 +73,41 @@ TEST(NoopTracer, StartWithOpAndParent)
     // test dependent on those other interfaces, I'm going to just pull
     // a context out of thin air to test the interface.
 
-    NoopContext contextImp;
-    GlobalContext& context = contextImp;
-
-    NoopTracer imp;
-    GlobalTracer& t = imp;
-
-    SpanGuard guard(&t, t.start("hello", context));
-    EXPECT_TRUE(guard.sp);
+    GlobalTracer::SpanGuard guard(GlobalTracer::instance()->start("hello"));
+    EXPECT_TRUE(guard.get());
 }
 
-TEST(NoopTracer, StartWithOpAndParentAndTsp)
-{
-    // We create spans, which have contexts or create contexts directly
-    // through the 'extract' interface. Either way, clients only deal
-    // with the 'GlobalContext' type. Rather than make this simple start
-    // test dependent on those other interfaces, I'm going to just pull
-    // a context out of thin air to test the interface.
-
-    NoopContext contextImp;
-    GlobalContext& context = contextImp;
-
-    NoopTracer imp;
-    GlobalTracer& t = imp;
-
-    SpanGuard guard(&t, t.start("hello", context, 125125));
-    EXPECT_TRUE(guard.sp);
-}
-
-TEST(NoopTracer, StartWithOpAndMultipleParents)
-{
-    NoopContext contextImp1;
-    NoopContext contextImp2;
-    NoopContext contextImp3;
-
-    std::vector<NoopContext> contexts(3, NoopContext());
-
-    NoopTracer imp;
-    GlobalTracer& t = imp;
-
-    SpanGuard guard(&t, t.start("hello", contexts.begin(), contexts.end()));
-    EXPECT_TRUE(guard.sp);
-}
-
-TEST(NoopTracer, StartWithOpAndMultipleParentsAndTsp)
-{
-    NoopContext contextImp1;
-    NoopContext contextImp2;
-    NoopContext contextImp3;
-
-    std::vector<NoopContext> contexts(3, NoopContext());
-
-    NoopTracer imp;
-    GlobalTracer& t = imp;
-
-    SpanGuard guard(&t, t.start("hello", contexts.begin(), contexts.end(), 125125));
-    EXPECT_TRUE(guard.sp);
-}
-
-TEST(NoopTracer, InjectText)
+TEST_F(NoopTracerEnv, InjectText)
 {
     TestTextWriter writer;
-    NoopTracer imp;
 
-    GlobalTracer& t = imp;
+    GlobalTracer::SpanGuard g(GlobalTracer::instance()->start("op"));
+    ASSERT_TRUE(g.get());
 
-    SpanGuard g(&t, t.start("op"));
-    ASSERT_TRUE(g.sp);
+    g->context().setBaggage("animal", "tiger");
+    g->context().setBaggage("animal", "cat");
 
-    g.sp->context().setBaggage("animal", "tiger");
-    g.sp->context().setBaggage("animal", "cat");
-
-    int rc = t.inject(&writer, g.sp->context());
+    int rc = GlobalTracer::instance()->inject(&writer, g->context());
     ASSERT_EQ(0, rc);
 }
 
-TEST(NoopTracer, ExtractText)
+TEST_F(NoopTracerEnv, ExtractText)
 {
     TestTextReader reader;
     reader.pairs.push_back(TextMapPair("animal", "tiger"));
     reader.pairs.push_back(TextMapPair("fruit", "apple"));
     reader.pairs.push_back(TextMapPair("veggie", "carrot"));
 
-    NoopTracer imp;
-
-    GlobalTracer& t = imp;
-
-    SpanContextGuard g(&t, t.extract(reader));
-    ASSERT_TRUE(g.sp);
+    GlobalTracer::SpanContextGuard g(GlobalTracer::instance()->extract(reader));
+    ASSERT_TRUE(g.get());
 
     size_t index = 0;
 
     const char * names[] = {"animal", "fruit", "veggie"};
     const char * values[] = {"tiger", "apple", "carrot"};
 
-    for (GlobalTracer::SpanContext::const_iterator it = g.sp->begin();
-         it != g.sp->end();
+    for (GlobalTracer::SpanContext::BaggageIterator it = g->baggageBegin();
+         it != g->baggageEnd();
          ++it)
     {
         ASSERT_STREQ(names[index], it.ref().key());
@@ -189,30 +116,21 @@ TEST(NoopTracer, ExtractText)
     }
 }
 
-TEST(NoopTracer, InjectBinary)
+TEST_F(NoopTracerEnv, InjectBinary)
 {
     TestBinaryWriter writer;
-    NoopTracer imp;
-
-    GlobalTracer& t = imp;
-
-    SpanGuard g(&t, t.start("op"));
-    ASSERT_TRUE(g.sp);
-
-    int rc = t.inject(&writer, g.sp->context());
+    GlobalTracer::SpanGuard g(GlobalTracer::instance()->start("op"));
+    ASSERT_TRUE(g.get());
+    int rc = GlobalTracer::instance()->inject(&writer, g->context());
     ASSERT_EQ(0, rc);
 }
 
-TEST(NoopTracer, ExtractBinary)
+TEST_F(NoopTracerEnv, ExtractBinary)
 {
     TestBinaryReader reader;
     reader.m_raw = 0xdeadbeef;
-
-    NoopTracer imp;
-
-    GlobalTracer& t = imp;
-    SpanContextGuard g(&t, t.extract(reader));
-    ASSERT_TRUE(g.sp);
+    GlobalTracer::SpanContextGuard g(GlobalTracer::instance()->extract(reader));
+    ASSERT_TRUE(g.get());
 }
 
 struct NoopWriter: public GenericWriter<NoopWriter, NoopContext>
@@ -223,16 +141,12 @@ struct NoopWriter: public GenericWriter<NoopWriter, NoopContext>
     }
 };
 
-TEST(NoopTracer, InjectExplicit)
+TEST_F(NoopTracerEnv, InjectExplicit)
 {
     NoopWriter w;
-    NoopTracer imp;
-    GlobalTracer& t = imp;
-
-    SpanGuard g(&t, t.start("span"));
-    ASSERT_TRUE(g.sp);
-
-    int rc = t.inject(&w, g.sp->context());
+    GlobalTracer::SpanGuard g(GlobalTracer::instance()->start("span"));
+    ASSERT_TRUE(g.get());
+    int rc = GlobalTracer::instance()->inject(&w, g->context());
     ASSERT_EQ(0, rc);
 }
 
@@ -244,17 +158,45 @@ struct NoopReader : public GenericReader<NoopReader, NoopContext>
     }
 };
 
-TEST(NoopTracer, ExtractExplicit)
+TEST_F(NoopTracerEnv, ExtractExplicit)
 {
-    NoopReader reader;
-    NoopTracer imp;
-    GlobalTracer& t = imp;
-    SpanContextGuard g(&t, t.extract(reader));
-    ASSERT_TRUE(g.sp);
+    NoopReader r;
+    GlobalTracer::SpanContextGuard g(GlobalTracer::instance()->extract(r));
+    ASSERT_TRUE(g.get());
+}
+
+TEST_F(NoopTracerEnv, StartWithOpts)
+{
+    NoopReader r;
+    GlobalTracer::SpanContextGuard otherContext(GlobalTracer::instance()->extract(r));
+    ASSERT_TRUE(otherContext.get());
+
+    GlobalTracer::SpanOptionsGuard opts(GlobalTracer::instance()->makeSpanOptions());
+
+    opts->setOperation("hello");
+    opts->setStartTime(1251251);
+    opts->addReference(SpanRelationship::e_FollowsFrom, *otherContext);
+
+    GlobalTracer::SpanGuard guard(GlobalTracer::instance()->start("hello"));
+    EXPECT_TRUE(guard.get());
 }
 
 template<typename T>
 class NoopSpanTypeTests : public ::testing::Test {
+  public:
+    virtual void
+    SetUp()
+    {
+        GlobalTracer::install(&imp);
+    };
+
+    virtual void
+    TearDown()
+    {
+        GlobalTracer::uninstall();
+    };
+
+    NoopTracer imp;
 };
 
 typedef ::testing::Types<StringRef,
@@ -278,25 +220,21 @@ TYPED_TEST_CASE(NoopSpanTypeTests, OverloadedTypes);
 
 TYPED_TEST(NoopSpanTypeTests, TagInterface)
 {
-    NoopSpan impl;
-    GlobalSpan& t = impl;
-    int rc = t.tag("key", TypeParam());
+    GlobalTracer::SpanGuard span(GlobalTracer::instance()->start("hello world"));
+    int rc = span->tag("key", TypeParam());
     ASSERT_EQ(0, rc);
 }
 
 TYPED_TEST(NoopSpanTypeTests, LogInterface)
 {
-    NoopSpan impl;
-    GlobalSpan& t = impl;
-    int rc = t.log("key", TypeParam());
+    GlobalTracer::SpanGuard span(GlobalTracer::instance()->start("hello world"));
+    int rc = span->log("key", TypeParam());
     ASSERT_EQ(0, rc);
 }
 
 TYPED_TEST(NoopSpanTypeTests, LogTspInterface)
 {
-    NoopSpan impl;
-    GlobalSpan& t = impl;
-    int rc = t.log("key", TypeParam(), 0);
+    GlobalTracer::SpanGuard span(GlobalTracer::instance()->start("hello world"));
+    int rc = span->log("key", TypeParam(), 0);
     ASSERT_EQ(0, rc);
 }
-*/

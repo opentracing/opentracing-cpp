@@ -35,13 +35,24 @@ class TestTracerImpl : public GenericTracer<TestTracerImpl,
                                             TestContextImpl,
                                             TestContextBaggageAdapter> {
   public:
-    Span*
+    TestOptionsImpl * makeSpanOptionsImp()
+    {
+        return new TestOptionsImpl();
+    }
+
+    void
+    cleanupImp(TestOptionsImpl* const opts)
+    {
+        delete opts;
+    }
+
+    TestSpanImpl*
     startImp(const StringRef&)
     {
         return new TestSpanImpl();
     }
 
-    Span*
+    TestSpanImpl*
     startImp(const TestOptionsImpl&)
     {
         return new TestSpanImpl();

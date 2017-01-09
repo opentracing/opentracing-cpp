@@ -19,51 +19,6 @@ test_widen(std::wstring* const dest, const std::string& src)
     dest->resize(src.size());
     std::mbstowcs(&(*dest)[0], src.c_str(), src.size());
 }
-
-template <typename TRACER>
-struct GenericSpanGuard {
-    GenericSpanGuard(TRACER* tracer, typename TRACER::Span* s) : t(tracer), sp(s)
-    {
-    }
-    ~GenericSpanGuard()
-    {
-        t->cleanup(sp);
-    }
-
-    TRACER*                t;
-    typename TRACER::Span* sp;
-};
-
-template <typename TRACER>
-struct GenericSpanOptionsGuard {
-    GenericSpanOptionsGuard(TRACER* tracer, typename TRACER::SpanOptions* s)
-    : t(tracer), sp(s)
-    {
-    }
-    ~GenericSpanOptionsGuard()
-    {
-        t->cleanup(sp);
-    }
-
-    TRACER*                       t;
-    typename TRACER::SpanOptions* sp;
-};
-
-template <typename TRACER>
-struct GenericSpanContextGuard {
-    GenericSpanContextGuard(TRACER*                             tracer,
-                            const typename TRACER::SpanContext* s)
-    : t(tracer), sp(s)
-    {
-    }
-    ~GenericSpanContextGuard()
-    {
-        t->cleanup(sp);
-    }
-
-    TRACER*                             t;
-    const typename TRACER::SpanContext* sp;
-};
 }
 
 using namespace opentracing;

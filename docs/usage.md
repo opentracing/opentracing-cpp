@@ -40,36 +40,45 @@ later.
 #include <opentracing/noop.h>
 
 namespace acme {
-    typedef opentracing::GenericSpanContext<
-                opentracing::NoopContext,
-                opentracing::NoopAdapter>    SpanContext;
-
-    typedef opentracing::GenericSpanOptions<
-                opentracing::NoopOptions,
-                opentracing::NoopContext,
-                opentracing::NoopAdapter>    SpanOptions;
-
-    typedef opentracing::GenericSpan<
-                opentracing::NoopSpan,
-                opentracing::NoopContext,
-                opentracing::NoopAdapter>    SpanContext;
+    typedef opentracing::NoopTracer TracerImpl;
 
     typedef opentracing::GenericTracer<
                 opentracing::NoopTracer,
                 opentracing::NoopSpan,
                 opentracing::NoopOptions,
                 opentracing::NoopContext,
-                opentracing::NoopAdapter>    Tracer;
+                opentracing::NoopAdapter> Tracer;
+    // Tracer is required for O(1) implementation swaps
 
-    typedef opentracing::NoopTracer          TracerImpl;
+    typedef Tracer::SpanContext SpanContext;
+    typedef Tracer::SpanOptions SpanOptions;
+    typedef Tracer::Span        Span;
+
+    typedef Tracer::SpanContextGuard SpanContextGuard;
+    typedef Tracer::SpanOptionsGuard SpanOptions;
+    typedef Tracer::SpanGuard        SpanGuard;
+    // Exposing the 'Span' typedefs is done for convenience
 }
 #endif
 ```
 
-The `SpanContext`, `SpanOptions`, `SpanContext`, and `Tracer` typedefs are now
-the names that our theoretical "ACME Inc." organization can use to instrument
-their applications. The names are not standardized, but these typedefs
-are the recommended names, and will be used throughout the rest of this documentation.
+By creating the `Tracer` typedef, we can now rely on the the GenericTracer interface,
+but avoid knowing any of the explicit implementation details in client code.
+
+The `Tracer` exposes a number of public typedefs which make it easier to create our
+types:
+
+    * `Tracer::Span`             - Interface to Span objects
+    * `Tracer::SpanContext`      - Interface to SpanContext objects
+    * `Tracer::SpanOptions`      - Interface to SpanOptions objects
+    * `Tracer::SpanGuard`        - RAII Wrappers for Spans
+    * `Tracer::SpanOptionsGuard` - RAII Wrappers for SpanOptions
+    * `Tracer::SpanContextGuard` - RAII Wrappers for SpanContexts
+
+
+Our theoretical "ACME Inc." organization can use to instrument their applications.
+The `Tracer` typedef is not standardized, but it is recommended. The rest of the
+documentation will assume that `Tracer` was the chosen name for the Tracer type.
 
 If clients ever require that they swap `OpenTracing` implementations, they
 will need to update only this header file and rebuild applications.
@@ -114,16 +123,16 @@ int getAccount(Repsonse * resp, const Request& req)
 {
     static Tracer * const s_tracer = Tracer::instance();
 
-    acme::Span * span = s_tracer->start("get_account");
-    if(!span){ /* log error */; }
+    acme::Tracer::SpanGuard span(s_tracer->start("get_account"));
 
-    // ... hanlding our request TBD
+    if (!span.get())
+    { /* log error */
+        ;
+    }
 
-    // finish() signals the Tracer that we're done with this span
-    if(int rc = span.finish()) { /* log error */; }
-
-    // Cleanup the span when we're finished.
-    s_tracer->cleanup(span);
+    // When 'span' goes out of scope, the destructor will call s_tracer->cleanup().
+    // This will automatically 'finish()' the span and return resources to the
+    // Tracer.
 
     return 0;
 }
@@ -165,8 +174,9 @@ int getAccount(Repsonse * resp, const Request& req)
 {
     static Tracer * const s_tracer = Tracer::instance();
 
-    acme::Span * span = s_tracer->start("get_account");
-    if(!span){ /* log error */; }
+    acme::SpanGuard span(s_tracer->start("get_account"));
+
+    if(!span.get()){ /* log error */; }
 
     HttpRequest httpRequest;
     HttpWriter writer(&httpRequest);
@@ -175,12 +185,6 @@ int getAccount(Repsonse * resp, const Request& req)
     // Business logic...
     HttpResponse httpResponse;
     sendHttpRequest(&httpResponse, httpRequest);
-
-    // finish() signals the Tracer that we're done with this span
-    if(int rc = span.finish()) { /* log error */; }
-
-    // Cleanup the span when we're finished.
-    s_tracer->cleanup(span);
 
     return 0;
 }
@@ -216,29 +220,23 @@ int httpGetAccount(const HttpRequest& httpRequest)
 {
     static Tracer* const s_tracer = Tracer::instance();
 
-    const acme::SpanContext* context =
-        s_tracer->extract(HttpReader(httpRequest));
+    acme::SpanContextGuard context(s_tracer->extract(HttpReader(httpRequest)));
 
-    acme::Span* span;
+    acme::SpanGuard span;
 
-    if (!context)
+    if (!context.get())
     {
         span = s_tracer->start("get_account");
     }
     else
     {
-        acme::SpanOptions* opts = s_tracer->makeSpanOptions();
+        acme::SpanOptionsGuard opts(s_tracer->makeSpanOptions());
+
         opts->addReference(opentracing::SpanRelationship::e_childOf, *context);
         opts->setOperation("get_account");
-        span = s_tracer->start(*opts);
-        s_tracer->cleanup(opts);
+        span = s_tracer->start(opts);
     }
 
-    // Send back response to requester...
-
-    span->finish();
-    s_tracer->cleanup(span);
-    s_tracer->cleanup(context);
     return 0;
 }
 ```

@@ -11,7 +11,6 @@
 #include <opentracing/stringref.h>
 
 #include <opentracing/config.h>
-
 #ifdef HAVE_STDINT_H
 #include <stdint.h>
 #endif
@@ -93,10 +92,10 @@ class GenericSpan {
     int finish(const uint64_t tsp);
     // This should be the last method called on the Span. It marks the end of
     // this Span (in microseconds since epoch) using the current wall-time, or
-    // an explicit timestamp 'tsp'. Retrusn 0 upon success and a non-zero
-    // value otherwise. It is undefined behavior to call any method on this span
-    // after 'finish()' is called, except for accessing 'context()' in a
-    // read-only fashion.
+    // an explicit timestamp 'tsp'. Returns 0 upon success and a non-zero
+    // value otherwise. Multiple calls to 'finish()' are redundant. The only
+    // other method that may be called on the span, after 'finish()' is to
+    // access the 'context()' in a read-only fashion.
 
     template <typename T>
     int tag(const StringRef& key, const T& val);

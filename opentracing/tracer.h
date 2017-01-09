@@ -10,6 +10,7 @@
 #include <opentracing/span.h>
 #include <opentracing/spanoptions.h>
 #include <opentracing/stringref.h>
+#include <opentracing/tracerguards.h>
 
 #include <opentracing/config.h>
 #ifdef HAVE_STDINT_H
@@ -55,42 +56,42 @@ namespace opentracing {
 // class TracerImp :
 //  GenericTracer<TracerImp, SpanImp, OptionsImp, ContextImp, Adapter>
 // {
-//      public:
-//          Options * makeSpanOptionsImp();
-//          void cleanupImp(const Options * const opts);
+//   public:
+//     Options * makeSpanOptionsImp();
+//     void cleanupImp(const Options * const opts);
 //
-//          SpanImp * start(const StringRef& op);
-//          SpanImp * start(const OptionsImp& opts);
-//          void cleanupImp(const SpanImp * const sp);
+//     SpanImp * start(const StringRef& op);
+//     SpanImp * start(const OptionsImp& opts);
+//     void cleanupImp(const SpanImp * const sp);
 //
-//          template<typename CARRIER>
-//          int injectImp(
+//     template<typename CARRIER>
+//     int injectImp(
 //              GenericTextWriter<CARRIER>* const carrier,
 //              const ContextImp&                 context) const;
 //
-//          template<typename CARRIER>
-//          int injectImp(
+//     template<typename CARRIER>
+//     int injectImp(
 //              GenericBinaryWriter<CARRIER>* const carrier,
 //              const ContextImp&                   context) const;
 //
-//          template <typename CARRIER>
-//          int injectImp(
+//     template <typename CARRIER>
+//     int injectImp(
 //              GenericWriter<CARRIER, ContextImp>* const carrier,
 //              const ContextImp&                         context) const;
 //
-//          template <typename CARRIER>
-//          const ContextImp* extractImp(
+//     template <typename CARRIER>
+//     const ContextImp* extractImp(
 //              const GenericTextReader<CARRIER>& carrier);
 //
-//          template <typename CARRIER>
-//          const ContextImp* extractImp(
+//     template <typename CARRIER>
+//     const ContextImp* extractImp(
 //              const GenericBinaryReader<CARRIER>& carrier);
 //
-//          template <typename CARRIER>
-//          const ContextImp* extractImp(
+//     template <typename CARRIER>
+//     const ContextImp* extractImp(
 //              const GenericReader<CARRIER, ContextImp>& carrier);
 //
-//          void cleanupImp(const ContextImp * const);
+//     void cleanupImp(const ContextImp * const);
 // };
 
 template <typename TRACER,
@@ -100,9 +101,13 @@ template <typename TRACER,
           typename ADAPTER>
 class GenericTracer {
   public:
-    typedef GenericSpan<SPAN, CONTEXT, ADAPTER> Span;
-    typedef GenericSpanContext<CONTEXT, ADAPTER> SpanContext;
-    typedef GenericSpanOptions<OPTIONS, CONTEXT, ADAPTER> SpanOptions;
+    typedef GenericSpan<SPAN, CONTEXT, ADAPTER>                  Span;
+    typedef GenericSpanContext<CONTEXT, ADAPTER>                 SpanContext;
+    typedef GenericSpanOptions<OPTIONS, CONTEXT, ADAPTER>        SpanOptions;
+
+    typedef GenericTracerGuard<GenericTracer, Span>              SpanGuard;
+    typedef GenericTracerGuard<GenericTracer, SpanOptions>       SpanOptionsGuard;
+    typedef GenericTracerGuard<GenericTracer, const SpanContext> SpanContextGuard;
     // Public typedefs used by clients to use underlying implementation
     // interfaces reliably. These must exist in order to support O(1) compile
     // time changes of the Tracer implementations.
@@ -206,6 +211,10 @@ class GenericTracer {
     static GenericTracer* s_tracer;
 };
 
+// -------------------
+// class GenericTracer
+// -------------------
+
 template <typename TRACER,
           typename SPAN,
           typename OPTIONS,
@@ -272,21 +281,8 @@ template <typename TRACER,
           typename OPTIONS,
           typename CONTEXT,
           typename ADAPTER>
-inline typename GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::Span*
-GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::start(
-    const StringRef& op)
-{
-    return static_cast<TRACER*>(this)->startImp(op);
-}
-
-template <typename TRACER,
-          typename SPAN,
-          typename OPTIONS,
-          typename CONTEXT,
-          typename ADAPTER>
-inline typename GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::
-    SpanOptions*
-    GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::makeSpanOptions()
+inline typename GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::SpanOptions*
+GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::makeSpanOptions()
 {
     return static_cast<TRACER*>(this)->makeSpanOptionsImp();
 }
@@ -300,7 +296,7 @@ inline void
 GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::cleanup(
     SpanOptions* const opts)
 {
-    OPTIONS* const optsImp = static_cast<OPTIONS*>(opts);
+    OPTIONS* const optsImp = static_cast<OPTIONS* const>(opts);
     return static_cast<TRACER*>(this)->cleanupImp(optsImp);
 }
 
@@ -310,11 +306,21 @@ template <typename TRACER,
           typename CONTEXT,
           typename ADAPTER>
 inline typename GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::Span*
-GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::start(
-    const SpanOptions& opts)
+GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::start(const StringRef& op)
+{
+    return static_cast<TRACER*>(this)->startImp(op);
+}
+
+template <typename TRACER,
+          typename SPAN,
+          typename OPTIONS,
+          typename CONTEXT,
+          typename ADAPTER>
+inline typename GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::Span*
+    GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::start(const SpanOptions& opts)
 {
     const OPTIONS& optsImp = static_cast<const OPTIONS&>(opts);
-    return static_cast<TRACER*>(this)->startImp(opts);
+    return static_cast<TRACER*>(this)->startImp(optsImp);
 }
 
 template <typename TRACER,
@@ -326,6 +332,7 @@ inline void
 GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::cleanup(Span* const sp)
 {
     SPAN* const spanImp = static_cast<SPAN*>(sp);
+    spanImp->finish();
     return static_cast<TRACER*>(this)->cleanupImp(spanImp);
 }
 
