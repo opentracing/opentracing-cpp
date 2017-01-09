@@ -292,10 +292,13 @@ for(acme::SpanContext::BaggageIterator it = span->context().baggageBegin();
 }
 ```
 
-If you have access to C++11 features, we can use the range based for loop syntax too:
+If you have access to C++11 features, we can use the range based for loop syntax too.
 
 ```
-for(const auto& baggage : span->context().baggageRange())
+HttpReader reader(request);
+acme::SpanContextGuard context(Tracer::extract(reader));
+
+for(const auto& baggage : context.baggageRange())
 {
     std::cout << "baggage item: " << baggage.key() << " val: " << baggage.value() << std::endl;
 }
