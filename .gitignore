@@ -3,9 +3,9 @@
 *.so
 config.h
 config.h.in
-*.in
 *.m4
 Makefile
+Makefile.in
 config.*
 */.deps/*
 stamp-h1

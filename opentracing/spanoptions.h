@@ -60,7 +60,7 @@ class GenericSpanOptions {
     // Set the start time from this span. If start time is not supplied, the
     // default is to use the current wall-time.
 
-    void addReference(const SpanRelationship::Value relationship,
+    void setReference(const SpanRelationship::Value relationship,
                       const SpanContext&            context);
     // A new Span created with these options would have a 'relationship'
     // referenced added for 'context'.
@@ -86,11 +86,11 @@ GenericSpanOptions<OPTIONS, CONTEXT, ADAPTER>::setStartTime(const uint64_t tsp)
 
 template <typename OPTIONS, typename CONTEXT, typename ADAPTER>
 inline void
-GenericSpanOptions<OPTIONS, CONTEXT, ADAPTER>::addReference(
+GenericSpanOptions<OPTIONS, CONTEXT, ADAPTER>::setReference(
     const SpanRelationship::Value rel, const SpanContext& context)
 {
     const CONTEXT& contextImp = static_cast<const CONTEXT&>(context);
-    static_cast<OPTIONS*>(this)->addReferenceImp(rel, contextImp);
+    static_cast<OPTIONS*>(this)->setReferenceImp(rel, contextImp);
 }
 
 }  // namespace opentracing

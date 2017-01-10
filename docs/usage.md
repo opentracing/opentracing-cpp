@@ -50,11 +50,7 @@ namespace acme {
     typedef Tracer::SpanContext SpanContext;
     typedef Tracer::SpanOptions SpanOptions;
     typedef Tracer::Span        Span;
-
-    typedef Tracer::SpanContextGuard SpanContextGuard;
-    typedef Tracer::SpanOptionsGuard SpanOptions;
-    typedef Tracer::SpanGuard        SpanGuard;
-    // Exposing the 'Span' typedefs is done for convenience
+    // For convenience
 }
 #endif
 ```
@@ -90,10 +86,12 @@ explicitly in main. This must be done before any other parts of the API can be u
 // acmetask.m.cpp
 #include <acme_tracing.h>
 
+using namespace acme;
+
 int main(int argc, const char * argv[])
 {
-    acme::TracerImpl tracerImpl;
-    acme::Tracer::install(&tracerImpl);
+    TracerImpl tracerImpl;
+    Tracer::install(&tracerImpl);
 
     // ...
 
@@ -114,16 +112,19 @@ To trace our application, we'll first need to start the span:
 // requesthandler.m.cpp
 #include <acme_tracing.h>
 
+using namespace acme;
+
 int getAccount(Repsonse * resp, const Request& req)
 {
-    static acme::Tracer * const s_tracer = acme::Tracer::instance();
+    Tracer::Span* span(Tracer::start("get_account"));
+    assert(span);
 
-    acme::Tracer::SpanGuard span(s_tracer->start("get_account"));
-    assert(span.get());
+    // When our span is complete, we have to call finish
+    span->finish();
 
-    // When 'span' goes out of scope, the destructor will call s_tracer->cleanup().
-    // This will automatically 'finish()' the span and return resources to the
-    // Tracer.
+    // When we're done with our Span, we need to return it to
+    // the Tracer implementation to be cleaned up
+    Tracer::cleanup(span);
 
     return 0;
 }
@@ -143,15 +144,18 @@ across your organization, so putting them into a library would be ideal.
 ```
 #include <opentracing/carriers.h>
 
-class HttpWriter : public opentracing::GenericBinaryWriter<HttpWriter>
+using namespace opentracing;
+using namespace acme;
+
+class HttpWriter : public GenericBinaryWriter<HttpWriter>
 {
   public:
     HttpWriter(HttpRequest * req): m_req(req){}
 
-    int injectImp(const void* blob, const_size len)
+    int injectImp(const std::vector<char>& blob)
     {
-        std::string blob(static_cast<const char*>(blob), len);
-        req->addHeader("x-acme-tracing-blob", blob);
+        std::string header(blob.data(), blob.size());
+        req->addHeader("x-acme-tracing-blob", header);
         return 0;
     }
 
@@ -161,19 +165,22 @@ class HttpWriter : public opentracing::GenericBinaryWriter<HttpWriter>
 
 int getAccount(Repsonse * resp, const Request& req)
 {
-    static acme::Tracer * const s_tracer = acme::Tracer::instance();
-
-    acme::SpanGuard span(s_tracer->start("get_account"));
-    assert(span.get());
+    Span* span(Tracer::start("get_account"));
+    assert(span);
 
     HttpResponse httpResponse;
     HttpRequest httpRequest(req);
 
     // Embed the details of our span into the outgoing HTTP headers:
     HttpWriter writer(&httpRequest);
-    s_tracer->inject(&writer, span->context());
+    Tracer::inject(&writer, span->context());
+
     sendHttpRequest(&httpResponse, httpRequest);
 
+    // ...
+
+    span->finish();
+    Tracer::cleanup(span);
     return 0;
 }
 ```
@@ -184,20 +191,23 @@ a new SpanContext as a 'child of' the original:
 ```
 #include <opentracing/carriers.h>
 
-struct HttpReader: public opentracing::GenericBinaryReader<HttpReader>
+using namespace opentracing;
+using namespace acme;
+
+struct HttpReader: public GenericBinaryReader<HttpReader>
 {
   public:
-    int extractImp(void* const buf, size_t* const written, const size_t len)
+    int extractImp(std::vector<std::string> * const buf) const
     {
         std::string header = m_req.getHeader("x-acme-tracing-blob");
 
-        if (header.length() >= len)
-        {
+        if(!header.empty()){
+            buf->assign(header.begin(), header.end());
+            return 0;
+        }
+        else {
             return 1;
         }
-
-        std::memcpy(buf, header.data(), header.size());
-        *written = header.size();
         return 0;
     }
 
@@ -207,30 +217,33 @@ struct HttpReader: public opentracing::GenericBinaryReader<HttpReader>
 
 int httpGetAccount(const HttpRequest& httpRequest)
 {
-    static acme::Tracer* const s_tracer = acme::Tracer::instance();
+    SpanContext* context(Tracer::extract(HttpReader(httpRequest)));
 
-    acme::SpanContextGuard context(s_tracer->extract(HttpReader(httpRequest)));
+    Span* span;
 
-    acme::SpanGuard span;
-
-    if (!context.get())
+    if (!context)
     {
-        span = s_tracer->start("get_account");
+        span = Tracer::start("get_account");
     }
     else
     {
-        acme::SpanOptionsGuard opts(s_tracer->makeSpanOptions());
+        SpanOptions* opts(Tracer::makeSpanOptions());
 
-        opts->addReference(opentracing::SpanRelationship::e_ChildOf, *context);
+        opts->setReference(SpanRelationship::e_ChildOf, *context);
         opts->setOperation("get_account_server");
 
-        span = s_tracer->start(opts);
+        span = Tracer::start(opts);
+
+        Tracer::cleanup(context);
+        Tracer::cleanup(opts);
     }
+    assert(span);
 
-    HttpResponse response;
+    // Send back our response...
 
-    // populate the response using the arguments in our original request...
-    sendResponse(response);
+    span->finish();
+    Tracer::cleanup(span);
+
     return 0;
 }
 ```
@@ -245,7 +258,7 @@ through the entire system.
 The `opentracing-cpp` interface allows you to tag your spans with `key:value` pairs:
 
 ```
-acme::SpanGuard span(acme::Tracer::instance()->start("get_bookmarks"));
+Span* span = Tracer::start("get_bookmarks");
 span->tag("account", account_id);
 span->tag("site", site);
 ```
@@ -256,12 +269,12 @@ The `key` must be a string, but the value can be any type that can be externaliz
 
 
 ##### Logs
-The `log` functions work similarly, but are implicitly associated with the current wall-time as well. Users can
-control the time-stamp behavior if they wish by providing it explicitly:
+The `log` functions work similarly, but logs are also implicitly associated with the current wall-time as well.
+Users can control the time-stamp behavior if they wish by providing it explicitly:
 
 ```
-acme::SpanGuard span(acme::Tracer::instance()->start("get_bookmarks"));
-span->log("db_access", account_id); // Use current wall-time
+Span* span(Tracer::start("get_bookmarks"));
+span->log("db_access", account_id);             // Use current wall-time
 span->log("redis_access", site, 1484003943000); // Accessed redis on Jan 9, 2017 at 23:19:02 GMT
 ```
 
@@ -273,20 +286,21 @@ schemas (e.g., protobuf). Care must be taken when adding any baggage.
 With all that being said, it can be added directly to any Span you create through the underlying SpanContext.
 
 ```
-acme::SpanGuard span(acme::Tracer::instance()->start("get_bookmarks"));
+Span* span = Tracer::start("get_bookmarks");
 span->context().setBaggage("database", std::to_string(database_id));
 span->context().setBaggage("user", user);
 ```
 
 Baggage can also be read back through the original Span or SpanContexts extracted from carriers.
+Note that SpanContexts created through 'extract()' are read-only.
 
 ```
-acme::SpanGuard span(acme::Tracer::instance()->start("get_bookmarks"));
+Span* span(Tracer::start("get_bookmarks"));
 
 span->context().setBaggage("database", std::to_string(database_id));
 span->context().setBaggage("user", user);
 
-for(acme::SpanContext::BaggageIterator it = span->context().baggageBegin();
+for(SpanContext::BaggageIterator it = span->context().baggageBegin();
                                        it != span->context().baggageEnd();
                                      ++it)
 {
@@ -298,12 +312,14 @@ If you have access to C++11 features, we can use the range based for loop syntax
 
 ```
 HttpReader reader(request);
-acme::SpanContextGuard context(Tracer::extract(reader));
+SpanContext* context(Tracer::extract(reader));
 
 for(const auto& baggage : context->baggageRange())
 {
     std::cout << "baggage item: " << baggage.key() << " val: " << baggage.value() << std::endl;
 }
+
+Tracer::cleanup(context);
 ```
 
 For details on the semantics of `BaggageIterators` and how they work, see [baggage.h](../opentracing/baggage.h).

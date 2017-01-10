@@ -24,7 +24,7 @@ class TestOptionsImpl : public GenericSpanOptions<TestOptionsImpl,
     }
 
     void
-    addReferenceImp(const SpanRelationship::Value, const TestContextImpl&)
+    setReferenceImp(const SpanRelationship::Value, const TestContextImpl&)
     {
     }
 };
@@ -90,7 +90,11 @@ class TestTracerImpl : public GenericTracer<TestTracerImpl,
         // Context unused for test. Implementations should encode
         // the context for a wire protocol here, most likely
         const int deadbeef = 0xdeadbeef;
-        return carrier->inject(&deadbeef, sizeof(deadbeef));
+        std::vector<char> buf(sizeof(deadbeef));
+        buf.resize(sizeof(deadbeef));
+        std::memcpy(&buf[0], &deadbeef, sizeof(deadbeef));
+
+        return carrier->inject(buf);
     }
 
     template <typename CIMPL>
@@ -128,14 +132,17 @@ class TestTracerImpl : public GenericTracer<TestTracerImpl,
     TestContextImpl*
     extractImp(const GenericBinaryReader<CIMPL>& carrier)
     {
-        size_t written = 0;
-        int    output  = 0;
+        const int expected = 0xdeadbeef;
 
-        if (int rc = carrier.extract(&output, &written, sizeof(output)))
+        std::vector<char> buf;
+
+        if (int rc = carrier.extract(&buf))
         {
             return NULL;
         }
-        else if (output == 0xdeadbeef)
+
+        if (buf.size() == sizeof(expected) &&
+            expected == *(reinterpret_cast<int*>(&buf[0])))
         {
             return new TestContextImpl();
         }

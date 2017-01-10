@@ -41,11 +41,11 @@ class TestContextImpl
     }
 
     int
-    getBaggageImp(BaggageValue* const baggage, const StringRef& key) const
+    getBaggageImp(const StringRef& key, std::string* const baggage) const
     {
         std::vector<std::string> out;
 
-        getBaggageImp(&out, key);
+        getBaggageImp(key, &out);
 
         if (1u == out.size())
         {
@@ -59,7 +59,8 @@ class TestContextImpl
     }
 
     int
-    getBaggageImp(BaggageValues* const baggage, const StringRef& key) const
+    getBaggageImp(const StringRef&                key,
+                  std::vector<std::string>* const baggage) const
     {
         baggage->clear();
 

@@ -32,14 +32,14 @@ struct TestTextReader : public GenericTextReader<TestTextReader> {
 
 struct TestBinaryWriter : public GenericBinaryWriter<TestBinaryWriter> {
     int
-    injectImp(const void* buf, const size_t len)
+    injectImp(const std::vector<char>& buf)
     {
-        if (len > sizeof(m_raw))
+        if (buf.size() > sizeof(m_raw))
         {
             return 1;
         }
 
-        std::memcpy(&m_raw, buf, len);
+        std::memcpy(&m_raw, &buf[0], buf.size());
         return 0;
     }
 
@@ -48,15 +48,10 @@ struct TestBinaryWriter : public GenericBinaryWriter<TestBinaryWriter> {
 
 struct TestBinaryReader : public GenericBinaryReader<TestBinaryReader> {
     int
-    extractImp(void* const buf, size_t* const written, const size_t len) const
+    extractImp(std::vector<char>* const buf) const
     {
-        if (sizeof(m_raw) > len)
-        {
-            return 1;
-        }
-
-        std::memcpy(buf, &m_raw, sizeof(m_raw));
-        *written = sizeof(m_raw);
+        buf->resize(sizeof(m_raw));
+        std::memcpy(&(*buf)[0], &m_raw, sizeof(m_raw));
         return 0;
     }
 

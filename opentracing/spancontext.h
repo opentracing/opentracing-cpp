@@ -16,16 +16,8 @@ namespace opentracing {
 // ========================
 // class GenericSpanContext
 // ========================
-// GenericSpanContext is a static, polymorphic interface for interacting with
-// SpanContexts. It uses the Curiously Repeating Template Pattern (CRTP) to
-// avoid unnecessary v-table hits we would encounter with traditional
-// polymorphism.
-//
-// See this CRTP article for more details on the design pattern:
-// https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern
-//
 // The 'GenericSpanContext' has two template parameters:
-//   * CONTEXT - A SpanContext implementation derived class (CRTP)
+//   * CONTEXT - A SpanContext implementation derived class
 //   * ADAPTER - A BaggageIteratorImp adapter
 //
 // CONTEXT implementations are required to implement the following:
@@ -37,9 +29,8 @@ namespace opentracing {
 //       typename Adapter::const_iterator baggageEndImp() const;
 //
 //       int setBaggageImp(const StringRef&, const StringRef&);
-//
-//       int getBaggageImp(std::string* const, const StringRef&) const;
-//       int getBaggageImp(BaggageValues* const, const StringRef&) const;
+//       int getBaggageImp(const StringRef&, std::string* const) const;
+//       int getBaggageImp(const StringRef&, std::vector<std::string>* const) const;
 //   };
 //
 // Implementations may choose how they implement storage of Baggage, but the
@@ -53,9 +44,6 @@ class GenericSpanContext {
     typedef ADAPTER                     BaggageAdapter;
     typedef BaggageIteratorImp<ADAPTER> BaggageIterator;
     typedef BaggageRangeImp<ADAPTER>    BaggageRange;
-
-    typedef std::string               BaggageValue;
-    typedef std::vector<BaggageValue> BaggageValues;
 
     BaggageIterator baggageBegin() const;
     // Return a BaggageIterator to the beginning of the Baggage maintained
@@ -73,14 +61,15 @@ class GenericSpanContext {
     // Set or append the single 'baggage' value for the given 'key'. Return 0
     // upon success and a non-zero value otherwise.
 
-    int getBaggage(BaggageValue *const baggage, const StringRef &key) const;
+    int getBaggage(const StringRef &key, std::string *const baggage) const;
     // Load a single 'baggage' value associated with 'key'. Returns 0 if there
     // is only one value associated with 'key' and that value was loaded
-    // succesfully. Return a non-zero value otherwise.
+    // successfully. Return a non-zero value otherwise.
 
-    int getBaggage(BaggageValues *const baggage, const StringRef &key) const;
+    int getBaggage(const StringRef &               key,
+                   std::vector<std::string> *const baggage) const;
     // Load the 'baggage' associated with 'key'. Returns 0 if the
-    // baggage is loaded succesfully, and a non-zero value otherwise.
+    // baggage is loaded successfully, and a non-zero value otherwise.
 
   protected:
     GenericSpanContext();
@@ -135,18 +124,19 @@ GenericSpanContext<CONTEXT, ADAPTER>::setBaggage(const StringRef &key,
 
 template <typename CONTEXT, typename ADAPTER>
 inline int
-GenericSpanContext<CONTEXT, ADAPTER>::getBaggage(BaggageValue *const baggage,
-                                                 const StringRef &key) const
+GenericSpanContext<CONTEXT, ADAPTER>::getBaggage(
+    const StringRef &key, std::string *const baggage) const
+
 {
-    return static_cast<const CONTEXT *>(this)->getBaggageImp(baggage, key);
+    return static_cast<const CONTEXT *>(this)->getBaggageImp(key, baggage);
 }
 
 template <typename CONTEXT, typename ADAPTER>
 inline int
-GenericSpanContext<CONTEXT, ADAPTER>::getBaggage(BaggageValues *const baggage,
-                                                 const StringRef &key) const
+GenericSpanContext<CONTEXT, ADAPTER>::getBaggage(
+    const StringRef &key, std::vector<std::string> *const baggage) const
 {
-    return static_cast<const CONTEXT *>(this)->getBaggageImp(baggage, key);
+    return static_cast<const CONTEXT *>(this)->getBaggageImp(key, baggage);
 }
 
 }  // namespace opentracing

@@ -17,26 +17,17 @@
 // ========
 // Carriers
 // ========
-// GenericTextWriter, GenericBinaryWriter, and GenericWriter are static,
-// polymorphic interfaces used by the Tracer's 'inject()' interface. They
-// are used to embed SpanContexts into a carrier object. Those carrier
-// objects are passed between process boundaries by applications as a part
-// of their existing message passing infrastructure.
+// GenericTextWriter, GenericBinaryWriter, and GenericWriter are used by the
+// Tracer's 'inject()' interface. They are used to embed SpanContexts into a
+// carrier object. Those carrier objects are passed between process boundaries
+// by applications as a part of their existing message passing infrastructure.
 //
 // When an RPC call is received, the SpanContext can be 'extract()'ed by
 // the Tracer using the GenericTextReader, GenericBinaryReader, or GenericReader
-// interfaces. If the readers are succesful, an immutable SpanContext is
+// interfaces. If the readers are successful, an immutable SpanContext is
 // returned to applications. That SpanContext can then be used to create
 // new spans, accessing its baggage or adding it as a reference to in other
 // Spans.
-//
-// All six interfaces are static, polymorphic interfaces for interacting
-// with the installed Tracer. They use the Curiously Repeating Template
-// Pattern (CRTP) to avoid v-table hits we would encounter with tradtional
-// polymorphism.
-//
-// See this CRTP article for more details on the design pattern:
-// https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern
 
 #include <opentracing/stringref.h>
 #include <string>
@@ -104,7 +95,7 @@ class GenericTextWriter {
 //
 // class BinaryWriter : GenericBinaryWriter<BinaryWriter>{
 //   public:
-//      int injectImp(const void * const, const size_t);
+//      int injectImp(const vector<char>& buf);
 // };
 //
 // Implementations are responsible for passing the blob along with a carrier
@@ -114,8 +105,8 @@ class GenericTextWriter {
 template <typename CARRIER>
 class GenericBinaryWriter {
   public:
-    int inject(const void* const buf, const size_t len);
-    // Inject the supplied 'buf' of 'len' bytes into this carrier.
+    int inject(const std::vector<char>& buf);
+    // Inject the binary representation of a span context into this carrier.
 
   protected:
     GenericBinaryWriter();
@@ -205,13 +196,8 @@ class GenericTextReader {
 //
 // class BinaryReader : GenericBinaryReader<BinaryReader>{
 //   public:
-//      int extractImp(
-//          void *const buf, size_t *const written, const size_t len) const;
+//      int extractImp(std::vector<char> *const buf) const;
 // };
-//
-// Implementations are responsible for:
-//      * Making sure there is enough room in 'buf' for the blob
-//      * Setting the number of bytes actually 'written' to 'buf
 //
 // When constructed, they should hold onto any references they may need to
 // retrieve the blob when 'extractImp()' is invoked.
@@ -219,9 +205,9 @@ class GenericTextReader {
 template <typename CARRIER>
 class GenericBinaryReader {
   public:
-    int extract(void* const buf, size_t* const written, const size_t len) const;
-    // Extract up to 'len' bytes of the binary representation of a span context
-    // into 'buf' then store the number of bytes 'written'.
+    int extract(std::vector<char>* const buffer) const;
+    // Load the binary representation of a span context into 'buffer'.
+    // Return 0 upon success and a non-zero value otherwise.
 
   protected:
     GenericBinaryReader();
@@ -306,9 +292,9 @@ inline GenericTextWriter<CARRIER>::GenericTextWriter(const GenericTextWriter&)
 
 template <typename CARRIER>
 inline int
-GenericBinaryWriter<CARRIER>::inject(const void* buf, const size_t len)
+GenericBinaryWriter<CARRIER>::inject(const std::vector<char>& buf)
 {
-    return static_cast<CARRIER*>(this)->injectImp(buf, len);
+    return static_cast<CARRIER*>(this)->injectImp(buf);
 }
 
 template <typename CARRIER>
@@ -371,11 +357,9 @@ inline GenericTextReader<CARRIER>::GenericTextReader(const GenericTextReader&)
 
 template <typename CARRIER>
 inline int
-GenericBinaryReader<CARRIER>::extract(void* const   buf,
-                                      size_t* const written,
-                                      const size_t  len) const
+GenericBinaryReader<CARRIER>::extract(std::vector<char>* const buf) const
 {
-    return static_cast<const CARRIER*>(this)->extractImp(buf, written, len);
+    return static_cast<const CARRIER*>(this)->extractImp(buf);
 }
 
 template <typename CARRIER>
