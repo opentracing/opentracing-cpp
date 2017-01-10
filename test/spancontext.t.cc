@@ -12,14 +12,14 @@ TEST(GenericSpanContext, BaggageCopies)
     int rc = t.setBaggage("hello", "world");
     ASSERT_EQ(0, rc);
 
-    TestContext::BaggageValues vals;
-    rc = t.getBaggage(&vals, "hello");
+    std::vector<std::string> vals;
+    rc = t.getBaggage("hello", &vals);
 
     ASSERT_EQ(0, rc);
     ASSERT_EQ(1u, vals.size());
     ASSERT_EQ("world", vals[0]);
 
-    rc = t.getBaggage(&vals, "unknown");
+    rc = t.getBaggage("unknown", &vals);
     ASSERT_NE(0, rc);
 
     ASSERT_TRUE(t.baggageBegin() != t.baggageEnd());
@@ -50,8 +50,8 @@ TEST(GenericSpanContext, CopyConstructor)
     TestContextImpl implCopy = impl;
     TestContext& tc = implCopy;
 
-    TestContext::BaggageValue val;
-    rc = tc.getBaggage(&val, "hello");
+    std::string val;
+    rc = tc.getBaggage("hello", &val);
 
     ASSERT_EQ(0, rc);
     ASSERT_EQ("world", val);

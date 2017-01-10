@@ -78,9 +78,9 @@ class NoopContext : public GenericSpanContext<NoopContext, NoopAdapter> {
     BaggageIterator baggageBeginImp() const;
     BaggageIterator baggageEndImp() const;
 
-    int setBaggageImp(const StringRef& key, const StringRef& value);
-    int getBaggageImp(BaggageValue* const, const StringRef& key) const;
-    int getBaggageRefsImp(BaggageValues* const, const StringRef& key) const;
+    int setBaggageImp(const StringRef&, const StringRef&);
+    int getBaggageImp(const StringRef&, std::string* const) const;
+    int getBaggageImp(const StringRef&, std::vector<std::string>* const) const;
 };
 
 // =================
@@ -95,7 +95,7 @@ class NoopOptions
   public:
     void setOperationImp(const StringRef&);
     void setStartTimeImp(const uint64_t);
-    void addReferenceImp(const SpanRelationship::Value, const NoopContext&);
+    void setReferenceImp(const SpanRelationship::Value, const NoopContext&);
 };
 
 // ==============
@@ -218,13 +218,14 @@ NoopContext::setBaggageImp(const StringRef&, const StringRef&)
 }
 
 inline int
-NoopContext::getBaggageImp(BaggageValue* const, const StringRef&) const
+NoopContext::getBaggageImp(const StringRef&, std::string* const) const
 {
     return 1;
 }
 
 inline int
-NoopContext::getBaggageRefsImp(BaggageValues* const, const StringRef&) const
+NoopContext::getBaggageImp(const StringRef&,
+                           std::vector<std::string>* const) const
 {
     return 1;
 }
@@ -244,7 +245,7 @@ NoopOptions::setStartTimeImp(const uint64_t)
 }
 
 inline void
-NoopOptions::addReferenceImp(const SpanRelationship::Value, const NoopContext&)
+NoopOptions::setReferenceImp(const SpanRelationship::Value, const NoopContext&)
 {
 }
 

@@ -24,5 +24,5 @@ AC_TYPE_UINT32_T
 AC_TYPE_UINT64_T
 AC_TYPE_SIZE_T
 
-AC_CONFIG_FILES([ Makefile ])
+AC_CONFIG_FILES([ Makefile opentracing.pc ])
 AC_OUTPUT

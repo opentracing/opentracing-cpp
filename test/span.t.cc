@@ -12,15 +12,15 @@ TEST(Span, BasicTests)
         // Make sure const references work
         const TestSpan& tc = impl;
 
-        TestSpan::SpanContext::BaggageValues vals;
-        rc = tc.context().getBaggage(&vals, "hello");
+        std::vector<std::string> vals;
+        rc = tc.context().getBaggage("hello", &vals);
 
         ASSERT_EQ(0, rc);
         ASSERT_EQ(1u, vals.size());
         ASSERT_EQ("world", vals[0]);
 
         const TestSpan::SpanContext& cc = tc.context();
-        rc  = cc.getBaggage(&vals, "miss");
+        rc  = cc.getBaggage("miss", &vals);
         ASSERT_NE(0, rc);
 
         TestSpan::SpanContext::BaggageIterator it = cc.baggageBegin();

@@ -20,23 +20,16 @@ namespace opentracing {
 // =================
 // class GenericSpan
 // =================
-// GenericSpan is a static, polymorphic interface for interacting with
-// Spans. It uses the Curiously Repeating Template Patttern (CRTP) to
-// avoid v-table hits we would encounter with traditional polymorphism.
-//
-// See this CRTP article for more details on the design pattern:
-// https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern
-//
 // The GenericSpan has three template parameters:
-//   * SPAN    - A Span implementation derived class (CRTP)
-//   * CONTEXT - A SpanContext implementation derived class (CRTP)
+//   * SPAN    - A Span implementation derived class
+//   * CONTEXT - A SpanContext implementation derived class
 //   * ADAPTER - A Baggage iterator adapter
 //
 // The CONTEXT and ADAPTER are used to alias the related GenericSpanContext
 // class as the SpanContext. This is a convenience typedef to ensure what is
 // exposed to clients is the same as the type used by the interface.
 //
-// SPAN implementations must support the following:
+// CRTP SPAN implementations must support the following:
 //
 // class SpanImpl: GenericSpan<SpanImpl, ContextImpl, Adapter>
 // {
@@ -44,7 +37,6 @@ namespace opentracing {
 //      ContextImpl& contextImp();
 //      const ContextImpl& contextImp() const;
 //
-//      int addReferenceImp(const ContextImpl&, const SpanRelationship::Value);
 //      int setOperationImp(const StringRef& operation);
 //
 //      int finishImp();
@@ -81,12 +73,6 @@ class GenericSpan {
     // Modify the Span's operation. Return 0 upon success and a non-zero
     // value otherwise. It is undefined behavior to call this method after
     // 'finish()'.
-
-    int addReference(const SpanContext&            context,
-                     const SpanRelationship::Value relationship);
-    // Add a reference to another SpanContext, after the Span was created.
-    // Returns 0 upon success and a non-zero value otherwise.
-    // It is undefined behavior to call this method after 'finish()'.
 
     int finish();
     int finish(const uint64_t tsp);
@@ -163,15 +149,6 @@ inline int
 GenericSpan<SPAN, CONTEXT, ADAPTER>::setOperation(const StringRef& operation)
 {
     return static_cast<SPAN*>(this)->setOperationImp(operation);
-}
-
-template <typename SPAN, typename CONTEXT, typename ADAPTER>
-inline int
-GenericSpan<SPAN, CONTEXT, ADAPTER>::addReference(
-    const SpanContext& context, const SpanRelationship::Value relationship)
-{
-    const CONTEXT& contextImp = static_cast<const CONTEXT&>(context);
-    return static_cast<SPAN*>(this)->addReferenceImp(contextImp, relationship);
 }
 
 template <typename SPAN, typename CONTEXT, typename ADAPTER>

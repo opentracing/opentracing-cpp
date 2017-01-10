@@ -136,8 +136,8 @@ typedef BaggageRefImp<char> BaggageRef;
 //      typedef ImplementationIterator iterator;
 //      typedef ImplementationIterator const_iterator;
 //
-//      Baggage copy()(const const_iterator& it) const;
-//      BaggageRef ref()(const const_iterator& it) const;
+//      Baggage copy(const const_iterator& it) const;
+//      BaggageRef ref(const const_iterator& it) const;
 //  };
 //
 // When clients create a BaggageIterator via 'SpanContext::baggageBegin()',

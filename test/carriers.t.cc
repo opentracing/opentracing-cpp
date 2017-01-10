@@ -63,19 +63,14 @@ TEST(Carriers, BinaryReader)
 
     BinaryReader& t = imp;
 
-    char smallbuf[3]; // too small for int32_t
-    size_t written = 0;
+    std::vector<char> buf;
 
-    int rc = t.extract(smallbuf, &written, sizeof(smallbuf));
-    ASSERT_NE(0, rc);
-
-    char buf[100];
-    rc = t.extract(buf, &written, sizeof(buf));
+    int rc = t.extract(&buf);
     ASSERT_EQ(0, rc);
-    ASSERT_EQ(written, sizeof(imp.m_raw));
+    ASSERT_EQ(buf.size(), sizeof(imp.m_raw));
 
     int32_t out = 0;
-    std::memcpy(&out, buf, written);
+    std::memcpy(&out, &buf[0], buf.size());
 
     ASSERT_EQ(out, imp.m_raw);
 }
@@ -87,14 +82,20 @@ TEST(Carriers, BinaryWriter)
 
     const int64_t tooBig= 0x00000000deadbeef;
 
-    int rc = t.inject(&tooBig, sizeof(tooBig));
+    std::vector<char> buf;
+    buf.resize(sizeof(tooBig));
+    std::memcpy(&buf[0], &tooBig, sizeof(tooBig));
+
+    int rc = t.inject(buf);
     ASSERT_NE(0, rc);
 
     const int32_t expected = 0xdeadbeef;
 
-    rc = t.inject(&expected, sizeof(expected));
-    ASSERT_EQ(0, rc);
+    buf.resize(sizeof(expected));
+    std::memcpy(&buf[0], &expected, sizeof(expected));
 
+    rc = t.inject(buf);
+    ASSERT_EQ(0, rc);
     ASSERT_EQ(expected, imp.m_raw);
 }
 
