@@ -3,6 +3,8 @@
 
 #include "carriers.h"
 
+TestTracerImpl* TestTracerImpl::s_tracer = 0;
+
 class TracerEnv : public ::testing::Test {
   public:
     virtual void
