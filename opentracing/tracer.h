@@ -48,6 +48,10 @@ namespace opentracing {
 //  GenericTracer<TracerImp, SpanImp, OptionsImp, ContextImp, Adapter>
 // {
 //   public:
+//     static installImp(TracerImp*);
+//     static TracerImp * instanceImp();
+//     static uninstallImp();
+//
 //     Options * makeSpanOptionsImp();
 //     void cleanupImp(const Options * const opts);
 //
@@ -199,9 +203,6 @@ class GenericTracer {
     GenericTracer();
     GenericTracer(const GenericTracer&);
     // Protected to avoid direct construction
-
-  private:
-    static GenericTracer* s_tracer;
 };
 
 // -------------------
@@ -213,19 +214,12 @@ template <typename TRACER,
           typename OPTIONS,
           typename CONTEXT,
           typename ADAPTER>
-GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>*
-    GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::s_tracer = 0;
-
-template <typename TRACER,
-          typename SPAN,
-          typename OPTIONS,
-          typename CONTEXT,
-          typename ADAPTER>
 inline void
 GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::install(
     GenericTracer* const tracer)
 {
-    s_tracer = tracer;
+    TRACER * const tracerImp = static_cast<TRACER* const>(tracer);
+    TRACER::installImp(tracerImp);
 }
 
 template <typename TRACER,
@@ -236,7 +230,7 @@ template <typename TRACER,
 inline void
 GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::uninstall()
 {
-    s_tracer = 0;
+    return TRACER::uninstallImp();
 }
 
 template <typename TRACER,
@@ -247,7 +241,7 @@ template <typename TRACER,
 inline GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>*
 GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::instance()
 {
-    return s_tracer;
+    return TRACER::instanceImp();
 }
 
 template <typename TRACER,
@@ -277,7 +271,7 @@ template <typename TRACER,
 inline typename GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::SpanOptions*
 GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::makeSpanOptions()
 {
-    return static_cast<TRACER*>(s_tracer)->makeSpanOptionsImp();
+    return TRACER::instanceImp()->makeSpanOptionsImp();
 }
 
 template <typename TRACER,
@@ -290,7 +284,7 @@ GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::cleanup(
     SpanOptions* const opts)
 {
     OPTIONS* const optsImp = static_cast<OPTIONS* const>(opts);
-    return static_cast<TRACER*>(s_tracer)->cleanupImp(optsImp);
+    return TRACER::instanceImp()->cleanupImp(optsImp);
 }
 
 template <typename TRACER,
@@ -301,7 +295,7 @@ template <typename TRACER,
 inline typename GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::Span*
 GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::start(const StringRef& op)
 {
-    return static_cast<TRACER*>(s_tracer)->startImp(op);
+    return TRACER::instanceImp()->startImp(op);
 }
 
 template <typename TRACER,
@@ -313,7 +307,7 @@ inline typename GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::Span*
     GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::start(const SpanOptions& opts)
 {
     const OPTIONS& optsImp = static_cast<const OPTIONS&>(opts);
-    return static_cast<TRACER*>(s_tracer)->startImp(optsImp);
+    return TRACER::instanceImp()->startImp(optsImp);
 }
 
 template <typename TRACER,
@@ -325,7 +319,7 @@ inline void
 GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::cleanup(Span* const sp)
 {
     SPAN* const spanImp = static_cast<SPAN*>(sp);
-    return static_cast<TRACER*>(s_tracer)->cleanupImp(spanImp);
+    return TRACER::instanceImp()->cleanupImp(spanImp);
 }
 
 template <typename TRACER,
@@ -339,7 +333,9 @@ GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::inject(
     GenericTextWriter<CARRIER>* const carrier, const SpanContext& context)
 {
     const CONTEXT& contextImp = static_cast<const CONTEXT&>(context);
-    return static_cast<const TRACER*>(s_tracer)->injectImp(carrier, contextImp);
+    const TRACER*  tracer     = TRACER::instanceImp();
+
+    return tracer->injectImp(carrier, contextImp);
 }
 
 template <typename TRACER,
@@ -353,8 +349,10 @@ GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::inject(
     GenericBinaryWriter<CARRIER>* const carrier,
     const SpanContext&                  context)
 {
-    const CONTEXT& contextImp = static_cast<const CONTEXT&>(context);
-    return static_cast<const TRACER*>(s_tracer)->injectImp(carrier, contextImp);
+    const CONTEXT&      contextImp = static_cast<const CONTEXT&>(context);
+    const TRACER* const tracer     = TRACER::instanceImp();
+
+    return tracer->injectImp(carrier, contextImp);
 }
 
 template <typename TRACER,
@@ -368,8 +366,9 @@ GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::inject(
     GenericWriter<CARRIER, CONTEXT>* const carrier,
     const SpanContext& context)
 {
-    const CONTEXT& contextImp = static_cast<const CONTEXT&>(context);
-    return static_cast<const TRACER*>(s_tracer)->injectImp(carrier, contextImp);
+    const CONTEXT&      contextImp = static_cast<const CONTEXT&>(context);
+    const TRACER* const tracer     = TRACER::instanceImp();
+    return tracer->injectImp(carrier, contextImp);
 }
 
 template <typename TRACER,
@@ -383,7 +382,7 @@ inline const typename GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::
     GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::extract(
         const GenericTextReader<CARRIER>& carrier)
 {
-    return static_cast<TRACER*>(s_tracer)->extractImp(carrier);
+    return TRACER::instanceImp()->extractImp(carrier);
 }
 
 template <typename TRACER,
@@ -397,7 +396,7 @@ inline const typename GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::
     GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::extract(
         const GenericBinaryReader<CARRIER>& carrier)
 {
-    return static_cast<TRACER*>(s_tracer)->extractImp(carrier);
+    return TRACER::instanceImp()->extractImp(carrier);
 }
 
 template <typename TRACER,
@@ -411,7 +410,7 @@ inline const typename GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::
     GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::extract(
         const GenericReader<CARRIER, CONTEXT>& carrier)
 {
-    return static_cast<TRACER*>(s_tracer)->extractImp(carrier);
+    return TRACER::instanceImp()->extractImp(carrier);
 }
 
 template <typename TRACER,
@@ -424,7 +423,7 @@ GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::cleanup(
     const SpanContext* const spc)
 {
     const CONTEXT* const contextImp = static_cast<const CONTEXT* const>(spc);
-    return static_cast<TRACER*>(s_tracer)->cleanupImp(contextImp);
+    return TRACER::instanceImp()->cleanupImp(contextImp);
 }
 
 }  // namespace opentracing

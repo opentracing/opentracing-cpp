@@ -3,11 +3,7 @@ CC=g++
 OPENTRACING_INCLUDE=../
 NOOP_INCLUDE=../noop
 
-THIRDPARTY_ROOT=../thirdparty
-GTEST_INCLUDE=${THIRDPARTY_ROOT}/googletest/googletest/include
-GTEST_LIBS=${THIRDPARTY_ROOT}/
-
-INCLUDES=-I. -I$(GTEST_INCLUDE) -I$(OPENTRACING_INCLUDE) -I$(NOOP_INCLUDE)
+INCLUDES=-I. -I$(OPENTRACING_INCLUDE) -I$(NOOP_INCLUDE)
 
 CXXFLAGS=-Wall -fno-elide-constructors -Wextra -Wall -Winit-self -Wold-style-cast -Woverloaded-virtual -Winit-self -Wuninitialized -Wmissing-declarations -Werror $(INCLUDES)
 
@@ -18,16 +14,16 @@ LDIR =${GTEST_LIBS}
 LIBS=-L${GTEST_LIBS} -lgtest -lpthread
 
 ODIR=.
-_OBJ = stringref.t.o baggage.t.o spancontext.t.o span.t.o carriers.t.o tracer.t.o noop.t.o unittest.t.o
+_OBJ = noop.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 $(ODIR)/%.o: %.cc %.h
 	$(CC) -c -o $@ $< $(CXXFLAGS)
 
-test: $(OBJ) ../noop/noop.o
-	$(CC) -o $@ $^ $(CXXFLAGS) $(LIBS) $(LDFLAGS)
+all: $(OBJ)
 
 .PHONY: clean
 
 clean:
 	rm -f $(ODIR)/*.o *~ core $(INCDIR)/*~
+

@@ -29,12 +29,27 @@ class TestOptionsImpl : public GenericSpanOptions<TestOptionsImpl,
     }
 };
 
+
 class TestTracerImpl : public GenericTracer<TestTracerImpl,
                                             TestSpanImpl,
                                             TestOptionsImpl,
                                             TestContextImpl,
                                             TestContextBaggageAdapter> {
   public:
+    static TestTracerImpl* s_tracer;
+
+    static void installImp(TestTracerImpl * const inst){
+        s_tracer = inst;
+    }
+
+    static TestTracerImpl * instanceImp(){
+        return s_tracer;
+    }
+
+    static void uninstallImp(){
+        s_tracer = 0;
+    }
+
     TestOptionsImpl * makeSpanOptionsImp()
     {
         return new TestOptionsImpl();

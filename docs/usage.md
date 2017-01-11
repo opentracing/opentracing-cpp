@@ -5,7 +5,7 @@ API. It assumes you have finished the required reading outlined [here](../README
 
 ### Outline
 
-The `opentracing-cpp` interface uses the [Curiously Repeating Template Pattern](https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern)
+The `opentracing-cpp` interface uses the [Curiously Recurring Template Pattern](https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern)
 (CRTP) to define a set of compile time, polymorphic interfaces to `OpenTracing` implementations.
 
 In order to trace their systems, clients must:
@@ -64,9 +64,6 @@ types:
  - `Tracer::Span`             - Interface to Span objects
  - `Tracer::SpanContext`      - Interface to SpanContext objects
  - `Tracer::SpanOptions`      - Interface to SpanOptions objects
- - `Tracer::SpanGuard`        - RAII Wrappers for Spans
- - `Tracer::SpanOptionsGuard` - RAII Wrappers for SpanOptions
- - `Tracer::SpanContextGuard` - RAII Wrappers for SpanContexts
 
 Our theoretical "ACME Inc." organization can use these type names to instrument their applications.
 The `Tracer` typedef is not standardized, but it is recommended. The rest of the documentation
@@ -201,14 +198,15 @@ struct HttpReader: public GenericBinaryReader<HttpReader>
     {
         std::string header = m_req.getHeader("x-acme-tracing-blob");
 
-        if(!header.empty()){
+        if (!header.empty())
+        {
             buf->assign(header.begin(), header.end());
             return 0;
         }
-        else {
+        else
+        {
             return 1;
         }
-        return 0;
     }
 
   private:

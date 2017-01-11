@@ -144,6 +144,10 @@ class NoopTracer : public GenericTracer<NoopTracer,
                                         NoopContext,
                                         NoopAdapter> {
   public:
+    static void installImp(NoopTracer *const);
+    static NoopTracer * instanceImp();
+    static void uninstallImp();
+
     NoopOptions* makeSpanOptionsImp();
     void cleanupImp(const NoopOptions* const opts);
 
@@ -175,6 +179,8 @@ class NoopTracer : public GenericTracer<NoopTracer,
     void cleanupImp(const NoopContext* const sp);
 
   private:
+    static NoopTracer *s_tracer;
+
     NoopOptions m_opts;
     NoopSpan    m_span;
 };
@@ -305,6 +311,24 @@ NoopSpan::logImp(const StringRef&, const T&, const uint64_t)
 // ----------------
 // class NoopTracer
 // ----------------
+
+inline void
+NoopTracer::installImp(NoopTracer* const tracer)
+{
+    s_tracer = tracer;
+}
+
+inline NoopTracer*
+NoopTracer::instanceImp()
+{
+    return s_tracer;
+}
+
+inline void
+NoopTracer::uninstallImp()
+{
+    s_tracer = 0;
+}
 
 inline NoopOptions*
 NoopTracer::makeSpanOptionsImp()
