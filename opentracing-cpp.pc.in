@@ -1,0 +1,14 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+libdir=${prefix}/@libdir@
+includedir=${prefix}/@includedir@
+
+Name: @PROJECT_NAME@
+Description: C++ interface for the OpenTracing specification
+URL: @opentracing_url@
+Version: @opentracing_version@
+Requires:
+Requires.private:
+Libs: @opentracing_libs@
+Libs.private:
+Cflags: -I${includedir}
+

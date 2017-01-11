@@ -24,16 +24,12 @@
 // https://github.com/opentracing/specification/blob/master/specification.md#nooptracer
 
 #include <opentracing/baggage.h>
-#include <opentracing/config.h>
 #include <opentracing/span.h>
 #include <opentracing/spancontext.h>
 #include <opentracing/spanoptions.h>
 #include <opentracing/stringref.h>
 #include <opentracing/tracer.h>
-
-#if HAVE_STDINT_H
 #include <stdint.h>
-#endif
 
 namespace opentracing {
 

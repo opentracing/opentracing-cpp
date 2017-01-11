@@ -11,11 +11,6 @@
 #include <opentracing/spanoptions.h>
 #include <opentracing/stringref.h>
 
-#include <opentracing/config.h>
-#ifdef HAVE_STDINT_H
-#include <stdint.h>
-#endif
-
 namespace opentracing {
 
 // ===================

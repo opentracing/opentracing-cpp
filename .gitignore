@@ -19,3 +19,8 @@ install-sh
 libtool
 ltmain.sh
 missing
+CMakeFiles
+*.cmake
+bin/
+build/
+test/unittest

@@ -8,11 +8,7 @@
 // class GenericSpanOptions - CRTP interface for SpanOptions
 
 #include <opentracing/spancontext.h>
-
-#include <opentracing/config.h>
-#if HAVE_STDINT_H
 #include <stdint.h>
-#endif
 
 namespace opentracing {
 

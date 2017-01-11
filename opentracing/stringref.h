@@ -4,9 +4,7 @@
 // ===========
 // stringref.h
 // ===========
-// class StringRefImp    - Templated implementation for a constant reference to an external string
-// typedef StringRef     - Typedef for StringRefImp<char>
-// typedef StringRefWide - Typedef for StringRefImp<wchar_t>
+// class StringRef - Constant reference to an external string
 //
 // -----------------
 // String References
@@ -19,97 +17,81 @@
 // http://www.boost.org/doc/libs/master/libs/utility/doc/html/string_ref.html
 
 #include <cstring>
-#include <cwchar>
-#include <string>
 #include <ostream>
-
-#include <opentracing/config.h>
-#if HAVE_STDING_H
-#include <stdint.h>
-#endif
+#include <string>
 
 namespace opentracing {
 
-// ==================
-// class StringRefImp
-// ==================
+// ===============
+// class StringRef
+// ===============
 // Represent a constant reference to an external character array. The external
 // array need not be null-terminated, if explicitly created with a known length.
 //
 // This class does not own the data. It is expected to be used in situations
 // where the character data resides in some other buffer, whose lifetime extends
-// past that of the StringRefImp. For this reason, it is not in general safe to
-// store a StringRefImp.
+// past that of the StringRef. For this reason, it is not in general safe to
+// store a StringRef.
 
-template <typename CHAR>
-class StringRefImp {
+class StringRef{
   public:
-    StringRefImp();
-    // Conststruct an empty StringRef
+    StringRef();
+    // Construct an empty StringRef
 
     template <size_t N>
-    StringRefImp(const CHAR (&str)[N]);
-    // Explicitly create string reference from a const CHARacter array
+    StringRef(const char (&str)[N]);
+    // Explicitly create string reference from a const character array
 
-    explicit StringRefImp(const CHAR* str);
-    // Explicitly create string reference from const CHARacter pointer
+    explicit StringRef(const char* str);
+    // Explicitly create string reference from const character pointer
 
-    StringRefImp(const std::basic_string<CHAR>& str);
+    StringRef(const std::basic_string<char>& str);
     // Create constant string reference from pointer and length
 
-    StringRefImp(const CHAR* str, size_t len);
+    StringRef(const char* str, size_t len);
     // Create constant string reference from pointer and length
 
-    operator const CHAR*() const;
-    // Implicit conversion to plain CHAR *
+    operator const char*() const;
+    // Implicit conversion to plain char *
 
     template <size_t N>
-    void             reset(const CHAR (&str)[N]);
-    // Reset the string reference given a const CHARacter array
+    void             reset(const char (&str)[N]);
+    // Reset the string reference given a const character array
 
-    void reset(const CHAR* const str);
+    void reset(const char* const str);
     // Reset this string ref to point at the supplied c-string
 
-    void reset(const std::basic_string<CHAR>& str);
+    void reset(const std::basic_string<char>& str);
     // Reset the string reference given a std::string
 
-    void reset(const CHAR* const str, const size_t length);
+    void reset(const char* const str, const size_t length);
     // Reset this string ref to point at the supplied 'str' of 'length' bytes.
 
-    const CHAR* data() const;
+    const char* data() const;
     // Return address of the referenced string
 
     size_t length() const;
     // Return the length of the referenced string
 
   private:
-    static size_t getLength(const CHAR* len);
-    // Similar to strlen, but for both char/wchar types
-
     template <size_t N>
-    StringRefImp(CHAR (&str)[N]);
+    StringRef(char (&str)[N]);
     // Disallow construction from non-const array
 
     template <size_t N>
-    void             reset(CHAR (&str)[N]);
+    void             reset(char (&str)[N]);
     // Disallow reset from non-const array
 
-    const CHAR* m_data;    // Pointer to external storage
+    const char* m_data;    // Pointer to external storage
     size_t      m_length;  // Length of data pointed to by 'm_data'
 };
-
-// --------
-// Typedefs
-// --------
-typedef StringRefImp<char> StringRef;
-typedef StringRefImp<wchar_t> StringRefWide;
 
 // -----
 // Note:
 // -----
 // Although we have the ability to use wide string refs, there are side
 // effects in exposing an OpenTracing interface that works with narrow and wide
-// strings at the same time. Storage on the implmentation will have a 'native'
+// strings at the same time. Storage on the implementation will have a 'native'
 // format.
 //
 // Exposing references to that format avoid copies means clients would be
@@ -118,102 +100,79 @@ typedef StringRefImp<wchar_t> StringRefWide;
 // that breaks if it was expecting wstring and starts receiving string all of a
 // sudden. That design issue still needs to be addressed.
 
-// ------------------
-// Class StringRefImp
-// ------------------
+// ---------------
+// Class StringRef
+// ---------------
 
-template <typename CHAR>
-inline StringRefImp<CHAR>::StringRefImp() : m_data(0), m_length(0)
+inline StringRef::StringRef() : m_data(0), m_length(0)
 {
 }
 
-template <typename CHAR>
 template <size_t N>
-inline StringRefImp<CHAR>::StringRefImp(const CHAR (&str)[N]) : m_data(str), m_length(N - 1)
+inline StringRef::StringRef(const char (&str)[N])
+: m_data(str), m_length(N - 1)
 {
 }
 
-template <typename CHAR>
-inline StringRefImp<CHAR>::StringRefImp(const CHAR* const str)
-: m_data(str), m_length(getLength(str))
+inline StringRef::StringRef(const char* const str)
+: m_data(str), m_length(std::strlen(str))
 {
 }
 
-template <typename CHAR>
-inline StringRefImp<CHAR>::StringRefImp(const std::basic_string<CHAR>& str)
+inline StringRef::StringRef(const std::basic_string<char>& str)
 : m_data(str.c_str()), m_length(str.length())
 {
 }
 
-template <typename CHAR>
-inline StringRefImp<CHAR>::StringRefImp(const CHAR* str, size_t len)
+inline StringRef::StringRef(const char* str, size_t len)
 : m_data(str), m_length(len)
 {
 }
 
-template <typename CHAR>
-inline StringRefImp<CHAR>::operator const CHAR*() const
+inline StringRef::operator const char*() const
 {
     return m_data;
 }
 
-template <typename CHAR>
 inline void
-StringRefImp<CHAR>::reset(const CHAR* const str, const size_t length)
+StringRef::reset(const char* const str, const size_t length)
 {
     m_data   = str;
     m_length = length;
 }
 
-template <typename CHAR>
 template <size_t N>
 inline void
-StringRefImp<CHAR>::reset(const CHAR (&str)[N])
+StringRef::reset(const char (&str)[N])
 {
     m_data   = str;
     m_length = N;
 }
 
-template <typename CHAR>
 inline void
-StringRefImp<CHAR>::reset(const CHAR* const str)
+StringRef::reset(const char* const str)
 {
     m_data   = str;
-    m_length = getLength(str);
+    m_length = std::strlen(str);
 }
 
-template <typename CHAR>
 inline void
-StringRefImp<CHAR>::reset(const std::basic_string<CHAR>& str)
+StringRef::reset(const std::basic_string<char>& str)
 {
     m_data   = str.data();
     m_length = str.length();
 }
 
-template <typename CHAR>
-inline const CHAR*
-StringRefImp<CHAR>::data() const
+inline const char*
+StringRef::data() const
 {
     return m_data;
 }
 
-template <typename CHAR>
 inline size_t
-StringRefImp<CHAR>::length() const
+StringRef::length() const
 {
     return m_length;
-}
-
-template <typename CHAR>
-inline size_t
-StringRefImp<CHAR>::getLength(const CHAR* s)
-{
-    const CHAR* p = s;
-    while (*p)
-    {
-        ++p;
-    }
-    return size_t(p - s);
 }
 
 }  // namespace opentracing

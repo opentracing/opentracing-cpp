@@ -2,8 +2,8 @@
 
 #include "carriers.h"
 
-#include <noop.h>
-#include <noop.h> // test include guard
+#include <opentracing/noop.h>
+#include <opentracing/noop.h> // test include guard
 
 // These run the same tests as the tracer.t.cc. The interface should be the
 // same, however, there may be some differences in return codes due
