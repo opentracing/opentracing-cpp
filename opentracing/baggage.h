@@ -42,9 +42,6 @@ namespace opentracing {
 
 class Baggage {
   public:
-    Baggage();
-    // Construct a Baggage with empty values.
-
     Baggage(const StringRef& key, const StringRef& value);
     // Construct a Baggage referencing 'key' and 'value'
 
@@ -85,9 +82,6 @@ class Baggage {
 
 class BaggageRef {
   public:
-    BaggageRef();
-    // Construct a BaggageRef with empty references.
-
     BaggageRef(const StringRef& key, const StringRef& value);
     // Construct a BaggageRef referencing 'key' and 'value'
 
@@ -216,10 +210,6 @@ class BaggageRangeImp {
 // class Baggage
 // -------------
 
-inline Baggage::Baggage() : m_key(), m_value()
-{
-}
-
 inline Baggage::Baggage(const StringRef& key, const StringRef& value)
 : m_key(key.data(), key.length()), m_value(value.data(), value.length())
 {
@@ -262,10 +252,6 @@ inline const Baggage* Baggage::operator->() const
 // ----------------
 // class BaggageRef
 // ----------------
-
-inline BaggageRef::BaggageRef() : m_key(), m_value()
-{
-}
 
 inline BaggageRef::BaggageRef(const StringRef& key, const StringRef& value)
 : m_key(key), m_value(value)

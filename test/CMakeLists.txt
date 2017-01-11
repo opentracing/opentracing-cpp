@@ -14,7 +14,7 @@ option(enable_noop "Test noop tracer." OFF)
 if(enable_noop)
     set(unittest_sources ${unittest_sources} noop.t.cc)
     include_directories(${CMAKE_SOURCE_DIR})
-    set(noop_lib "opentracing-cpp")
+    set(noop_lib "opentracing")
 endif()
 
 include_directories(${CMAKE_SOURCE_DIR})

@@ -43,7 +43,7 @@ mkdir build
 cd build
 cmake -Denable_tests=ON ..
 make
-../bin/unittest
+./bin/unittest
 ```
 
 If you're using the `NoopTracer`, you would want to add `-Denable_noop=ON` as well.

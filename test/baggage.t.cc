@@ -9,7 +9,7 @@
 
 TEST(Baggage, Constructor)
 {
-    Baggage b;
+    Baggage b("", "");
     ASSERT_EQ("", b.key());
     ASSERT_EQ("", b.value());
 }
@@ -26,7 +26,7 @@ TEST(Baggage, CopyConstructor)
 TEST(Baggage, Assignment)
 {
     Baggage b("apple", "banana");
-    Baggage cp;
+    Baggage cp("", "");
     cp = b;
 
     ASSERT_EQ("apple", cp.key());

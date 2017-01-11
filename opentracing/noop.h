@@ -188,13 +188,13 @@ class NoopTracer : public GenericTracer<NoopTracer,
 inline BaggageRef
 NoopAdapter::ref(const const_iterator&) const
 {
-    return BaggageRef();
+    return BaggageRef("", "");
 }
 
 inline Baggage
 NoopAdapter::copy(const const_iterator&) const
 {
-    return Baggage();
+    return Baggage("", "");
 }
 
 // -----------------
