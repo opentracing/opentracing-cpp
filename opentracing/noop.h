@@ -188,7 +188,8 @@ class NoopTracer : public GenericTracer<NoopTracer,
 inline BaggageRef
 NoopAdapter::ref(const const_iterator&) const
 {
-    return BaggageRef("", "");
+    static const char empty[] = "";
+    return BaggageRef(empty, empty);
 }
 
 inline Baggage
