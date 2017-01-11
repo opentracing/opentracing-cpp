@@ -37,7 +37,7 @@ if("${UNIX}" OR "${CYGWIN}")
                    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc
                    @ONLY)
 
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc.in
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc
             DESTINATION ${LIB_INSTALL_DIR}/pkgconfig
             COMPONENT pkgconfig)
 endif()

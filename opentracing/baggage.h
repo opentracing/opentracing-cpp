@@ -45,12 +45,6 @@ class Baggage {
     Baggage(const StringRef& key, const StringRef& value);
     // Construct a Baggage referencing 'key' and 'value'
 
-    std::string& key();
-    // Mutable reference to the underlying 'key'.
-
-    std::string& value();
-    // Mutable reference to the underlying 'value'.
-
     const std::string& key() const;
     // Return the non-modifiable 'key' associated with this baggage.
 
@@ -213,18 +207,6 @@ class BaggageRangeImp {
 inline Baggage::Baggage(const StringRef& key, const StringRef& value)
 : m_key(key.data(), key.length()), m_value(value.data(), value.length())
 {
-}
-
-inline std::string&
-Baggage::key()
-{
-    return m_key;
-}
-
-inline std::string&
-Baggage::value()
-{
-    return m_value;
 }
 
 inline const std::string&

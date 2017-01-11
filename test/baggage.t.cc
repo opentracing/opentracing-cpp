@@ -33,26 +33,6 @@ TEST(Baggage, Assignment)
     ASSERT_EQ("banana", cp.value());
 }
 
-TEST(Baggage, Manipulate)
-{
-    Baggage b("apple", "banana");
-    b.key() = "cranberry";
-    b.value() = "dates";
-
-    ASSERT_EQ("cranberry", b.key());
-    ASSERT_EQ("dates", b.value());
-}
-
-TEST(Baggage, ManipulateThroughDeref)
-{
-    Baggage b("apple", "banana");
-    b->key() = "cranberry";
-    b->value() = "dates";
-
-    ASSERT_EQ("cranberry", b.key());
-    ASSERT_EQ("dates", b.value());
-}
-
 TEST(Baggage, ConstBehavior)
 {
     const Baggage b("apple", "banana");

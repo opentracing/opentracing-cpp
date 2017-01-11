@@ -22,7 +22,7 @@ if(NOT includedir)
     set(includedir "include")
 endif()
 
-set(INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/${include}")
+set(INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/${includedir}")
 set(LIB_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/${libdir}")
 
 add_subdirectory(opentracing)
