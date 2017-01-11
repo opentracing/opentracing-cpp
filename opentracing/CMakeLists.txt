@@ -1,9 +1,5 @@
 include_directories(${CMAKE_SOURCE_DIR})
 
-if(enable_noop)
-    set(opentracing_libs "-L${libdir} -lopentracing-cpp")
-endif()
-
 set(headers
     baggage.h
     carriers.h
@@ -15,15 +11,33 @@ set(headers
     tracer.h)
 
 if(enable_noop)
+    # Used by pc file
+    set(opentracing_libs "-L${libdir} -lopentracing")
+
+    # Updated set of included files
     set(headers ${headers} noop.h)
 
-    add_library(opentracing-cpp STATIC noop.cc)
+    # Build our opentracing library
+    add_library(opentracing STATIC noop.cc)
 
-    install (TARGETS opentracing-cpp
+    # Add the opentracing install target
+    install (TARGETS opentracing
              DESTINATION ${LIB_INSTALL_DIR}
              COMPONENT dev)
 endif()
 
+# Install the opentracing headers into /path/to/include/opentracing/
 install (FILES ${headers}
          DESTINATION ${INCLUDE_INSTALL_DIR}/opentracing
          COMPONENT dev)
+
+# pkg-config
+if("${UNIX}" OR "${CYGWIN}")
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.pc.in
+                   ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc
+                   @ONLY)
+
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc.in
+            DESTINATION ${LIB_INSTALL_DIR}/pkgconfig
+            COMPONENT pkgconfig)
+endif()

@@ -9,6 +9,8 @@ set(unittest_sources
     tracer.t.cc
     unittest.t.cc)
 
+option(enable_noop "Test noop tracer." OFF)
+
 if(enable_noop)
     set(unittest_sources ${unittest_sources} noop.t.cc)
     include_directories(${CMAKE_SOURCE_DIR})

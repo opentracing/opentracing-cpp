@@ -14,28 +14,44 @@ In order to understand the C++ platform API, one must first be familiar with the
 
 ## Compile and install
 
+The default package is a header-only library. It can be installed as such
+
 ```
-libtoolize # or glibtoolize
-./autogen.sh
-./configure
-sudo make install
+mkdir build
+cd build
+cmake ..
+make install
+```
+
+If you would like to include the NoopTracer, a static library is created in addition to the headers.
+
+```
+mkdir build
+cd build
+cmake -Denable_noop=ON ..
+make install
 ```
 
 #### Tests
 
-Testing requires the use of `gtest`. The gtest library is added as a submodule to this repository. To build all of the
-tests, from the root repository:
+Testing requires the use of `gtest`. The `gtest` library is added as a submodule to this repository.
+To build all of the tests, from the root repository:
 
 ```
-cd ./thirdparty && ./build_gtest.sh
-cd ../test && make
-./test
+git submodule update --recursive --remote
+mkdir build
+cd build
+cmake -Denable_tests=ON ..
+make
+../bin/unittest
 ```
+
+If you're using the `NoopTracer`, you would want to add `-Denable_noop=ON` as well.
 
 ## API overview for those adding instrumentation
 
-Clients of this `OpenTracing` package do need to understand only the key abstractions of this API:
-    * Installing a Tracer implmementation in `main()`
+Clients of this `OpenTracing` only need to understand the key abstractions:
+    * Installing a Tracer
     * Using the Global `Tracer` to create `Spans` and `SpanContexts`
     * Adding tags, logs, or baggage to `Spans`
 
