@@ -48,18 +48,25 @@ class GenericSpanOptions {
   public:
     typedef GenericSpanContext<CONTEXT, ADAPTER> SpanContext;
 
-    void setOperation(const StringRef&);
+    int setOperation(const StringRef&);
     // Set the operation name to be used for any Span created with these
-    // options.
+    // options. Return 0 upon success and a non-zero value otherwise.
 
-    void setStartTime(const uint64_t);
+    int setStartTime(const uint64_t);
     // Set the start time from this span. If start time is not supplied, the
-    // default is to use the current wall-time.
+    // default is to use the current wall-time. Return 0 upon success and a
+    // non-zero value otherwise.
 
-    void setReference(const SpanRelationship::Value relationship,
+    int setReference(const SpanRelationship::Value relationship,
                       const SpanContext&            context);
     // A new Span created with these options would have a 'relationship'
-    // referenced added for 'context'.
+    // referenced added for 'context'. Return 0 upon success and a non-zero
+    // value otherwise.
+
+    template<typename T>
+    int setTag(const StringRef& key, const T& value);
+    // A new Span created with these options would have this 'key:value' tag.
+    // Return 0 upon success and a non-zero value otherwise.
 };
 
 // ------------------------
@@ -67,26 +74,35 @@ class GenericSpanOptions {
 // ------------------------
 
 template <typename OPTIONS, typename CONTEXT, typename ADAPTER>
-inline void
+inline int
 GenericSpanOptions<OPTIONS, CONTEXT, ADAPTER>::setOperation(const StringRef& op)
 {
-    static_cast<OPTIONS*>(this)->setOperationImp(op);
+    return static_cast<OPTIONS*>(this)->setOperationImp(op);
 }
 
 template <typename OPTIONS, typename CONTEXT, typename ADAPTER>
-inline void
+inline int
 GenericSpanOptions<OPTIONS, CONTEXT, ADAPTER>::setStartTime(const uint64_t tsp)
 {
-    static_cast<OPTIONS*>(this)->setStartTimeImp(tsp);
+    return static_cast<OPTIONS*>(this)->setStartTimeImp(tsp);
 }
 
 template <typename OPTIONS, typename CONTEXT, typename ADAPTER>
-inline void
+inline int
 GenericSpanOptions<OPTIONS, CONTEXT, ADAPTER>::setReference(
     const SpanRelationship::Value rel, const SpanContext& context)
 {
     const CONTEXT& contextImp = static_cast<const CONTEXT&>(context);
-    static_cast<OPTIONS*>(this)->setReferenceImp(rel, contextImp);
+    return static_cast<OPTIONS*>(this)->setReferenceImp(rel, contextImp);
+}
+
+template <typename OPTIONS, typename CONTEXT, typename ADAPTER>
+template <typename T>
+inline int
+GenericSpanOptions<OPTIONS, CONTEXT, ADAPTER>::setTag(
+    const StringRef& key, const T& value)
+{
+    return static_cast<OPTIONS*>(this)->setTagImp(key, value);
 }
 
 }  // namespace opentracing

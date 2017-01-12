@@ -89,9 +89,12 @@ class NoopContext : public GenericSpanContext<NoopContext, NoopAdapter> {
 class NoopOptions
     : public GenericSpanOptions<NoopOptions, NoopContext, NoopAdapter> {
   public:
-    void setOperationImp(const StringRef&);
-    void setStartTimeImp(const uint64_t);
-    void setReferenceImp(const SpanRelationship::Value, const NoopContext&);
+    int setOperationImp(const StringRef&);
+    int setStartTimeImp(const uint64_t);
+    int setReferenceImp(const SpanRelationship::Value, const NoopContext&);
+
+    template<typename T>
+    int setTagImp(const StringRef&, const T&);
 };
 
 // ==============
@@ -237,19 +240,29 @@ NoopContext::getBaggageImp(const StringRef&,
 // class NoopOptions
 // -----------------
 
-inline void
+inline int
 NoopOptions::setOperationImp(const StringRef&)
 {
+    return 0;
 }
 
-inline void
+inline int
 NoopOptions::setStartTimeImp(const uint64_t)
 {
+    return 0;
 }
 
-inline void
+inline int
 NoopOptions::setReferenceImp(const SpanRelationship::Value, const NoopContext&)
 {
+    return 0;
+}
+
+template<typename T>
+inline int
+NoopOptions::setTagImp(const StringRef&, const T&)
+{
+    return 0;
 }
 
 // -------------

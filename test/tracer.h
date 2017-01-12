@@ -13,19 +13,28 @@ class TestOptionsImpl : public GenericSpanOptions<TestOptionsImpl,
                                                   TestContextImpl,
                                                   TestContextBaggageAdapter> {
   public:
-    void
+    int
     setOperationImp(const StringRef&)
     {
+        return 0;
     }
 
-    void
+    int
     setStartTimeImp(const uint64_t)
     {
+        return 0;
     }
 
-    void
+    int
     setReferenceImp(const SpanRelationship::Value, const TestContextImpl&)
     {
+        return 0;
+    }
+
+    template<typename T>
+    int setTagImp(const StringRef&, const T&)
+    {
+        return 0;
     }
 };
 

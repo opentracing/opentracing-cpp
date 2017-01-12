@@ -38,7 +38,8 @@ Testing requires the use of `gtest`. The `gtest` library is added as a submodule
 To build all of the tests, from the root repository:
 
 ```
-git submodule update --recursive --remote
+git submodule init
+git submodule update
 mkdir build
 cd build
 cmake -Denable_tests=ON ..
