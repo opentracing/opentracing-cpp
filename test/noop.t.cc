@@ -189,7 +189,7 @@ TEST_F(NoopTracerEnv, StartWithOpts)
 
     opts->setOperation("hello");
     opts->setStartTime(1251251);
-    opts->setReference(SpanRelationship::e_FollowsFrom, *otherContext);
+    opts->setReference(SpanReferenceType::e_FollowsFrom, *otherContext);
 
     GlobalTracer::Span* span(GlobalTracer::start("hello"));
     EXPECT_TRUE(span);

@@ -26,7 +26,7 @@ class TestOptionsImpl : public GenericSpanOptions<TestOptionsImpl,
     }
 
     int
-    setReferenceImp(const SpanRelationship::Value, const TestContextImpl&)
+    setReferenceImp(const SpanReferenceType::Value, const TestContextImpl&)
     {
         return 0;
     }

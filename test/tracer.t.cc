@@ -185,7 +185,7 @@ TEST_F(TracerEnv, StartWithOptions)
 
     opts->setOperation("test");
     opts->setStartTime(12414);
-    opts->setReference(SpanRelationship::e_ChildOf, *otherContext);
+    opts->setReference(SpanReferenceType::e_ChildOf, *otherContext);
 
     Tracer::Span* span(Tracer::start(*opts));
     ASSERT_TRUE(span);

@@ -91,7 +91,7 @@ class NoopOptions
   public:
     int setOperationImp(const StringRef&);
     int setStartTimeImp(const uint64_t);
-    int setReferenceImp(const SpanRelationship::Value, const NoopContext&);
+    int setReferenceImp(const SpanReferenceType::Value, const NoopContext&);
 
     template<typename T>
     int setTagImp(const StringRef&, const T&);
@@ -253,7 +253,7 @@ NoopOptions::setStartTimeImp(const uint64_t)
 }
 
 inline int
-NoopOptions::setReferenceImp(const SpanRelationship::Value, const NoopContext&)
+NoopOptions::setReferenceImp(const SpanReferenceType::Value, const NoopContext&)
 {
     return 0;
 }

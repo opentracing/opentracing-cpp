@@ -30,7 +30,7 @@ class TestSpanImpl : public GenericSpan<TestSpanImpl,
     }
 
     int
-    addReferenceImp(const TestContextImpl&, const SpanRelationship::Value)
+    addReferenceImp(const TestContextImpl&, const SpanReferenceType::Value)
     {
         return 0;
     }

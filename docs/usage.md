@@ -227,7 +227,7 @@ int httpGetAccount(const HttpRequest& httpRequest)
     {
         SpanOptions* opts(Tracer::makeSpanOptions());
 
-        opts->setReference(SpanRelationship::e_ChildOf, *context);
+        opts->setReference(SpanReferenceType::e_ChildOf, *context);
         opts->setOperation("get_account_server");
 
         span = Tracer::start(opts);

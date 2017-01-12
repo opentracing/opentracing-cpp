@@ -4,7 +4,7 @@
 // =============
 // spanoptions.h
 // =============
-// class SpanRelationship   - Enumeration for Span relationship types
+// class SpanReferenceType   - Enumeration for Span relationship types
 // class GenericSpanOptions - CRTP interface for SpanOptions
 
 #include <opentracing/spancontext.h>
@@ -12,22 +12,22 @@
 
 namespace opentracing {
 
-// ======================
-// class SpanRelationship
-// ======================
+// =======================
+// class SpanReferenceType
+// =======================
 // Spans may reference zero or more other SpanContexts that are causally related.
 // OpenTracing presently defines two types of references: ChildOf and
 // FollowsFrom. Both reference types specifically model direct causal
 // relationships between a child Span and a parent Span.
 //
-//  * ChildOf - A Span may be the ChildOf a parent Span. In a ChildOf reference,
-//  			the parent Span depends on the child Span in some capacity.
+//  * e_ChildOf - A Span may be the ChildOf a parent Span. In a ChildOf reference,
+//                the parent Span depends on the child Span in some capacity.
 //
-//  * FollowsFrom - Some parent Spans do not depend in any way on the result of
-//  				their child Spans. In these cases, we say merely that the
-//  			 	child Span FollowsFrom the parent Span in a causal sense.
+//  * e_FollowsFrom - Some parent Spans do not depend in any way on the result of
+//                    their child Spans. In these cases, we say merely that the
+//                    child Span FollowsFrom the parent Span in a causal sense.
 
-class SpanRelationship {
+class SpanReferenceType {
   public:
     enum Value
     {
@@ -57,7 +57,7 @@ class GenericSpanOptions {
     // default is to use the current wall-time. Return 0 upon success and a
     // non-zero value otherwise.
 
-    int setReference(const SpanRelationship::Value relationship,
+    int setReference(const SpanReferenceType::Value relationship,
                       const SpanContext&            context);
     // A new Span created with these options would have a 'relationship'
     // referenced added for 'context'. Return 0 upon success and a non-zero
@@ -90,7 +90,7 @@ GenericSpanOptions<OPTIONS, CONTEXT, ADAPTER>::setStartTime(const uint64_t tsp)
 template <typename OPTIONS, typename CONTEXT, typename ADAPTER>
 inline int
 GenericSpanOptions<OPTIONS, CONTEXT, ADAPTER>::setReference(
-    const SpanRelationship::Value rel, const SpanContext& context)
+    const SpanReferenceType::Value rel, const SpanContext& context)
 {
     const CONTEXT& contextImp = static_cast<const CONTEXT&>(context);
     return static_cast<OPTIONS*>(this)->setReferenceImp(rel, contextImp);
