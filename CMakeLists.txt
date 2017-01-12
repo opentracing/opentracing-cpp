@@ -9,21 +9,9 @@ set(opentracing_version "${lib_major_version}.${lib_minor_version}.${lib_patch_v
 set(opentracing_url "https://github.com/opentracing/opentracing-cpp")
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-set(CMAKE_CXX_FLAGS "-g -Wall -Werror -Wextra -Wfloat-equal")
 
 option(enable_noop "Build noop tracer." OFF)
 option(enable_tests "Build unit tests." OFF)
-
-if(NOT libdir)
-    set(libdir "lib")
-endif()
-
-if(NOT includedir)
-    set(includedir "include")
-endif()
-
-set(INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/${includedir}")
-set(LIB_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/${libdir}")
 
 add_subdirectory(opentracing)
 

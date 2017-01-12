@@ -22,13 +22,13 @@ if(enable_noop)
 
     # Add the opentracing install target
     install (TARGETS opentracing
-             DESTINATION ${LIB_INSTALL_DIR}
+             DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}
              COMPONENT dev)
 endif()
 
 # Install the opentracing headers into /path/to/include/opentracing/
 install (FILES ${headers}
-         DESTINATION ${INCLUDE_INSTALL_DIR}/opentracing
+         DESTINATION ${CMAKE_INSTALL_PREFIX}/include/opentracing
          COMPONENT dev)
 
 # pkg-config
@@ -38,6 +38,6 @@ if("${UNIX}" OR "${CYGWIN}")
                    @ONLY)
 
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc
-            DESTINATION ${LIB_INSTALL_DIR}/pkgconfig
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/pkgconfig
             COMPONENT pkgconfig)
 endif()
