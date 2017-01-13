@@ -53,7 +53,7 @@ namespace opentracing {
 //
 // The templated 'tagImp' and 'logImp' methods may assume that the following
 // method is defined for any type 'T':
-//      `std::ostream& operator<<(std::ostream&, const T& val);`
+//      `std::ostream& ::operator<<(std::ostream&, const T& val);`
 
 template <typename SPAN, typename CONTEXT, typename ADAPTER>
 class GenericSpan {

@@ -26,8 +26,7 @@
 // the Tracer using the GenericTextReader, GenericBinaryReader, or GenericReader
 // interfaces. If the readers are successful, an immutable SpanContext is
 // returned to applications. That SpanContext can then be used to create
-// new spans, accessing its baggage or adding it as a reference to in other
-// Spans.
+// new spans or accessing baggage.
 
 #include <opentracing/stringref.h>
 #include <string>
