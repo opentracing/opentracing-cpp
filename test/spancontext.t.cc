@@ -9,7 +9,7 @@ TEST(GenericSpanContext, BaggageCopies)
     TestContextImpl imp;
     TestContext&    t = imp;
 
-    int rc = t.setBaggage("hello", "world");
+    int rc = imp.setBaggage("hello", "world");
     ASSERT_EQ(0, rc);
 
     std::vector<std::string> vals;
@@ -44,7 +44,7 @@ TEST(GenericSpanContext, CopyConstructor)
     TestContextImpl impl;
     TestContext& t = impl;
 
-    int rc = t.setBaggage("hello", "world");
+    int rc = impl.setBaggage("hello", "world");
     ASSERT_EQ(0, rc);
 
     TestContextImpl implCopy = impl;

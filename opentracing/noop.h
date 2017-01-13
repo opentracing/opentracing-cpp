@@ -74,7 +74,6 @@ class NoopContext : public GenericSpanContext<NoopContext, NoopAdapter> {
     BaggageIterator baggageBeginImp() const;
     BaggageIterator baggageEndImp() const;
 
-    int setBaggageImp(const StringRef&, const StringRef&);
     int getBaggageImp(const StringRef&, std::string* const) const;
     int getBaggageImp(const StringRef&, std::vector<std::string>* const) const;
 };
@@ -108,8 +107,13 @@ class NoopOptions
 
 class NoopSpan : public GenericSpan<NoopSpan, NoopContext, NoopAdapter> {
   public:
-    NoopContext&       contextImp();
-    const NoopContext& contextImp() const;
+    const NoopContext * contextImp() const;
+
+    int setOperationImp(const StringRef&);
+    int setBaggageImp(const StringRef&, const StringRef&);
+
+    int getBaggageImp(const StringRef&, std::string* const) const;
+    int getBaggageImp(const StringRef&, std::vector<std::string>* const) const;
 
     int finishImp();
     int finishImp(const uint64_t);
@@ -123,7 +127,6 @@ class NoopSpan : public GenericSpan<NoopSpan, NoopContext, NoopAdapter> {
     template <typename T>
     int logImp(const StringRef&, const T&, const uint64_t);
 
-  private:
     NoopContext m_context;
 };
 
@@ -218,12 +221,6 @@ NoopContext::baggageEndImp() const
 }
 
 inline int
-NoopContext::setBaggageImp(const StringRef&, const StringRef&)
-{
-    return 0;
-}
-
-inline int
 NoopContext::getBaggageImp(const StringRef&, std::string* const) const
 {
     return 1;
@@ -269,21 +266,39 @@ NoopOptions::setTagImp(const StringRef&, const T&)
 // class NooSpan
 // -------------
 
-inline NoopContext&
-NoopSpan::contextImp()
-{
-    return m_context;
-}
-
-inline const NoopContext&
+inline const NoopContext*
 NoopSpan::contextImp() const
 {
-    return m_context;
+    return &m_context;
 }
 
 // --------------
 // class NoopSpan
 // --------------
+
+inline int
+NoopSpan::setOperationImp(const StringRef&)
+{
+    return 0;
+}
+
+inline int
+NoopSpan::setBaggageImp(const StringRef&, const StringRef&)
+{
+    return 0;
+}
+
+inline int
+NoopSpan::getBaggageImp(const StringRef&, std::string* const) const
+{
+    return 1;
+}
+
+inline int
+NoopSpan::getBaggageImp(const StringRef&, std::vector<std::string>* const) const
+{
+    return 1;
+}
 
 inline int
 NoopSpan::finishImp()
@@ -396,21 +411,21 @@ template <typename CARRIER>
 inline NoopContext*
 NoopTracer::extractImp(const GenericTextReader<CARRIER>&)
 {
-    return &m_span.contextImp();
+    return &m_span.m_context;
 }
 
 template <typename CARRIER>
 inline NoopContext*
 NoopTracer::extractImp(const GenericBinaryReader<CARRIER>&)
 {
-    return &m_span.contextImp();
+    return &m_span.m_context;
 }
 
 template <typename CARRIER>
 inline NoopContext*
 NoopTracer::extractImp(const GenericReader<CARRIER, NoopContext>&)
 {
-    return &m_span.contextImp();
+    return &m_span.m_context;
 }
 
 inline void

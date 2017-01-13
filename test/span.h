@@ -11,21 +11,66 @@ class TestSpanImpl : public GenericSpan<TestSpanImpl,
                                         TestContextImpl,
                                         TestContextBaggageAdapter> {
   public:
-    TestContextImpl&
-    contextImp()
-    {
-        return d_context;
-    }
-
-    const TestContextImpl&
+    const TestContextImpl *
     contextImp() const
     {
-        return d_context;
+        TestContextImpl * context = new TestContextImpl();
+        context->baggageMap() = m_context.baggageMap();
     }
 
     int
     setOperationImp(const StringRef&)
     {
+        return 0;
+    }
+
+    int
+    getBaggageImp(const StringRef& key, std::string* const baggage) const
+    {
+        std::vector<std::string> out;
+
+        getBaggageImp(key, &out);
+
+        if (1u == out.size())
+        {
+            *baggage = out[0];
+            return 0;
+        }
+        else
+        {
+            return 1;
+        }
+    }
+
+    int
+    getBaggageImp(const StringRef&                key,
+                  std::vector<std::string>* const baggage) const
+    {
+        baggage->clear();
+
+        const std::string mkey(key.data(), key.length());
+
+        const std::pair<TestBaggageContainer::const_iterator,
+                        TestBaggageContainer::const_iterator>
+            range = m_context.baggageMap().equal_range(mkey);
+
+        for (TestBaggageContainer::const_iterator it  = range.first,
+                                                  end = range.second;
+             it != end;
+             ++it)
+        {
+            baggage->push_back(it->second);
+        }
+
+        return baggage->empty();
+    }
+    int
+    setBaggageImp(const StringRef& key, const StringRef& baggage)
+    {
+        m_context.baggageMap().insert(TestBaggageContainer::value_type(
+            std::string(key.data(), key.length()),
+            std::string(baggage.data(), baggage.length())));
+
         return 0;
     }
 
@@ -69,7 +114,7 @@ class TestSpanImpl : public GenericSpan<TestSpanImpl,
     }
 
   private:
-    TestContextImpl d_context;
+    TestContextImpl m_context;
 };
 
 typedef GenericSpan<TestSpanImpl, TestContextImpl, TestContextBaggageAdapter>

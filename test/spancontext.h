@@ -30,8 +30,9 @@ struct TestContextBaggageAdapter {
 class TestContextImpl
     : public GenericSpanContext<TestContextImpl, TestContextBaggageAdapter> {
   public:
+      // For tests only, not part of the interface
     int
-    setBaggageImp(const StringRef& key, const StringRef& baggage)
+    setBaggage(const StringRef& key, const StringRef& baggage)
     {
         m_baggage.insert(TestBaggageContainer::value_type(
             std::string(key.data(), key.length()),

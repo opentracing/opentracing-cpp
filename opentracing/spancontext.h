@@ -28,14 +28,14 @@ namespace opentracing {
 //       typename Adapter::const_iterator baggageBeginImp() const;
 //       typename Adapter::const_iterator baggageEndImp() const;
 //
-//       int setBaggageImp(const StringRef&, const StringRef&);
 //       int getBaggageImp(const StringRef&, std::string* const) const;
 //       int getBaggageImp(const StringRef&, std::vector<std::string>* const) const;
 //   };
 //
 // Implementations may choose how they implement storage of Baggage, but the
 // baggageBeginImp/baggageEndImp iterators should interact with the installed
-// BaggageIterator/Adapter correctly.
+// BaggageIterator/Adapter correctly. Contexts should be immutable and
+// thread-safe.
 
 template <typename CONTEXT, typename ADAPTER>
 class GenericSpanContext {
@@ -56,10 +56,6 @@ class GenericSpanContext {
     BaggageRange baggageRange() const;
     // Return a structure containing the range of iterators:
     // [baggageBegin, baggageEnd). The object supports range-based for loops.
-
-    int setBaggage(const StringRef &key, const StringRef &baggage);
-    // Set or append the single 'baggage' value for the given 'key'. Return 0
-    // upon success and a non-zero value otherwise.
 
     int getBaggage(const StringRef &key, std::string *const baggage) const;
     // Load a single 'baggage' value associated with 'key'. Returns 0 if there
@@ -112,14 +108,6 @@ inline typename GenericSpanContext<CONTEXT, ADAPTER>::BaggageRange
 GenericSpanContext<CONTEXT, ADAPTER>::baggageRange() const
 {
     return BaggageRange(baggageBegin(), baggageEnd());
-}
-
-template <typename CONTEXT, typename ADAPTER>
-inline int
-GenericSpanContext<CONTEXT, ADAPTER>::setBaggage(const StringRef &key,
-                                                 const StringRef &baggage)
-{
-    return static_cast<CONTEXT *>(this)->setBaggageImp(key, baggage);
 }
 
 template <typename CONTEXT, typename ADAPTER>

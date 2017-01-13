@@ -1,34 +1,13 @@
 #include "unittest.h"
 #include "span.h"
 
-TEST(Span, BasicTests)
+
+TEST(SpanTests, setOperation)
 {
     TestSpanImpl impl;
     TestSpan& t = impl;
-
-    int rc = impl.context().setBaggage("hello", "world");
-
-    {
-        // Make sure const references work
-        const TestSpan& tc = impl;
-
-        std::vector<std::string> vals;
-        rc = tc.context().getBaggage("hello", &vals);
-
-        ASSERT_EQ(0, rc);
-        ASSERT_EQ(1u, vals.size());
-        ASSERT_EQ("world", vals[0]);
-
-        const TestSpan::SpanContext& cc = tc.context();
-        rc  = cc.getBaggage("miss", &vals);
-        ASSERT_NE(0, rc);
-
-        TestSpan::SpanContext::BaggageIterator it = cc.baggageBegin();
-        ASSERT_FALSE(it == cc.baggageEnd());
-    }
-
-    t.finish();
-    t.finish(1234567);
+    const int rc = t.setOperation("hello world");
+    ASSERT_EQ(0, rc);
 }
 
 template<typename T>
