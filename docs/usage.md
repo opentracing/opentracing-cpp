@@ -149,9 +149,9 @@ class HttpWriter : public GenericBinaryWriter<HttpWriter>
   public:
     HttpWriter(HttpRequest * req): m_req(req){}
 
-    int injectImp(const std::vector<char>& blob)
+    int injectImp(const void * const blob, const size_t len)
     {
-        std::string header(blob.data(), blob.size());
+        std::string header(static_cast<const char* const>(blob), len);
         req->addHeader("x-acme-tracing-blob", header);
         return 0;
     }
