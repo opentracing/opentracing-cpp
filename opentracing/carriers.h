@@ -89,7 +89,7 @@ class GenericTextWriter {
 //
 // class BinaryWriter : GenericBinaryWriter<BinaryWriter>{
 //   public:
-//      int injectImp(const vector<char>& buf);
+//      int injectImp(const void* const buf, const size_t len);
 // };
 //
 // Implementations are responsible for passing the blob along with a carrier
@@ -99,7 +99,7 @@ class GenericTextWriter {
 template <typename CARRIER>
 class GenericBinaryWriter {
   public:
-    int inject(const std::vector<char>& buf);
+    int inject(const void * const buf, const size_t len);
     // Inject the binary representation of a span context into this carrier.
 
   protected:
@@ -286,9 +286,9 @@ inline GenericTextWriter<CARRIER>::GenericTextWriter(const GenericTextWriter&)
 
 template <typename CARRIER>
 inline int
-GenericBinaryWriter<CARRIER>::inject(const std::vector<char>& buf)
+GenericBinaryWriter<CARRIER>::inject(const void* const buf, const size_t len)
 {
-    return static_cast<CARRIER*>(this)->injectImp(buf);
+    return static_cast<CARRIER*>(this)->injectImp(buf, len);
 }
 
 template <typename CARRIER>

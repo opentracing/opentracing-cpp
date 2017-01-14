@@ -43,9 +43,9 @@ namespace opentracing {
 //  GenericTracer<TracerImp, SpanImp, OptionsImp, ContextImp, Adapter>
 // {
 //   public:
-//     static installImp(TracerImp*);
+//     static void installImp(TracerImp*);
 //     static TracerImp * instanceImp();
-//     static uninstallImp();
+//     static void uninstallImp();
 //
 //     Options * makeSpanOptionsImp();
 //     void cleanupImp(const Options * const opts);

@@ -118,7 +118,7 @@ class TestTracerImpl : public GenericTracer<TestTracerImpl,
         buf.resize(sizeof(deadbeef));
         std::memcpy(&buf[0], &deadbeef, sizeof(deadbeef));
 
-        return carrier->inject(buf);
+        return carrier->inject(buf.data(), buf.size());
     }
 
     template <typename CIMPL>

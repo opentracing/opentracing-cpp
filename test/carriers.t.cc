@@ -86,7 +86,7 @@ TEST(Carriers, BinaryWriter)
     buf.resize(sizeof(tooBig));
     std::memcpy(&buf[0], &tooBig, sizeof(tooBig));
 
-    int rc = t.inject(buf);
+    int rc = t.inject(buf.data(), buf.size());
     ASSERT_NE(0, rc);
 
     const int32_t expected = 0xdeadbeef;
@@ -94,7 +94,7 @@ TEST(Carriers, BinaryWriter)
     buf.resize(sizeof(expected));
     std::memcpy(&buf[0], &expected, sizeof(expected));
 
-    rc = t.inject(buf);
+    rc = t.inject(buf.data(), buf.size());
     ASSERT_EQ(0, rc);
     ASSERT_EQ(expected, imp.m_raw);
 }

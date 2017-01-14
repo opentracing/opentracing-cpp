@@ -32,14 +32,14 @@ struct TestTextReader : public GenericTextReader<TestTextReader> {
 
 struct TestBinaryWriter : public GenericBinaryWriter<TestBinaryWriter> {
     int
-    injectImp(const std::vector<char>& buf)
+    injectImp(const void* const buf, const size_t len)
     {
-        if (buf.size() > sizeof(m_raw))
+        if (len > sizeof(m_raw))
         {
             return 1;
         }
 
-        std::memcpy(&m_raw, &buf[0], buf.size());
+        std::memcpy(&m_raw, buf, len);
         return 0;
     }
 
