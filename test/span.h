@@ -113,7 +113,6 @@ class TestSpanImpl : public GenericSpan<TestSpanImpl,
         return 0;
     }
 
-  private:
     TestContextImpl m_context;
 };
 

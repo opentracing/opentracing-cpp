@@ -157,6 +157,9 @@ class NoopTracer : public GenericTracer<NoopTracer,
     NoopSpan* startImp(const NoopOptions&);
     void cleanupImp(const Span* const sp);
 
+    template <typename CARRIER_T>
+    int injectImp(CARRIER_T* const carrier, const NoopSpan& span) const;
+
     template <typename CARRIER>
     int injectImp(GenericTextWriter<CARRIER>* const carrier,
                   const NoopContext&                context) const;
@@ -381,6 +384,13 @@ NoopTracer::startImp(const NoopOptions&)
 inline void
 NoopTracer::cleanupImp(const Span* const)
 {
+}
+
+template <typename CARRIER_T>
+inline int
+NoopTracer::injectImp(CARRIER_T* const, const NoopSpan&) const
+{
+    return 0;
 }
 
 template <typename CARRIER>

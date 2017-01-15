@@ -88,6 +88,13 @@ class TestTracerImpl : public GenericTracer<TestTracerImpl,
         delete sp;
     }
 
+    template <typename CARRIER_T>
+    int
+    injectImp(CARRIER_T* const carrier, const TestSpanImpl& imp) const
+    {
+        return injectImp(carrier, imp.m_context);
+    }
+
     template <typename CIMPL>
     int
     injectImp(GenericTextWriter<CIMPL>* const carrier,

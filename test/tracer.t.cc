@@ -87,6 +87,29 @@ TEST_F(TracerEnv, InjectText)
     Tracer::cleanup(context);
 }
 
+TEST_F(TracerEnv, SpanInjectText)
+{
+    TestTextWriter writer;
+
+    Tracer::Span* span(Tracer::start("op"));
+    ASSERT_TRUE(span);
+
+    span->setBaggage("animal", "tiger");
+    span->setBaggage("animal", "cat");
+
+    int rc = Tracer::inject(&writer, *span);
+    ASSERT_EQ(0, rc);
+    ASSERT_EQ(2u, writer.pairs.size());
+
+    ASSERT_EQ(writer.pairs[0].m_name, "animal");
+    ASSERT_EQ(writer.pairs[1].m_name, "animal");
+
+    ASSERT_TRUE(writer.pairs[0].m_value == "cat" || writer.pairs[0].m_value == "tiger");
+    ASSERT_TRUE(writer.pairs[1].m_value == "cat" || writer.pairs[1].m_value == "tiger");
+
+    Tracer::cleanup(span);
+}
+
 TEST_F(TracerEnv, ExtractText)
 {
     TestTextReader reader;
@@ -128,6 +151,21 @@ TEST_F(TracerEnv, InjectBinary)
     ASSERT_EQ(0xdeadbeef, writer.m_raw);
 
     Tracer::cleanup(context);
+    Tracer::cleanup(span);
+}
+
+TEST_F(TracerEnv, SpanInjectBinary)
+{
+    TestBinaryWriter writer;
+
+    Tracer::Span* span(Tracer::start("op"));
+    ASSERT_TRUE(span);
+
+    int rc = Tracer::inject(&writer, *span);
+    ASSERT_EQ(0, rc);
+    ASSERT_EQ(0xdeadbeef, writer.m_raw);
+
+    Tracer::cleanup(span);
 }
 
 TEST_F(TracerEnv, ExtractBinary)
@@ -168,6 +206,32 @@ TEST_F(TracerEnv, InjectExplicit)
 
     Tracer::cleanup(span);
     Tracer::cleanup(context);
+}
+
+TEST_F(TracerEnv, SpanInjectExplicit)
+{
+    TestWriter w;
+
+    Tracer::Span* span(Tracer::start("span"));
+    ASSERT_TRUE(span);
+
+    span->setBaggage("animal", "tiger");
+    span->setBaggage("fruit", "apple");
+
+    int rc = Tracer::inject(&w, *span);
+    ASSERT_EQ(0, rc);
+    ASSERT_EQ(2u, w.carrier.size());
+
+    TestBaggageContainer::const_iterator cit = w.carrier.find("animal");
+
+    ASSERT_NE(cit, w.carrier.end());
+    ASSERT_EQ("tiger", cit->second);
+
+    cit = w.carrier.find("fruit");
+    ASSERT_NE(cit, w.carrier.end());
+    ASSERT_EQ("apple", cit->second);
+
+    Tracer::cleanup(span);
 }
 
 TEST_F(TracerEnv, ExtractExplicit)

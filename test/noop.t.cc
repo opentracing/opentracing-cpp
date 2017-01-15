@@ -82,6 +82,21 @@ TEST_F(NoopTracerEnv, StartWithOpAndParent)
     EXPECT_TRUE(guard);
 }
 
+TEST_F(NoopTracerEnv, InjectSpan)
+{
+    TestTextWriter writer;
+
+    GlobalTracer::Span* span(GlobalTracer::start("op"));
+    ASSERT_TRUE(span);
+    span->setBaggage("animal", "tiger");
+    span->setBaggage("animal", "cat");
+
+    int rc = GlobalTracer::inject(&writer, *span);
+    ASSERT_EQ(0, rc);
+
+    GlobalTracer::cleanup(span);
+}
+
 TEST_F(NoopTracerEnv, InjectText)
 {
     TestTextWriter writer;
@@ -100,6 +115,8 @@ TEST_F(NoopTracerEnv, InjectText)
     GlobalTracer::cleanup(span);
     GlobalTracer::cleanup(context);
 }
+
+
 
 TEST_F(NoopTracerEnv, ExtractText)
 {

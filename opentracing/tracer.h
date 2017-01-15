@@ -54,6 +54,9 @@ namespace opentracing {
 //     SpanImp * start(const OptionsImp& opts);
 //     void cleanupImp(const SpanImp * const sp);
 //
+//     template<typename CARRIER_T>
+//     int injectImp(CARRIER_T*const carrier, const SpanImp& context) const;
+//
 //     template<typename CARRIER>
 //     int injectImp(
 //              GenericTextWriter<CARRIER>* const carrier,
@@ -143,6 +146,13 @@ class GenericTracer {
     static void cleanup(Span* const sp);
     // All Span pointers returned by the Tracer via 'start()' must be passed
     // back to the Tracer when clients are done with them via 'cleanup()'.
+
+    template <typename CARRIER_T>
+    static int inject(CARRIER_T* const carrier, const Span& span);
+    // Inject the supplied 'span' into the supplied 'carrier' writer. This
+    // method should defer to other inject implementations, but gives
+    // implementations the opportunity to avoid copying the span context
+    // of a span. Returns 0 upon success and a non-zero value otherwise.
 
     template <typename CARRIER>
     static int inject(GenericTextWriter<CARRIER>* const carrier,
@@ -315,6 +325,21 @@ GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::cleanup(Span* const sp)
 {
     SPAN* const spanImp = static_cast<SPAN*>(sp);
     return TRACER::instanceImp()->cleanupImp(spanImp);
+}
+
+template <typename TRACER,
+          typename SPAN,
+          typename OPTIONS,
+          typename CONTEXT,
+          typename ADAPTER>
+template <typename CARRIER_T>
+inline int
+GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::inject(
+    CARRIER_T* const carrier, const Span& span)
+{
+    const SPAN&   spanImp = static_cast<const SPAN&>(span);
+    const TRACER* tracer  = TRACER::instanceImp();
+    return tracer->injectImp(carrier, spanImp);
 }
 
 template <typename TRACER,
