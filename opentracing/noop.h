@@ -157,29 +157,11 @@ class NoopTracer : public GenericTracer<NoopTracer,
     NoopSpan* startImp(const NoopOptions&);
     void cleanupImp(const Span* const sp);
 
-    template <typename CARRIER>
-    int injectImp(CARRIER* const carrier, const NoopSpan& span) const;
+    template <typename CARRIER, typename T>
+    int injectImp(CARRIER* const carrier, const T&) const;
 
     template <typename CARRIER>
-    int injectImp(GenericTextWriter<CARRIER>* const carrier,
-                  const NoopContext&                context) const;
-
-    template <typename CARRIER>
-    int injectImp(GenericBinaryWriter<CARRIER>* const carrier,
-                  const NoopContext&                  context) const;
-
-    template <typename CARRIER>
-    int injectImp(GenericWriter<CARRIER>* const carrier,
-                  const NoopContext& context) const;
-
-    template <typename CARRIER>
-    NoopContext* extractImp(const GenericTextReader<CARRIER>& carrier);
-
-    template <typename CARRIER>
-    NoopContext* extractImp(const GenericBinaryReader<CARRIER>& carrier);
-
-    template <typename CARRIER>
-    NoopContext* extractImp(const GenericReader<CARRIER>& carrier);
+    NoopContext* extractImp(const CARRIER& carrier);
 
     void cleanupImp(const NoopContext* const sp);
 
@@ -386,53 +368,16 @@ NoopTracer::cleanupImp(const Span* const)
 {
 }
 
-template <typename CARRIER>
+template <typename CARRIER, typename T>
 inline int
-NoopTracer::injectImp(CARRIER* const, const NoopSpan&) const
-{
-    return 0;
-}
-
-template <typename CARRIER>
-inline int
-NoopTracer::injectImp(GenericTextWriter<CARRIER>* const,
-                      const NoopContext&) const
-{
-    return 0;
-}
-
-template <typename CARRIER>
-inline int
-NoopTracer::injectImp(GenericBinaryWriter<CARRIER>* const,
-                      const NoopContext&) const
-{
-    return 0;
-}
-
-template <typename CARRIER>
-inline int
-NoopTracer::injectImp(GenericWriter<CARRIER>* const, const NoopContext&) const
+NoopTracer::injectImp(CARRIER* const, const T&) const
 {
     return 0;
 }
 
 template <typename CARRIER>
 inline NoopContext*
-NoopTracer::extractImp(const GenericTextReader<CARRIER>&)
-{
-    return &m_span.m_context;
-}
-
-template <typename CARRIER>
-inline NoopContext*
-NoopTracer::extractImp(const GenericBinaryReader<CARRIER>&)
-{
-    return &m_span.m_context;
-}
-
-template <typename CARRIER>
-inline NoopContext*
-NoopTracer::extractImp(const GenericReader<CARRIER>&)
+NoopTracer::extractImp(const CARRIER&)
 {
     return &m_span.m_context;
 }
