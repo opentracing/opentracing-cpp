@@ -130,8 +130,8 @@ class TestTracerImpl : public GenericTracer<TestTracerImpl,
 
     template <typename CIMPL>
     int
-    injectImp(GenericWriter<CIMPL, TestContextImpl>* const carrier,
-              const TestContextImpl& context) const
+    injectImp(GenericWriter<CIMPL>* const carrier,
+              const TestContextImpl&      context) const
     {
         return carrier->inject(context);
     }
@@ -154,7 +154,7 @@ class TestTracerImpl : public GenericTracer<TestTracerImpl,
              ++it)
         {
             imp->baggageMap().insert(
-                TestBaggageContainer::value_type(it->m_name, it->m_value));
+                TestBaggageContainer::value_type(it->m_key, it->m_value));
         }
         return imp;
     }
@@ -185,10 +185,8 @@ class TestTracerImpl : public GenericTracer<TestTracerImpl,
 
     template <typename CIMPL>
     TestContextImpl*
-    extractImp(const GenericReader<CIMPL, TestContextImpl>& carrier)
+    extractImp(const GenericReader<CIMPL>& carrier)
     {
-        // Should use a guard here and release it, iff, carrier has
-        // no errors.
         TestContextImpl* imp = new TestContextImpl;
         if (int rc = carrier.extract(imp))
         {

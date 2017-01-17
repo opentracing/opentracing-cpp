@@ -58,7 +58,7 @@ struct TestBinaryReader : public GenericBinaryReader<TestBinaryReader> {
     int32_t m_raw;
 };
 
-struct TestWriter : public GenericWriter<TestWriter, TestContextImpl>
+struct TestWriter : public GenericWriter<TestWriter>
 {
     int injectImp(const TestContextImpl& context)
     {
@@ -69,7 +69,7 @@ struct TestWriter : public GenericWriter<TestWriter, TestContextImpl>
     std::multimap<std::string, std::string> carrier;
 };
 
-struct TestReader : public GenericReader<TestReader, TestContextImpl>
+struct TestReader : public GenericReader<TestReader>
 {
     int extractImp(TestContextImpl * const context) const
     {
@@ -84,7 +84,7 @@ typedef GenericTextWriter<TestTextWriter>     TextWriter;
 typedef GenericTextReader<TestTextReader>     TextReader;
 typedef GenericBinaryWriter<TestBinaryWriter> BinaryWriter;
 typedef GenericBinaryReader<TestBinaryReader> BinaryReader;
-typedef GenericWriter<TestWriter, TestContextImpl> ExplicitWriter;
-typedef GenericReader<TestReader, TestContextImpl> ExplicitReader;
+typedef GenericWriter<TestWriter>             ExplicitWriter;
+typedef GenericReader<TestReader>             ExplicitReader;
 
 #endif

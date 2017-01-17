@@ -17,13 +17,13 @@ TEST(Carriers, TextMapWriter)
 
     ASSERT_EQ(3u, imp.pairs.size());
 
-    ASSERT_EQ(imp.pairs[0].m_name, "animal");
+    ASSERT_EQ(imp.pairs[0].m_key, "animal");
     ASSERT_EQ(imp.pairs[0].m_value, "dog");
 
-    ASSERT_EQ(imp.pairs[1].m_name, "fruit");
+    ASSERT_EQ(imp.pairs[1].m_key, "fruit");
     ASSERT_EQ(imp.pairs[1].m_value, "apple");
 
-    ASSERT_EQ(imp.pairs[2].m_name, "veggie");
+    ASSERT_EQ(imp.pairs[2].m_key, "veggie");
     ASSERT_EQ(imp.pairs[2].m_value, "carrot");
 }
 
@@ -46,13 +46,13 @@ TEST(Carriers, TextMapReader)
 
     ASSERT_EQ(3u, o.size());
 
-    ASSERT_EQ(o[0].m_name, "animal");
+    ASSERT_EQ(o[0].m_key, "animal");
     ASSERT_EQ(o[0].m_value, "dog");
 
-    ASSERT_EQ(o[1].m_name, "fruit");
+    ASSERT_EQ(o[1].m_key, "fruit");
     ASSERT_EQ(o[1].m_value, "apple");
 
-    ASSERT_EQ(o[2].m_name, "veggie");
+    ASSERT_EQ(o[2].m_key, "veggie");
     ASSERT_EQ(o[2].m_value, "carrot");
 }
 

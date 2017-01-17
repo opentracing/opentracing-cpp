@@ -77,8 +77,8 @@ TEST_F(TracerEnv, InjectText)
     ASSERT_EQ(0, rc);
     ASSERT_EQ(2u, writer.pairs.size());
 
-    ASSERT_EQ(writer.pairs[0].m_name, "animal");
-    ASSERT_EQ(writer.pairs[1].m_name, "animal");
+    ASSERT_EQ(writer.pairs[0].m_key, "animal");
+    ASSERT_EQ(writer.pairs[1].m_key, "animal");
 
     ASSERT_TRUE(writer.pairs[0].m_value == "cat" || writer.pairs[0].m_value == "tiger");
     ASSERT_TRUE(writer.pairs[1].m_value == "cat" || writer.pairs[1].m_value == "tiger");
@@ -101,8 +101,8 @@ TEST_F(TracerEnv, SpanInjectText)
     ASSERT_EQ(0, rc);
     ASSERT_EQ(2u, writer.pairs.size());
 
-    ASSERT_EQ(writer.pairs[0].m_name, "animal");
-    ASSERT_EQ(writer.pairs[1].m_name, "animal");
+    ASSERT_EQ(writer.pairs[0].m_key, "animal");
+    ASSERT_EQ(writer.pairs[1].m_key, "animal");
 
     ASSERT_TRUE(writer.pairs[0].m_value == "cat" || writer.pairs[0].m_value == "tiger");
     ASSERT_TRUE(writer.pairs[1].m_value == "cat" || writer.pairs[1].m_value == "tiger");

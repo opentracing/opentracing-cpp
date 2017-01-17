@@ -168,12 +168,9 @@ TEST_F(NoopTracerEnv, ExtractBinary)
     GlobalTracer::cleanup(context);
 }
 
-struct NoopWriter: public GenericWriter<NoopWriter, NoopContext>
+struct NoopWriter: public GenericWriter<NoopWriter>
 {
-    int injectImp(const NoopContext&)
-    {
-        return 0;
-    }
+    // won't ever be called
 };
 
 TEST_F(NoopTracerEnv, InjectExplicit)
@@ -191,12 +188,9 @@ TEST_F(NoopTracerEnv, InjectExplicit)
     GlobalTracer::cleanup(context);
 }
 
-struct NoopReader : public GenericReader<NoopReader, NoopContext>
+struct NoopReader : public GenericReader<NoopReader>
 {
-    int injectImp(const NoopContext&)
-    {
-        return 0;
-    }
+    // won't ever be called
 };
 
 TEST_F(NoopTracerEnv, ExtractExplicit)

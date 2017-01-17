@@ -54,35 +54,14 @@ namespace opentracing {
 //     SpanImp * start(const OptionsImp& opts);
 //     void cleanupImp(const SpanImp * const sp);
 //
-//     template<typename CARRIER_T>
-//     int injectImp(CARRIER_T*const carrier, const SpanImp& context) const;
+//     template<typename CARRIER>
+//     int injectImp(CARRIER*const carrier, const SpanImp& context) const;
 //
 //     template<typename CARRIER>
-//     int injectImp(
-//              GenericTextWriter<CARRIER>* const carrier,
-//              const ContextImp&                 context) const;
-//
-//     template<typename CARRIER>
-//     int injectImp(
-//              GenericBinaryWriter<CARRIER>* const carrier,
-//              const ContextImp&                   context) const;
+//     int injectImp(CARRIER*const carrier, const ContextImp& context) const;
 //
 //     template <typename CARRIER>
-//     int injectImp(
-//              GenericWriter<CARRIER, ContextImp>* const carrier,
-//              const ContextImp&                         context) const;
-//
-//     template <typename CARRIER>
-//     const ContextImp* extractImp(
-//              const GenericTextReader<CARRIER>& carrier);
-//
-//     template <typename CARRIER>
-//     const ContextImp* extractImp(
-//              const GenericBinaryReader<CARRIER>& carrier);
-//
-//     template <typename CARRIER>
-//     const ContextImp* extractImp(
-//              const GenericReader<CARRIER, ContextImp>& carrier);
+//     const ContextImp* extractImp(const CARRIER& carrier);
 //
 //     void cleanupImp(const ContextImp * const);
 // };
@@ -147,57 +126,23 @@ class GenericTracer {
     // All Span pointers returned by the Tracer via 'start()' must be passed
     // back to the Tracer when clients are done with them via 'cleanup()'.
 
-    template <typename CARRIER_T>
-    static int inject(CARRIER_T* const carrier, const Span& span);
+    template <typename CARRIER>
+    static int inject(CARRIER* const carrier, const Span& span);
     // Inject the supplied 'span' into the supplied 'carrier' writer. This
-    // method should defer to other inject implementations, but gives
-    // implementations the opportunity to avoid copying the span context
-    // of a span. Returns 0 upon success and a non-zero value otherwise.
+    // method should expect one of the 'Writer' carriers defined in
+    // carriers.h. Returns 0 upon success and a non-zero value otherwise.
 
     template <typename CARRIER>
-    static int inject(GenericTextWriter<CARRIER>* const carrier,
-                      const SpanContext&                context);
-    // Inject the supplied 'context' into the text map writer 'carrier'.
-    // Returns 0 upon success and a non-zero value otherwise.
+    static int inject(CARRIER* const carrier, const SpanContext& context);
+    // Inject the supplied 'span' into the supplied 'carrier' writer. This
+    // method should expect one of the 'Writer' carriers defined in
+    // carriers.h. Returns 0 upon success and a non-zero value otherwise.
 
     template <typename CARRIER>
-    static int inject(GenericBinaryWriter<CARRIER>* const carrier,
-                      const SpanContext&                  context);
-    // Inject the supplied 'context' into the binary writer 'carrier'.
-    // Returns 0 upon success and a non-zero value otherwise.
-
-    template <typename CARRIER>
-    static int inject(GenericWriter<CARRIER, CONTEXT>* const carrier,
-                      const SpanContext& context);
-    // Inject the SpanContext directly into the specialized 'carrier'.
-    // Returns 0 upon success and a non-zero value otherwise.
-    //
-    // Note: The carrier will be passed the SpanContext directly. Using this may
-    // make your carrier code more efficient, but, it removes flexibility if you
-    // want to swap Tracer/Span implementations.
-
-    template <typename CARRIER>
-    static const SpanContext* extract(
-        const GenericTextReader<CARRIER>& carrier);
+    static const SpanContext* extract(const CARRIER& carrier);
     // Extract the read-only supplied 'context' from the text map reader
-    // 'carrier' upon success, and NULL otherwise. Returns NULL on error.
-
-    template <typename CARRIER>
-    static const SpanContext* extract(
-        const GenericBinaryReader<CARRIER>& carrier);
-    // Extract the read-only SpanContext from the binary reader 'carrier'
-    // upon success, and NULL otherwise. Returns NULL on error.
-
-    template <typename CARRIER>
-    static const SpanContext* extract(
-        const GenericReader<CARRIER, CONTEXT>& carrier);
-    // Extract the read-only SpanContext from the specialized 'carrier'. Returns
-    // NULL on error.
-    //
-    // Note: The carrier will be passed the SpanContext directly.
-    // Using this may make your carrier code more efficient, but, it
-    // removes flexibility if you want to swap Tracer/Span implementations
-    // later.
+    // 'carrier' upon success, and NULL otherwise. Should expect one
+    // of the 'Reader' carriers defined in carriers.h.
 
     static void cleanup(const SpanContext* const sp);
     // All SpanContext pointers created by the Tracer through 'extract()' should
@@ -332,10 +277,10 @@ template <typename TRACER,
           typename OPTIONS,
           typename CONTEXT,
           typename ADAPTER>
-template <typename CARRIER_T>
+template <typename CARRIER>
 inline int
 GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::inject(
-    CARRIER_T* const carrier, const Span& span)
+    CARRIER* const carrier, const Span& span)
 {
     const SPAN&   spanImp = static_cast<const SPAN&>(span);
     const TRACER* tracer  = TRACER::instanceImp();
@@ -350,7 +295,7 @@ template <typename TRACER,
 template <typename CARRIER>
 inline int
 GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::inject(
-    GenericTextWriter<CARRIER>* const carrier, const SpanContext& context)
+    CARRIER* const carrier, const SpanContext& context)
 {
     const CONTEXT& contextImp = static_cast<const CONTEXT&>(context);
     const TRACER*  tracer     = TRACER::instanceImp();
@@ -364,71 +309,10 @@ template <typename TRACER,
           typename CONTEXT,
           typename ADAPTER>
 template <typename CARRIER>
-inline int
-GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::inject(
-    GenericBinaryWriter<CARRIER>* const carrier,
-    const SpanContext&                  context)
-{
-    const CONTEXT&      contextImp = static_cast<const CONTEXT&>(context);
-    const TRACER* const tracer     = TRACER::instanceImp();
-
-    return tracer->injectImp(carrier, contextImp);
-}
-
-template <typename TRACER,
-          typename SPAN,
-          typename OPTIONS,
-          typename CONTEXT,
-          typename ADAPTER>
-template <typename CARRIER>
-inline int
-GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::inject(
-    GenericWriter<CARRIER, CONTEXT>* const carrier,
-    const SpanContext& context)
-{
-    const CONTEXT&      contextImp = static_cast<const CONTEXT&>(context);
-    const TRACER* const tracer     = TRACER::instanceImp();
-    return tracer->injectImp(carrier, contextImp);
-}
-
-template <typename TRACER,
-          typename SPAN,
-          typename OPTIONS,
-          typename CONTEXT,
-          typename ADAPTER>
-template <typename CARRIER>
 inline const typename GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::
     SpanContext*
     GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::extract(
-        const GenericTextReader<CARRIER>& carrier)
-{
-    return TRACER::instanceImp()->extractImp(carrier);
-}
-
-template <typename TRACER,
-          typename SPAN,
-          typename OPTIONS,
-          typename CONTEXT,
-          typename ADAPTER>
-template <typename CARRIER>
-inline const typename GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::
-    SpanContext*
-    GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::extract(
-        const GenericBinaryReader<CARRIER>& carrier)
-{
-    return TRACER::instanceImp()->extractImp(carrier);
-}
-
-template <typename TRACER,
-          typename SPAN,
-          typename OPTIONS,
-          typename CONTEXT,
-          typename ADAPTER>
-template <typename CARRIER>
-inline const typename GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::
-    SpanContext*
-    GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::extract(
-        const GenericReader<CARRIER, CONTEXT>& carrier)
+        const CARRIER& carrier)
 {
     return TRACER::instanceImp()->extractImp(carrier);
 }
