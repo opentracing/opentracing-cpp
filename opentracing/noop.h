@@ -138,7 +138,10 @@ class NoopSpan : public GenericSpan<NoopSpan, NoopContext, NoopAdapter> {
 //
 // Although clients can 'start()' spans or 'makeSpanOptions()', there are
 // no allocations made. Clients should call 'finish()'/'cleanup()', however,
-// this implementation has no side effects of them doing so.
+// this implementation has no side effects of them doing so. Inject/extract
+// can be called, but there are no side effects; the noop tracer will
+// never add itself to carrier objects, but will always return a valid
+// pointer to a context.
 
 class NoopTracer : public GenericTracer<NoopTracer,
                                         NoopSpan,
