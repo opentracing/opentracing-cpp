@@ -33,7 +33,7 @@ namespace opentracing {
 // past that of the StringRef. For this reason, it is not in general safe to
 // store a StringRef.
 
-class StringRef{
+class StringRef {
   public:
     StringRef();
     // Construct an empty StringRef
@@ -58,13 +58,13 @@ class StringRef{
     void             reset(const char (&str)[N]);
     // Reset the string reference given a const character array
 
-    void reset(const char* const str);
+    void reset(const char* str);
     // Reset this string ref to point at the supplied c-string
 
     void reset(const std::basic_string<char>& str);
     // Reset the string reference given a std::string
 
-    void reset(const char* const str, const size_t length);
+    void reset(const char* str, const size_t length);
     // Reset this string ref to point at the supplied 'str' of 'length' bytes.
 
     const char* data() const;
@@ -109,12 +109,11 @@ inline StringRef::StringRef() : m_data(0), m_length(0)
 }
 
 template <size_t N>
-inline StringRef::StringRef(const char (&str)[N])
-: m_data(str), m_length(N - 1)
+StringRef::StringRef(const char (&str)[N]) : m_data(str), m_length(N - 1)
 {
 }
 
-inline StringRef::StringRef(const char* const str)
+inline StringRef::StringRef(const char* str)
 : m_data(str), m_length(std::strlen(str))
 {
 }
@@ -135,14 +134,14 @@ inline StringRef::operator const char*() const
 }
 
 inline void
-StringRef::reset(const char* const str, const size_t length)
+StringRef::reset(const char* str, const size_t length)
 {
     m_data   = str;
     m_length = length;
 }
 
 template <size_t N>
-inline void
+void
 StringRef::reset(const char (&str)[N])
 {
     m_data   = str;
@@ -150,7 +149,7 @@ StringRef::reset(const char (&str)[N])
 }
 
 inline void
-StringRef::reset(const char* const str)
+StringRef::reset(const char* str)
 {
     m_data   = str;
     m_length = std::strlen(str);
@@ -177,8 +176,8 @@ StringRef::length() const
 
 }  // namespace opentracing
 
-inline
-std::ostream& operator<<(std::ostream& os, const opentracing::StringRef& ref)
+inline std::ostream&
+operator<<(std::ostream& os, const opentracing::StringRef& ref)
 {
     return os.write(ref.data(), ref.length());
 }

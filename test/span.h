@@ -25,7 +25,7 @@ class TestSpanImpl : public GenericSpan<TestSpanImpl,
     }
 
     int
-    getBaggageImp(const StringRef& key, std::string* const baggage) const
+    getBaggageImp(const StringRef& key, std::string* baggage) const
     {
         std::vector<std::string> out;
 
@@ -43,8 +43,7 @@ class TestSpanImpl : public GenericSpan<TestSpanImpl,
     }
 
     int
-    getBaggageImp(const StringRef&                key,
-                  std::vector<std::string>* const baggage) const
+    getBaggageImp(const StringRef& key, std::vector<std::string>* baggage) const
     {
         baggage->clear();
 

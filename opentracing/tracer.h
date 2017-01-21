@@ -44,26 +44,26 @@ namespace opentracing {
 // {
 //   public:
 //     static void installImp(TracerImp*);
-//     static TracerImp * instanceImp();
 //     static void uninstallImp();
+//     static TracerImp * instanceImp();
 //
 //     Options * makeSpanOptionsImp();
-//     void cleanupImp(const Options * const opts);
 //
 //     SpanImp * start(const StringRef& op);
 //     SpanImp * start(const OptionsImp& opts);
-//     void cleanupImp(const SpanImp * const sp);
 //
 //     template<typename CARRIER>
-//     int injectImp(CARRIER*const carrier, const SpanImp& context) const;
+//     int injectImp(CARRIER*, const SpanImp& context) const;
 //
 //     template<typename CARRIER>
-//     int injectImp(CARRIER*const carrier, const ContextImp& context) const;
+//     int injectImp(CARRIER*, const ContextImp& context) const;
 //
 //     template <typename CARRIER>
 //     const ContextImp* extractImp(const CARRIER& carrier);
 //
-//     void cleanupImp(const ContextImp * const);
+//     void cleanupImp(const Options*);
+//     void cleanupImp(const SpanImp*);
+//     void cleanupImp(const ContextImp*);
 // };
 
 template <typename TRACER,
@@ -80,7 +80,7 @@ class GenericTracer {
     // interfaces reliably. These must exist in order to support O(1) compile
     // time changes of the Tracer implementations.
 
-    static void install(GenericTracer* const tracer);
+    static void install(GenericTracer* tracer);
     // Install Tracer to be referenced globally with calls to 'instance()'.
     // It is undefined behavior to call any other Tracer method if an
     // implementation has not been installed.
@@ -99,19 +99,14 @@ class GenericTracer {
     // tracer has not been previously installed. It is undefined behavior
     // to call this method without previously calling 'install()'.
 
-    static SpanOptions* makeSpanOptions();
+    SpanOptions* makeSpanOptions();
     // This is a factory method to create SpanOptions. Options can be passed
     // to 'start()' to control how Spans are created. Options should be
     // subsequently cleaned up with a call to 'cleanup()' Returns NULL on
     // failure.
 
-    static void cleanup(SpanOptions* const opts);
-    // All SpanOptions pointers returned by the Tracer via 'makeSpanOptions()'
-    // must be passed back to the Tracer when client's are done with them via
-    // 'cleanup()'.
-
-    static Span* start(const StringRef& op);
-    static Span* start(const SpanOptions& opts);
+    Span* start(const StringRef& op);
+    Span* start(const SpanOptions& opts);
     // The 'start()' functions are factory methods to create a new Span. The
     // only required parameter is the operation string 'op', which should
     // describe the work being performed during the span.
@@ -122,29 +117,34 @@ class GenericTracer {
     //
     // Returns NULL on error.
 
-    static void cleanup(Span* const sp);
-    // All Span pointers returned by the Tracer via 'start()' must be passed
-    // back to the Tracer when clients are done with them via 'cleanup()'.
-
     template <typename CARRIER>
-    static int inject(CARRIER* const carrier, const Span& span);
+    int inject(CARRIER* carrier, const Span& span) const;
     // Inject the supplied 'span' into the supplied 'carrier' writer. This
     // method should expect one of the 'Writer' carriers defined in
     // carriers.h. Returns 0 upon success and a non-zero value otherwise.
 
     template <typename CARRIER>
-    static int inject(CARRIER* const carrier, const SpanContext& context);
+    int inject(CARRIER* carrier, const SpanContext& context) const;
     // Inject the supplied 'span' into the supplied 'carrier' writer. This
     // method should expect one of the 'Writer' carriers defined in
     // carriers.h. Returns 0 upon success and a non-zero value otherwise.
 
     template <typename CARRIER>
-    static const SpanContext* extract(const CARRIER& carrier);
+    const SpanContext* extract(const CARRIER& carrier);
     // Extract the read-only supplied 'context' from the text map reader
     // 'carrier' upon success, and NULL otherwise. Should expect one
     // of the 'Reader' carriers defined in carriers.h.
 
-    static void cleanup(const SpanContext* const sp);
+    void cleanup(const SpanOptions* opts);
+    // All SpanOptions pointers returned by the Tracer via 'makeSpanOptions()'
+    // must be passed back to the Tracer when client's are done with them via
+    // 'cleanup()'.
+
+    void cleanup(const Span* sp);
+    // All Span pointers returned by the Tracer via 'start()' must be passed
+    // back to the Tracer when clients are done with them via 'cleanup()'.
+
+    void cleanup(const SpanContext* sp);
     // All SpanContext pointers created by the Tracer through 'extract()' should
     // be passed back to the Tracer when client's are done with them via
     // 'cleanup()'.
@@ -164,11 +164,11 @@ template <typename TRACER,
           typename OPTIONS,
           typename CONTEXT,
           typename ADAPTER>
-inline void
+void
 GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::install(
-    GenericTracer* const tracer)
+    GenericTracer* tracer)
 {
-    TRACER * const tracerImp = static_cast<TRACER* const>(tracer);
+    TRACER* tracerImp = static_cast<TRACER*>(tracer);
     TRACER::installImp(tracerImp);
 }
 
@@ -177,7 +177,7 @@ template <typename TRACER,
           typename OPTIONS,
           typename CONTEXT,
           typename ADAPTER>
-inline void
+void
 GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::uninstall()
 {
     return TRACER::uninstallImp();
@@ -188,7 +188,7 @@ template <typename TRACER,
           typename OPTIONS,
           typename CONTEXT,
           typename ADAPTER>
-inline GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>*
+GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>*
 GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::instance()
 {
     return TRACER::instanceImp();
@@ -199,7 +199,7 @@ template <typename TRACER,
           typename OPTIONS,
           typename CONTEXT,
           typename ADAPTER>
-inline GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::GenericTracer()
+GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::GenericTracer()
 {
 }
 
@@ -208,7 +208,7 @@ template <typename TRACER,
           typename OPTIONS,
           typename CONTEXT,
           typename ADAPTER>
-inline GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::GenericTracer(
+GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::GenericTracer(
     const GenericTracer&)
 {
 }
@@ -218,10 +218,10 @@ template <typename TRACER,
           typename OPTIONS,
           typename CONTEXT,
           typename ADAPTER>
-inline typename GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::SpanOptions*
+typename GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::SpanOptions*
 GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::makeSpanOptions()
 {
-    return TRACER::instanceImp()->makeSpanOptionsImp();
+    return static_cast<TRACER*>(this)->makeSpanOptionsImp();
 }
 
 template <typename TRACER,
@@ -229,12 +229,11 @@ template <typename TRACER,
           typename OPTIONS,
           typename CONTEXT,
           typename ADAPTER>
-inline void
-GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::cleanup(
-    SpanOptions* const opts)
+typename GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::Span*
+GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::start(
+    const StringRef& op)
 {
-    OPTIONS* const optsImp = static_cast<OPTIONS* const>(opts);
-    return TRACER::instanceImp()->cleanupImp(optsImp);
+    return static_cast<TRACER*>(this)->startImp(op);
 }
 
 template <typename TRACER,
@@ -242,34 +241,12 @@ template <typename TRACER,
           typename OPTIONS,
           typename CONTEXT,
           typename ADAPTER>
-inline typename GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::Span*
-GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::start(const StringRef& op)
-{
-    return TRACER::instanceImp()->startImp(op);
-}
-
-template <typename TRACER,
-          typename SPAN,
-          typename OPTIONS,
-          typename CONTEXT,
-          typename ADAPTER>
-inline typename GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::Span*
-    GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::start(const SpanOptions& opts)
+typename GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::Span*
+GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::start(
+    const SpanOptions& opts)
 {
     const OPTIONS& optsImp = static_cast<const OPTIONS&>(opts);
-    return TRACER::instanceImp()->startImp(optsImp);
-}
-
-template <typename TRACER,
-          typename SPAN,
-          typename OPTIONS,
-          typename CONTEXT,
-          typename ADAPTER>
-inline void
-GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::cleanup(Span* const sp)
-{
-    SPAN* const spanImp = static_cast<SPAN*>(sp);
-    return TRACER::instanceImp()->cleanupImp(spanImp);
+    return static_cast<TRACER*>(this)->startImp(optsImp);
 }
 
 template <typename TRACER,
@@ -278,12 +255,12 @@ template <typename TRACER,
           typename CONTEXT,
           typename ADAPTER>
 template <typename CARRIER>
-inline int
+int
 GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::inject(
-    CARRIER* const carrier, const Span& span)
+    CARRIER* carrier, const Span& span) const
 {
     const SPAN&   spanImp = static_cast<const SPAN&>(span);
-    const TRACER* tracer  = TRACER::instanceImp();
+    const TRACER* tracer  = static_cast<const TRACER*>(this);
     return tracer->injectImp(carrier, spanImp);
 }
 
@@ -293,13 +270,12 @@ template <typename TRACER,
           typename CONTEXT,
           typename ADAPTER>
 template <typename CARRIER>
-inline int
+int
 GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::inject(
-    CARRIER* const carrier, const SpanContext& context)
+    CARRIER* carrier, const SpanContext& context) const
 {
     const CONTEXT& contextImp = static_cast<const CONTEXT&>(context);
-    const TRACER*  tracer     = TRACER::instanceImp();
-
+    const TRACER*  tracer     = static_cast<const TRACER*>(this);
     return tracer->injectImp(carrier, contextImp);
 }
 
@@ -309,12 +285,12 @@ template <typename TRACER,
           typename CONTEXT,
           typename ADAPTER>
 template <typename CARRIER>
-inline const typename GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::
+const typename GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::
     SpanContext*
     GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::extract(
         const CARRIER& carrier)
 {
-    return TRACER::instanceImp()->extractImp(carrier);
+    return static_cast<TRACER*>(this)->extractImp(carrier);
 }
 
 template <typename TRACER,
@@ -322,12 +298,37 @@ template <typename TRACER,
           typename OPTIONS,
           typename CONTEXT,
           typename ADAPTER>
-inline void
+void
 GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::cleanup(
-    const SpanContext* const spc)
+    const SpanOptions* opts)
 {
-    const CONTEXT* const contextImp = static_cast<const CONTEXT* const>(spc);
-    return TRACER::instanceImp()->cleanupImp(contextImp);
+    const OPTIONS* optsImp = static_cast<const OPTIONS*>(opts);
+    return static_cast<TRACER*>(this)->cleanupImp(optsImp);
+}
+
+template <typename TRACER,
+          typename SPAN,
+          typename OPTIONS,
+          typename CONTEXT,
+          typename ADAPTER>
+void
+GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::cleanup(const Span* sp)
+{
+    const SPAN* spanImp = static_cast<const SPAN*>(sp);
+    return static_cast<TRACER*>(this)->cleanupImp(spanImp);
+}
+
+template <typename TRACER,
+          typename SPAN,
+          typename OPTIONS,
+          typename CONTEXT,
+          typename ADAPTER>
+void
+GenericTracer<TRACER, SPAN, OPTIONS, CONTEXT, ADAPTER>::cleanup(
+    const SpanContext* spc)
+{
+    const CONTEXT* contextImp = static_cast<const CONTEXT*>(spc);
+    return static_cast<TRACER*>(this)->cleanupImp(contextImp);
 }
 
 }  // namespace opentracing

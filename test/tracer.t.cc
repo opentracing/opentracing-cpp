@@ -11,6 +11,7 @@ class TracerEnv : public ::testing::Test {
     SetUp()
     {
         Tracer::install(&imp);
+        tracer = &imp;
     };
 
     virtual void
@@ -20,6 +21,7 @@ class TracerEnv : public ::testing::Test {
     };
 
     TestTracerImpl imp;
+    Tracer * tracer;
 };
 
 TEST_F(TracerEnv, SingletonTests)
@@ -31,7 +33,7 @@ TEST_F(TracerEnv, SingletonTests)
 
 TEST_F(TracerEnv, StartWithOp)
 {
-    Tracer::Span * span = Tracer::start("hello");
+    Tracer::Span * span = tracer->start("hello");
     ASSERT_TRUE(span);
 
     int rc = 0;
@@ -58,14 +60,14 @@ TEST_F(TracerEnv, StartWithOp)
     ASSERT_EQ(0, rc);
     ASSERT_EQ("banana", val);
 
-    Tracer::cleanup(span);
+    tracer->cleanup(span);
 }
 
 TEST_F(TracerEnv, InjectText)
 {
     TestTextWriter writer;
 
-    Tracer::Span* span(Tracer::start("op"));
+    Tracer::Span* span(tracer->start("op"));
     ASSERT_TRUE(span);
 
     span->setBaggage("animal", "tiger");
@@ -73,7 +75,7 @@ TEST_F(TracerEnv, InjectText)
 
     const Tracer::SpanContext * context = span->context();
 
-    int rc = Tracer::inject(&writer, *context);
+    int rc = tracer->inject(&writer, *context);
     ASSERT_EQ(0, rc);
     ASSERT_EQ(2u, writer.pairs.size());
 
@@ -83,21 +85,21 @@ TEST_F(TracerEnv, InjectText)
     ASSERT_TRUE(writer.pairs[0].m_value == "cat" || writer.pairs[0].m_value == "tiger");
     ASSERT_TRUE(writer.pairs[1].m_value == "cat" || writer.pairs[1].m_value == "tiger");
 
-    Tracer::cleanup(span);
-    Tracer::cleanup(context);
+    tracer->cleanup(span);
+    tracer->cleanup(context);
 }
 
 TEST_F(TracerEnv, SpanInjectText)
 {
     TestTextWriter writer;
 
-    Tracer::Span* span(Tracer::start("op"));
+    Tracer::Span* span(tracer->start("op"));
     ASSERT_TRUE(span);
 
     span->setBaggage("animal", "tiger");
     span->setBaggage("animal", "cat");
 
-    int rc = Tracer::inject(&writer, *span);
+    int rc = tracer->inject(&writer, *span);
     ASSERT_EQ(0, rc);
     ASSERT_EQ(2u, writer.pairs.size());
 
@@ -107,7 +109,7 @@ TEST_F(TracerEnv, SpanInjectText)
     ASSERT_TRUE(writer.pairs[0].m_value == "cat" || writer.pairs[0].m_value == "tiger");
     ASSERT_TRUE(writer.pairs[1].m_value == "cat" || writer.pairs[1].m_value == "tiger");
 
-    Tracer::cleanup(span);
+    tracer->cleanup(span);
 }
 
 TEST_F(TracerEnv, ExtractText)
@@ -117,7 +119,7 @@ TEST_F(TracerEnv, ExtractText)
     reader.pairs.push_back(TextMapPair("fruit", "apple"));
     reader.pairs.push_back(TextMapPair("veggie", "carrot"));
 
-    const Tracer::SpanContext* context(Tracer::extract(reader));
+    const Tracer::SpanContext* context(tracer->extract(reader));
     ASSERT_TRUE(context);
 
     size_t index = 0;
@@ -134,38 +136,38 @@ TEST_F(TracerEnv, ExtractText)
         ++index;
     }
 
-    Tracer::cleanup(context);
+    tracer->cleanup(context);
 }
 
 TEST_F(TracerEnv, InjectBinary)
 {
     TestBinaryWriter writer;
 
-    Tracer::Span* span(Tracer::start("op"));
+    Tracer::Span* span(tracer->start("op"));
     ASSERT_TRUE(span);
 
     const Tracer::SpanContext * context = span->context();
 
-    int rc = Tracer::inject(&writer, *context);
+    int rc = tracer->inject(&writer, *context);
     ASSERT_EQ(0, rc);
     ASSERT_EQ(0xdeadbeef, writer.m_raw);
 
-    Tracer::cleanup(context);
-    Tracer::cleanup(span);
+    tracer->cleanup(context);
+    tracer->cleanup(span);
 }
 
 TEST_F(TracerEnv, SpanInjectBinary)
 {
     TestBinaryWriter writer;
 
-    Tracer::Span* span(Tracer::start("op"));
+    Tracer::Span* span(tracer->start("op"));
     ASSERT_TRUE(span);
 
-    int rc = Tracer::inject(&writer, *span);
+    int rc = tracer->inject(&writer, *span);
     ASSERT_EQ(0, rc);
     ASSERT_EQ(0xdeadbeef, writer.m_raw);
 
-    Tracer::cleanup(span);
+    tracer->cleanup(span);
 }
 
 TEST_F(TracerEnv, ExtractBinary)
@@ -173,9 +175,9 @@ TEST_F(TracerEnv, ExtractBinary)
     TestBinaryReader reader;
     reader.m_raw = 0xdeadbeef;
 
-    const Tracer::SpanContext* context(Tracer::extract(reader));
+    const Tracer::SpanContext* context(tracer->extract(reader));
     ASSERT_TRUE(context);
-    Tracer::cleanup(context);
+    tracer->cleanup(context);
 }
 
 
@@ -183,7 +185,7 @@ TEST_F(TracerEnv, InjectExplicit)
 {
     TestWriter w;
 
-    Tracer::Span* span(Tracer::start("span"));
+    Tracer::Span* span(tracer->start("span"));
     ASSERT_TRUE(span);
 
     span->setBaggage("animal", "tiger");
@@ -191,7 +193,7 @@ TEST_F(TracerEnv, InjectExplicit)
 
     const Tracer::SpanContext * const context = span->context();
 
-    int rc = Tracer::inject(&w, *context);
+    int rc = tracer->inject(&w, *context);
     ASSERT_EQ(0, rc);
     ASSERT_EQ(2u, w.carrier.size());
 
@@ -204,21 +206,21 @@ TEST_F(TracerEnv, InjectExplicit)
     ASSERT_NE(cit, w.carrier.end());
     ASSERT_EQ("apple", cit->second);
 
-    Tracer::cleanup(span);
-    Tracer::cleanup(context);
+    tracer->cleanup(span);
+    tracer->cleanup(context);
 }
 
 TEST_F(TracerEnv, SpanInjectExplicit)
 {
     TestWriter w;
 
-    Tracer::Span* span(Tracer::start("span"));
+    Tracer::Span* span(tracer->start("span"));
     ASSERT_TRUE(span);
 
     span->setBaggage("animal", "tiger");
     span->setBaggage("fruit", "apple");
 
-    int rc = Tracer::inject(&w, *span);
+    int rc = tracer->inject(&w, *span);
     ASSERT_EQ(0, rc);
     ASSERT_EQ(2u, w.carrier.size());
 
@@ -231,7 +233,7 @@ TEST_F(TracerEnv, SpanInjectExplicit)
     ASSERT_NE(cit, w.carrier.end());
     ASSERT_EQ("apple", cit->second);
 
-    Tracer::cleanup(span);
+    tracer->cleanup(span);
 }
 
 TEST_F(TracerEnv, ExtractExplicit)
@@ -239,9 +241,9 @@ TEST_F(TracerEnv, ExtractExplicit)
     TestReader reader;
     reader.carrier.insert(TestBaggageContainer::value_type("animal", "tiger"));
     reader.carrier.insert(TestBaggageContainer::value_type("fruit", "apple"));
-    const Tracer::SpanContext* context(Tracer::extract(reader));
+    const Tracer::SpanContext* context(tracer->extract(reader));
     ASSERT_TRUE(context);
-    Tracer::cleanup(context);
+    tracer->cleanup(context);
 }
 
 TEST_F(TracerEnv, StartWithOptions)
@@ -249,10 +251,10 @@ TEST_F(TracerEnv, StartWithOptions)
     TestReader reader;
     reader.carrier.insert(TestBaggageContainer::value_type("animal", "tiger"));
     reader.carrier.insert(TestBaggageContainer::value_type("fruit", "apple"));
-    const Tracer::SpanContext* otherContext(Tracer::extract(reader));
+    const Tracer::SpanContext* otherContext(tracer->extract(reader));
     ASSERT_TRUE(otherContext);
 
-    Tracer::SpanOptions* opts(Tracer::makeSpanOptions());
+    Tracer::SpanOptions* opts(tracer->makeSpanOptions());
     ASSERT_TRUE(opts);
 
     opts->setOperation("test");
@@ -260,10 +262,10 @@ TEST_F(TracerEnv, StartWithOptions)
     opts->setReference(SpanReferenceType::e_ChildOf, *otherContext);
     opts->setTag("hello", "world");
 
-    Tracer::Span* span(Tracer::start(*opts));
+    Tracer::Span* span(tracer->start(*opts));
     ASSERT_TRUE(span);
 
-    Tracer::cleanup(otherContext);
-    Tracer::cleanup(opts);
-    Tracer::cleanup(span);
+    tracer->cleanup(otherContext);
+    tracer->cleanup(opts);
+    tracer->cleanup(span);
 }

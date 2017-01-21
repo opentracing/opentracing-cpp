@@ -74,8 +74,8 @@ class NoopContext : public GenericSpanContext<NoopContext, NoopAdapter> {
     BaggageIterator baggageBeginImp() const;
     BaggageIterator baggageEndImp() const;
 
-    int getBaggageImp(const StringRef&, std::string* const) const;
-    int getBaggageImp(const StringRef&, std::vector<std::string>* const) const;
+    int getBaggageImp(const StringRef&, std::string*) const;
+    int getBaggageImp(const StringRef&, std::vector<std::string>*) const;
 };
 
 // =================
@@ -92,7 +92,7 @@ class NoopOptions
     int setStartTimeImp(const uint64_t);
     int setReferenceImp(const SpanReferenceType::Value, const NoopContext&);
 
-    template<typename T>
+    template <typename T>
     int setTagImp(const StringRef&, const T&);
 };
 
@@ -107,13 +107,13 @@ class NoopOptions
 
 class NoopSpan : public GenericSpan<NoopSpan, NoopContext, NoopAdapter> {
   public:
-    const NoopContext * contextImp() const;
+    const NoopContext* contextImp() const;
 
     int setOperationImp(const StringRef&);
     int setBaggageImp(const StringRef&, const StringRef&);
 
-    int getBaggageImp(const StringRef&, std::string* const) const;
-    int getBaggageImp(const StringRef&, std::vector<std::string>* const) const;
+    int getBaggageImp(const StringRef&, std::string*) const;
+    int getBaggageImp(const StringRef&, std::vector<std::string>*) const;
 
     int finishImp();
     int finishImp(const uint64_t);
@@ -149,27 +149,27 @@ class NoopTracer : public GenericTracer<NoopTracer,
                                         NoopContext,
                                         NoopAdapter> {
   public:
-    static void installImp(NoopTracer *const);
-    static NoopTracer * instanceImp();
-    static void uninstallImp();
+    static void        installImp(NoopTracer*);
+    static void        uninstallImp();
+    static NoopTracer* instanceImp();
 
     NoopOptions* makeSpanOptionsImp();
-    void cleanupImp(const NoopOptions* const opts);
 
     NoopSpan* startImp(const StringRef&);
     NoopSpan* startImp(const NoopOptions&);
-    void cleanupImp(const Span* const sp);
 
     template <typename CARRIER, typename T>
-    int injectImp(CARRIER* const carrier, const T&) const;
+    int injectImp(CARRIER* carrier, const T&) const;
 
     template <typename CARRIER>
     NoopContext* extractImp(const CARRIER& carrier);
 
-    void cleanupImp(const NoopContext* const sp);
+    void cleanupImp(const NoopOptions*);
+    void cleanupImp(const Span*);
+    void cleanupImp(const NoopContext*);
 
   private:
-    static NoopTracer *s_tracer;
+    static NoopTracer* s_tracer;
 
     NoopOptions m_opts;
     NoopSpan    m_span;
@@ -209,14 +209,13 @@ NoopContext::baggageEndImp() const
 }
 
 inline int
-NoopContext::getBaggageImp(const StringRef&, std::string* const) const
+NoopContext::getBaggageImp(const StringRef&, std::string*) const
 {
     return 1;
 }
 
 inline int
-NoopContext::getBaggageImp(const StringRef&,
-                           std::vector<std::string>* const) const
+NoopContext::getBaggageImp(const StringRef&, std::vector<std::string>*) const
 {
     return 1;
 }
@@ -243,8 +242,8 @@ NoopOptions::setReferenceImp(const SpanReferenceType::Value, const NoopContext&)
     return 0;
 }
 
-template<typename T>
-inline int
+template <typename T>
+int
 NoopOptions::setTagImp(const StringRef&, const T&)
 {
     return 0;
@@ -277,13 +276,13 @@ NoopSpan::setBaggageImp(const StringRef&, const StringRef&)
 }
 
 inline int
-NoopSpan::getBaggageImp(const StringRef&, std::string* const) const
+NoopSpan::getBaggageImp(const StringRef&, std::string*) const
 {
     return 1;
 }
 
 inline int
-NoopSpan::getBaggageImp(const StringRef&, std::vector<std::string>* const) const
+NoopSpan::getBaggageImp(const StringRef&, std::vector<std::string>*) const
 {
     return 1;
 }
@@ -301,21 +300,21 @@ NoopSpan::finishImp(const uint64_t)
 }
 
 template <typename T>
-inline int
+int
 NoopSpan::tagImp(const StringRef&, const T&)
 {
     return 0;
 }
 
 template <typename T>
-inline int
+int
 NoopSpan::logImp(const StringRef&, const T&)
 {
     return 0;
 }
 
 template <typename T>
-inline int
+int
 NoopSpan::logImp(const StringRef&, const T&, const uint64_t)
 {
     return 0;
@@ -326,7 +325,7 @@ NoopSpan::logImp(const StringRef&, const T&, const uint64_t)
 // ----------------
 
 inline void
-NoopTracer::installImp(NoopTracer* const tracer)
+NoopTracer::installImp(NoopTracer* tracer)
 {
     s_tracer = tracer;
 }
@@ -349,11 +348,6 @@ NoopTracer::makeSpanOptionsImp()
     return &m_opts;
 }
 
-inline void
-NoopTracer::cleanupImp(const NoopOptions* const)
-{
-}
-
 inline NoopSpan*
 NoopTracer::startImp(const StringRef&)
 {
@@ -366,27 +360,32 @@ NoopTracer::startImp(const NoopOptions&)
     return &m_span;
 }
 
-inline void
-NoopTracer::cleanupImp(const Span* const)
-{
-}
-
 template <typename CARRIER, typename T>
-inline int
-NoopTracer::injectImp(CARRIER* const, const T&) const
+int
+NoopTracer::injectImp(CARRIER*, const T&) const
 {
     return 0;
 }
 
 template <typename CARRIER>
-inline NoopContext*
+NoopContext*
 NoopTracer::extractImp(const CARRIER&)
 {
     return &m_span.m_context;
 }
 
 inline void
-NoopTracer::cleanupImp(const NoopContext* const)
+NoopTracer::cleanupImp(const NoopOptions*)
+{
+}
+
+inline void
+NoopTracer::cleanupImp(const Span*)
+{
+}
+
+inline void
+NoopTracer::cleanupImp(const NoopContext*)
 {
 }
 

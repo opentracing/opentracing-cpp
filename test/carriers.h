@@ -21,7 +21,7 @@ struct TestTextWriter : public GenericTextWriter<TestTextWriter> {
 
 struct TestTextReader : public GenericTextReader<TestTextReader> {
     int
-    extractImp(std::vector<TextMapPair>* const textmap) const
+    extractImp(std::vector<TextMapPair>* textmap) const
     {
         *textmap = pairs;
         return 0;
@@ -32,7 +32,7 @@ struct TestTextReader : public GenericTextReader<TestTextReader> {
 
 struct TestBinaryWriter : public GenericBinaryWriter<TestBinaryWriter> {
     int
-    injectImp(const void* const buf, const size_t len)
+    injectImp(const void* buf, const size_t len)
     {
         if (len > sizeof(m_raw))
         {
@@ -48,7 +48,7 @@ struct TestBinaryWriter : public GenericBinaryWriter<TestBinaryWriter> {
 
 struct TestBinaryReader : public GenericBinaryReader<TestBinaryReader> {
     int
-    extractImp(std::vector<char>* const buf) const
+    extractImp(std::vector<char>* buf) const
     {
         buf->resize(sizeof(m_raw));
         std::memcpy(&(*buf)[0], &m_raw, sizeof(m_raw));
@@ -58,9 +58,9 @@ struct TestBinaryReader : public GenericBinaryReader<TestBinaryReader> {
     int32_t m_raw;
 };
 
-struct TestWriter : public GenericWriter<TestWriter>
-{
-    int injectImp(const TestContextImpl& context)
+struct TestWriter : public GenericWriter<TestWriter> {
+    int
+    injectImp(const TestContextImpl& context)
     {
         carrier = context.baggageMap();
         return 0;
@@ -69,9 +69,9 @@ struct TestWriter : public GenericWriter<TestWriter>
     std::multimap<std::string, std::string> carrier;
 };
 
-struct TestReader : public GenericReader<TestReader>
-{
-    int extractImp(TestContextImpl * const context) const
+struct TestReader : public GenericReader<TestReader> {
+    int
+    extractImp(TestContextImpl* context) const
     {
         context->baggageMap() = carrier;
         return 0;

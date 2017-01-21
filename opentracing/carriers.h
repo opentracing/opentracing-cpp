@@ -89,7 +89,7 @@ class GenericTextWriter {
 //
 // class BinaryWriter : GenericBinaryWriter<BinaryWriter>{
 //   public:
-//      int injectImp(const void* const buf, const size_t len);
+//      int injectImp(const void* buf, const size_t len);
 // };
 //
 // Implementations are responsible for passing the blob along with a carrier
@@ -99,7 +99,7 @@ class GenericTextWriter {
 template <typename CARRIER>
 class GenericBinaryWriter {
   public:
-    int inject(const void * const buf, const size_t len);
+    int inject(const void* buf, const size_t len);
     // Inject the binary representation of a span context into this carrier.
 
   protected:
@@ -168,7 +168,7 @@ class GenericWriter {
 template <typename CARRIER>
 class GenericTextReader {
   public:
-    int extract(std::vector<TextMapPair>* const textmap) const;
+    int extract(std::vector<TextMapPair>* textmap) const;
     // Extract the supplied 'Textmap' from this carrier.
 
   protected:
@@ -186,7 +186,7 @@ class GenericTextReader {
 //
 // class BinaryReader : GenericBinaryReader<BinaryReader>{
 //   public:
-//      int extractImp(std::vector<char> *const buf) const;
+//      int extractImp(std::vector<char> *buf) const;
 // };
 //
 // When constructed, they should hold onto any references they may need to
@@ -195,7 +195,7 @@ class GenericTextReader {
 template <typename CARRIER>
 class GenericBinaryReader {
   public:
-    int extract(std::vector<char>* const buffer) const;
+    int extract(std::vector<char>* buffer) const;
     // Load the binary representation of a span context into 'buffer'.
     // Return 0 upon success and a non-zero value otherwise.
 
@@ -220,14 +220,14 @@ class GenericBinaryReader {
 // class ExplicitReader: GenericReader<ExplicitReader>
 // {
 //    public:
-//      int extractImp(ImplType* const) const;
+//      int extractImp(ImplType* ) const;
 // };
 
 template <typename CARRIER>
 class GenericReader {
   public:
     template <typename T>
-    int extract(T* const impl) const;
+    int extract(T* impl) const;
     // Extract the 'impl' object directly from this carrier.
 
   protected:
@@ -253,19 +253,19 @@ inline TextMapPair::TextMapPair(const StringRef& name, const StringRef& value)
 // -----------------------
 
 template <typename CARRIER>
-inline int
+int
 GenericTextWriter<CARRIER>::inject(const std::vector<TextMapPair>& textmap)
 {
     return static_cast<CARRIER*>(this)->injectImp(textmap);
 }
 
 template <typename CARRIER>
-inline GenericTextWriter<CARRIER>::GenericTextWriter()
+GenericTextWriter<CARRIER>::GenericTextWriter()
 {
 }
 
 template <typename CARRIER>
-inline GenericTextWriter<CARRIER>::GenericTextWriter(const GenericTextWriter&)
+GenericTextWriter<CARRIER>::GenericTextWriter(const GenericTextWriter&)
 {
 }
 
@@ -274,19 +274,19 @@ inline GenericTextWriter<CARRIER>::GenericTextWriter(const GenericTextWriter&)
 // -------------------------
 
 template <typename CARRIER>
-inline int
-GenericBinaryWriter<CARRIER>::inject(const void* const buf, const size_t len)
+int
+GenericBinaryWriter<CARRIER>::inject(const void* buf, const size_t len)
 {
     return static_cast<CARRIER*>(this)->injectImp(buf, len);
 }
 
 template <typename CARRIER>
-inline GenericBinaryWriter<CARRIER>::GenericBinaryWriter()
+GenericBinaryWriter<CARRIER>::GenericBinaryWriter()
 {
 }
 
 template <typename CARRIER>
-inline GenericBinaryWriter<CARRIER>::GenericBinaryWriter(
+GenericBinaryWriter<CARRIER>::GenericBinaryWriter(
     const GenericBinaryWriter&)
 {
 }
@@ -297,19 +297,19 @@ inline GenericBinaryWriter<CARRIER>::GenericBinaryWriter(
 
 template <typename CARRIER>
 template <typename T>
-inline int
+int
 GenericWriter<CARRIER>::inject(const T& impl)
 {
     return static_cast<CARRIER*>(this)->injectImp(impl);
 }
 
 template <typename CARRIER>
-inline GenericWriter<CARRIER>::GenericWriter()
+GenericWriter<CARRIER>::GenericWriter()
 {
 }
 
 template <typename CARRIER>
-inline GenericWriter<CARRIER>::GenericWriter(const GenericWriter&)
+GenericWriter<CARRIER>::GenericWriter(const GenericWriter&)
 {
 }
 
@@ -318,20 +318,19 @@ inline GenericWriter<CARRIER>::GenericWriter(const GenericWriter&)
 // -----------------------
 
 template <typename CARRIER>
-inline int
-GenericTextReader<CARRIER>::extract(
-    std::vector<TextMapPair>* const textmap) const
+int
+GenericTextReader<CARRIER>::extract(std::vector<TextMapPair>* textmap) const
 {
     return static_cast<const CARRIER*>(this)->extractImp(textmap);
 }
 
 template <typename CARRIER>
-inline GenericTextReader<CARRIER>::GenericTextReader()
+GenericTextReader<CARRIER>::GenericTextReader()
 {
 }
 
 template <typename CARRIER>
-inline GenericTextReader<CARRIER>::GenericTextReader(const GenericTextReader&)
+GenericTextReader<CARRIER>::GenericTextReader(const GenericTextReader&)
 {
 }
 
@@ -340,19 +339,19 @@ inline GenericTextReader<CARRIER>::GenericTextReader(const GenericTextReader&)
 // -------------------------
 
 template <typename CARRIER>
-inline int
-GenericBinaryReader<CARRIER>::extract(std::vector<char>* const buf) const
+int
+GenericBinaryReader<CARRIER>::extract(std::vector<char>* buf) const
 {
     return static_cast<const CARRIER*>(this)->extractImp(buf);
 }
 
 template <typename CARRIER>
-inline GenericBinaryReader<CARRIER>::GenericBinaryReader()
+GenericBinaryReader<CARRIER>::GenericBinaryReader()
 {
 }
 
 template <typename CARRIER>
-inline GenericBinaryReader<CARRIER>::GenericBinaryReader(
+GenericBinaryReader<CARRIER>::GenericBinaryReader(
     const GenericBinaryReader&)
 {
 }
@@ -362,20 +361,20 @@ inline GenericBinaryReader<CARRIER>::GenericBinaryReader(
 // -------------------
 
 template <typename CARRIER>
-template<typename T>
-inline int
-GenericReader<CARRIER>::extract(T* const impl) const
+template <typename T>
+int
+GenericReader<CARRIER>::extract(T* impl) const
 {
     return static_cast<const CARRIER*>(this)->extractImp(impl);
 }
 
 template <typename CARRIER>
-inline GenericReader<CARRIER>::GenericReader()
+GenericReader<CARRIER>::GenericReader()
 {
 }
 
 template <typename CARRIER>
-inline GenericReader<CARRIER>::GenericReader(const GenericReader&)
+GenericReader<CARRIER>::GenericReader(const GenericReader&)
 {
 }
 

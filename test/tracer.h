@@ -31,13 +31,13 @@ class TestOptionsImpl : public GenericSpanOptions<TestOptionsImpl,
         return 0;
     }
 
-    template<typename T>
-    int setTagImp(const StringRef&, const T&)
+    template <typename T>
+    int
+    setTagImp(const StringRef&, const T&)
     {
         return 0;
     }
 };
-
 
 class TestTracerImpl : public GenericTracer<TestTracerImpl,
                                             TestSpanImpl,
@@ -47,28 +47,30 @@ class TestTracerImpl : public GenericTracer<TestTracerImpl,
   public:
     static TestTracerImpl* s_tracer;
 
-    static void installImp(TestTracerImpl * const inst){
+    static void
+    installImp(TestTracerImpl* inst)
+    {
         s_tracer = inst;
     }
 
-    static TestTracerImpl * instanceImp(){
+    static TestTracerImpl*
+    instanceImp()
+    {
         return s_tracer;
     }
 
-    static void uninstallImp(){
+    static void
+    uninstallImp()
+    {
         s_tracer = 0;
     }
 
-    TestOptionsImpl * makeSpanOptionsImp()
+    TestOptionsImpl*
+    makeSpanOptionsImp()
     {
         return new TestOptionsImpl();
     }
 
-    void
-    cleanupImp(TestOptionsImpl* const opts)
-    {
-        delete opts;
-    }
 
     TestSpanImpl*
     startImp(const StringRef&)
@@ -82,23 +84,17 @@ class TestTracerImpl : public GenericTracer<TestTracerImpl,
         return new TestSpanImpl();
     }
 
-    void
-    cleanupImp(const TestSpanImpl* const sp)
-    {
-        delete sp;
-    }
-
     template <typename CARRIER_T>
     int
-    injectImp(CARRIER_T* const carrier, const TestSpanImpl& imp) const
+    injectImp(CARRIER_T* carrier, const TestSpanImpl& imp) const
     {
         return injectImp(carrier, imp.m_context);
     }
 
     template <typename CIMPL>
     int
-    injectImp(GenericTextWriter<CIMPL>* const carrier,
-              const TestContextImpl&          imp) const
+    injectImp(GenericTextWriter<CIMPL>* carrier,
+              const TestContextImpl&    imp) const
     {
         std::vector<TextMapPair> pairs;
         pairs.reserve(imp.baggageMap().size());
@@ -115,12 +111,11 @@ class TestTracerImpl : public GenericTracer<TestTracerImpl,
 
     template <typename CIMPL>
     int
-    injectImp(GenericBinaryWriter<CIMPL>* const carrier,
-              const TestContext&) const
+    injectImp(GenericBinaryWriter<CIMPL>* carrier, const TestContext&) const
     {
         // Context unused for test. Implementations should encode
         // the context for a wire protocol here, most likely
-        const int deadbeef = 0xdeadbeef;
+        const int         deadbeef = 0xdeadbeef;
         std::vector<char> buf(sizeof(deadbeef));
         buf.resize(sizeof(deadbeef));
         std::memcpy(&buf[0], &deadbeef, sizeof(deadbeef));
@@ -130,8 +125,8 @@ class TestTracerImpl : public GenericTracer<TestTracerImpl,
 
     template <typename CIMPL>
     int
-    injectImp(GenericWriter<CIMPL>* const carrier,
-              const TestContextImpl&      context) const
+    injectImp(GenericWriter<CIMPL>*  carrier,
+              const TestContextImpl& context) const
     {
         return carrier->inject(context);
     }
@@ -200,7 +195,19 @@ class TestTracerImpl : public GenericTracer<TestTracerImpl,
     }
 
     void
-    cleanupImp(const TestContextImpl* const spc)
+    cleanupImp(const TestOptionsImpl* opts)
+    {
+        delete opts;
+    }
+
+    void
+    cleanupImp(const TestSpanImpl* sp)
+    {
+        delete sp;
+    }
+
+    void
+    cleanupImp(const TestContextImpl* spc)
     {
         delete spc;
     }

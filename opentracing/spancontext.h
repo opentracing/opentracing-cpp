@@ -28,8 +28,8 @@ namespace opentracing {
 //       typename Adapter::const_iterator baggageBeginImp() const;
 //       typename Adapter::const_iterator baggageEndImp() const;
 //
-//       int getBaggageImp(const StringRef&, std::string* const) const;
-//       int getBaggageImp(const StringRef&, std::vector<std::string>* const) const;
+//       int getBaggageImp(const StringRef&, std::string*) const;
+//       int getBaggageImp(const StringRef&, std::vector<std::string>*) const;
 //   };
 //
 // Implementations may choose how they implement storage of Baggage, but the
@@ -57,13 +57,13 @@ class GenericSpanContext {
     // Return a structure containing the range of iterators:
     // [baggageBegin, baggageEnd). The object supports range-based for loops.
 
-    int getBaggage(const StringRef &key, std::string *const baggage) const;
+    int getBaggage(const StringRef &key, std::string *baggage) const;
     // Load a single 'baggage' value associated with 'key'. Returns 0 if there
     // is only one value associated with 'key' and that value was loaded
     // successfully. Return a non-zero value otherwise.
 
-    int getBaggage(const StringRef &               key,
-                   std::vector<std::string> *const baggage) const;
+    int getBaggage(const StringRef &         key,
+                   std::vector<std::string> *baggage) const;
     // Load the 'baggage' associated with 'key'. Returns 0 if the
     // baggage is loaded successfully, and a non-zero value otherwise.
 
@@ -78,18 +78,18 @@ class GenericSpanContext {
 // ------------------------
 
 template <typename CONTEXT, typename ADAPTER>
-inline GenericSpanContext<CONTEXT, ADAPTER>::GenericSpanContext()
+GenericSpanContext<CONTEXT, ADAPTER>::GenericSpanContext()
 {
 }
 
 template <typename CONTEXT, typename ADAPTER>
-inline GenericSpanContext<CONTEXT, ADAPTER>::GenericSpanContext(
+GenericSpanContext<CONTEXT, ADAPTER>::GenericSpanContext(
     const GenericSpanContext &)
 {
 }
 
 template <typename CONTEXT, typename ADAPTER>
-inline typename GenericSpanContext<CONTEXT, ADAPTER>::BaggageIterator
+typename GenericSpanContext<CONTEXT, ADAPTER>::BaggageIterator
 GenericSpanContext<CONTEXT, ADAPTER>::baggageBegin() const
 {
     return BaggageIterator(
@@ -97,32 +97,32 @@ GenericSpanContext<CONTEXT, ADAPTER>::baggageBegin() const
 }
 
 template <typename CONTEXT, typename ADAPTER>
-inline typename GenericSpanContext<CONTEXT, ADAPTER>::BaggageIterator
+typename GenericSpanContext<CONTEXT, ADAPTER>::BaggageIterator
 GenericSpanContext<CONTEXT, ADAPTER>::baggageEnd() const
 {
     return BaggageIterator(static_cast<const CONTEXT *>(this)->baggageEndImp());
 }
 
 template <typename CONTEXT, typename ADAPTER>
-inline typename GenericSpanContext<CONTEXT, ADAPTER>::BaggageRange
+typename GenericSpanContext<CONTEXT, ADAPTER>::BaggageRange
 GenericSpanContext<CONTEXT, ADAPTER>::baggageRange() const
 {
     return BaggageRange(baggageBegin(), baggageEnd());
 }
 
 template <typename CONTEXT, typename ADAPTER>
-inline int
-GenericSpanContext<CONTEXT, ADAPTER>::getBaggage(
-    const StringRef &key, std::string *const baggage) const
+int
+GenericSpanContext<CONTEXT, ADAPTER>::getBaggage(const StringRef &key,
+                                                 std::string *baggage) const
 
 {
     return static_cast<const CONTEXT *>(this)->getBaggageImp(key, baggage);
 }
 
 template <typename CONTEXT, typename ADAPTER>
-inline int
+int
 GenericSpanContext<CONTEXT, ADAPTER>::getBaggage(
-    const StringRef &key, std::vector<std::string> *const baggage) const
+    const StringRef &key, std::vector<std::string> *baggage) const
 {
     return static_cast<const CONTEXT *>(this)->getBaggageImp(key, baggage);
 }

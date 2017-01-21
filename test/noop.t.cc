@@ -22,6 +22,7 @@ class NoopTracerEnv : public ::testing::Test {
     SetUp()
     {
         GlobalTracer::install(&imp);
+        tracer = &imp;
     };
 
     virtual void
@@ -31,6 +32,7 @@ class NoopTracerEnv : public ::testing::Test {
     };
 
     NoopTracer imp;
+    GlobalTracer * tracer;
 };
 
 TEST_F(NoopTracerEnv, Intantiation){
@@ -45,7 +47,7 @@ TEST_F(NoopTracerEnv, Intantiation){
 
 TEST_F(NoopTracerEnv, StartWithOp)
 {
-    GlobalTracer::Span* span(GlobalTracer::start("hello"));
+    GlobalTracer::Span* span(tracer->start("hello"));
     EXPECT_TRUE(span);
 
     int rc = 0;
@@ -67,7 +69,7 @@ TEST_F(NoopTracerEnv, StartWithOp)
     rc = span->getBaggage("apple", &vals);
     ASSERT_NE(0, rc);
 
-    GlobalTracer::cleanup(span);
+    tracer->cleanup(span);
 }
 
 TEST_F(NoopTracerEnv, StartWithOpAndParent)
@@ -78,7 +80,7 @@ TEST_F(NoopTracerEnv, StartWithOpAndParent)
     // test dependent on those other interfaces, I'm going to just pull
     // a context out of thin air to test the interface.
 
-    GlobalTracer::Span* guard(GlobalTracer::start("hello"));
+    GlobalTracer::Span* guard(tracer->start("hello"));
     EXPECT_TRUE(guard);
 }
 
@@ -86,22 +88,22 @@ TEST_F(NoopTracerEnv, InjectSpan)
 {
     TestTextWriter writer;
 
-    GlobalTracer::Span* span(GlobalTracer::start("op"));
+    GlobalTracer::Span* span(tracer->start("op"));
     ASSERT_TRUE(span);
     span->setBaggage("animal", "tiger");
     span->setBaggage("animal", "cat");
 
-    int rc = GlobalTracer::inject(&writer, *span);
+    int rc = tracer->inject(&writer, *span);
     ASSERT_EQ(0, rc);
 
-    GlobalTracer::cleanup(span);
+    tracer->cleanup(span);
 }
 
 TEST_F(NoopTracerEnv, InjectText)
 {
     TestTextWriter writer;
 
-    GlobalTracer::Span* span(GlobalTracer::start("op"));
+    GlobalTracer::Span* span(tracer->start("op"));
     ASSERT_TRUE(span);
 
     span->setBaggage("animal", "tiger");
@@ -109,11 +111,11 @@ TEST_F(NoopTracerEnv, InjectText)
 
     const GlobalTracer::SpanContext * context = span->context();
 
-    int rc = GlobalTracer::inject(&writer, *context);
+    int rc = tracer->inject(&writer, *context);
     ASSERT_EQ(0, rc);
 
-    GlobalTracer::cleanup(span);
-    GlobalTracer::cleanup(context);
+    tracer->cleanup(span);
+    tracer->cleanup(context);
 }
 
 
@@ -125,7 +127,7 @@ TEST_F(NoopTracerEnv, ExtractText)
     reader.pairs.push_back(TextMapPair("fruit", "apple"));
     reader.pairs.push_back(TextMapPair("veggie", "carrot"));
 
-    const GlobalTracer::SpanContext* context(GlobalTracer::extract(reader));
+    const GlobalTracer::SpanContext* context(tracer->extract(reader));
     ASSERT_TRUE(context);
 
     size_t index = 0;
@@ -142,30 +144,30 @@ TEST_F(NoopTracerEnv, ExtractText)
         ++index;
     }
 
-    GlobalTracer::cleanup(context);
+    tracer->cleanup(context);
 }
 
 TEST_F(NoopTracerEnv, InjectBinary)
 {
     TestBinaryWriter writer;
-    GlobalTracer::Span* span = GlobalTracer::start("op");
+    GlobalTracer::Span* span = tracer->start("op");
     ASSERT_TRUE(span);
 
     const GlobalTracer::SpanContext * context = span->context();
 
-    int rc = GlobalTracer::inject(&writer, *context);
+    int rc = tracer->inject(&writer, *context);
     ASSERT_EQ(0, rc);
-    GlobalTracer::cleanup(span);
-    GlobalTracer::cleanup(context);
+    tracer->cleanup(span);
+    tracer->cleanup(context);
 }
 
 TEST_F(NoopTracerEnv, ExtractBinary)
 {
     TestBinaryReader reader;
     reader.m_raw = 0xdeadbeef;
-    const GlobalTracer::SpanContext* context(GlobalTracer::extract(reader));
+    const GlobalTracer::SpanContext* context(tracer->extract(reader));
     ASSERT_TRUE(context);
-    GlobalTracer::cleanup(context);
+    tracer->cleanup(context);
 }
 
 struct NoopWriter: public GenericWriter<NoopWriter>
@@ -176,16 +178,16 @@ struct NoopWriter: public GenericWriter<NoopWriter>
 TEST_F(NoopTracerEnv, InjectExplicit)
 {
     NoopWriter w;
-    GlobalTracer::Span* span(GlobalTracer::start("span"));
+    GlobalTracer::Span* span(tracer->start("span"));
     ASSERT_TRUE(span);
 
     const GlobalTracer::SpanContext * context = span->context();
 
-    int rc = GlobalTracer::inject(&w, *context);
+    int rc = tracer->inject(&w, *context);
     ASSERT_EQ(0, rc);
 
-    GlobalTracer::cleanup(span);
-    GlobalTracer::cleanup(context);
+    tracer->cleanup(span);
+    tracer->cleanup(context);
 }
 
 struct NoopReader : public GenericReader<NoopReader>
@@ -196,30 +198,30 @@ struct NoopReader : public GenericReader<NoopReader>
 TEST_F(NoopTracerEnv, ExtractExplicit)
 {
     NoopReader r;
-    const GlobalTracer::SpanContext* context(GlobalTracer::extract(r));
+    const GlobalTracer::SpanContext* context(tracer->extract(r));
     ASSERT_TRUE(context);
-    GlobalTracer::cleanup(context);
+    tracer->cleanup(context);
 }
 
 TEST_F(NoopTracerEnv, StartWithOpts)
 {
     NoopReader r;
-    const GlobalTracer::SpanContext* otherContext(GlobalTracer::extract(r));
+    const GlobalTracer::SpanContext* otherContext(tracer->extract(r));
     ASSERT_TRUE(otherContext);
 
-    GlobalTracer::SpanOptions* opts(GlobalTracer::makeSpanOptions());
+    GlobalTracer::SpanOptions* opts(tracer->makeSpanOptions());
 
     opts->setOperation("hello");
     opts->setStartTime(1251251);
     opts->setReference(SpanReferenceType::e_FollowsFrom, *otherContext);
     opts->setTag("hello", 125);
 
-    GlobalTracer::Span* span(GlobalTracer::start("hello"));
+    GlobalTracer::Span* span(tracer->start("hello"));
     EXPECT_TRUE(span);
 
-    GlobalTracer::cleanup(span);
-    GlobalTracer::cleanup(otherContext);
-    GlobalTracer::cleanup(opts);
+    tracer->cleanup(span);
+    tracer->cleanup(otherContext);
+    tracer->cleanup(opts);
 }
 
 template<typename T>
@@ -261,27 +263,35 @@ TYPED_TEST_CASE(NoopSpanTypeTests, OverloadedTypes);
 
 TYPED_TEST(NoopSpanTypeTests, TagInterface)
 {
-    GlobalTracer::Span* span(GlobalTracer::start("hello world"));
+    NoopTracer noop;
+    GlobalTracer* tracer = &noop;
+
+    GlobalTracer::Span* span(tracer->start("hello world"));
     int rc = span->tag("key", TypeParam());
     ASSERT_EQ(0, rc);
 
-    GlobalTracer::cleanup(span);
+    tracer->cleanup(span);
 }
 
 TYPED_TEST(NoopSpanTypeTests, LogInterface)
 {
-    GlobalTracer::Span* span(GlobalTracer::start("hello world"));
+    NoopTracer noop;
+    GlobalTracer* tracer = &noop;
+    GlobalTracer::Span* span(tracer->start("hello world"));
     int rc = span->log("key", TypeParam());
     ASSERT_EQ(0, rc);
 
-    GlobalTracer::cleanup(span);
+    tracer->cleanup(span);
 }
 
 TYPED_TEST(NoopSpanTypeTests, LogTspInterface)
 {
-    GlobalTracer::Span* span(GlobalTracer::start("hello world"));
+    NoopTracer noop;
+    GlobalTracer* tracer = &noop;
+
+    GlobalTracer::Span* span(tracer->start("hello world"));
     int rc = span->log("key", TypeParam(), 0);
     ASSERT_EQ(0, rc);
 
-    GlobalTracer::cleanup(span);
+    tracer->cleanup(span);
 }

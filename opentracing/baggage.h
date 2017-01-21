@@ -262,46 +262,45 @@ inline const BaggageRef* BaggageRef::operator->() const
 // ------------------------
 
 template <typename ADAPTER>
-inline BaggageIteratorImp<ADAPTER>::BaggageIteratorImp(const iterator& iter)
+BaggageIteratorImp<ADAPTER>::BaggageIteratorImp(const iterator& iter)
 : d_iterator(iter), d_handler()
 {
 }
 
 template <typename ADAPTER>
-inline BaggageIteratorImp<ADAPTER>::BaggageIteratorImp(
-    const const_iterator& iter)
+BaggageIteratorImp<ADAPTER>::BaggageIteratorImp(const const_iterator& iter)
 : d_iterator(iter), d_handler()
 {
 }
 
 template <typename ADAPTER>
-inline BaggageRef BaggageIteratorImp<ADAPTER>::operator*() const
+BaggageRef BaggageIteratorImp<ADAPTER>::operator*() const
 {
     return d_handler.ref(d_iterator);
 }
 
 template <typename ADAPTER>
-inline BaggageRef BaggageIteratorImp<ADAPTER>::operator->() const
+BaggageRef BaggageIteratorImp<ADAPTER>::operator->() const
 {
     return d_handler.ref(d_iterator);
 }
 
 template <typename ADAPTER>
-inline Baggage
+Baggage
 BaggageIteratorImp<ADAPTER>::copy() const
 {
     return d_handler.copy(d_iterator);
 }
 
 template <typename ADAPTER>
-inline BaggageRef
+BaggageRef
 BaggageIteratorImp<ADAPTER>::ref() const
 {
     return d_handler.ref(d_iterator);
 }
 
 template <typename ADAPTER>
-inline BaggageIteratorImp<ADAPTER> BaggageIteratorImp<ADAPTER>::operator++(int)
+BaggageIteratorImp<ADAPTER> BaggageIteratorImp<ADAPTER>::operator++(int)
 {
     BaggageIteratorImp tmp(*this);
     ++d_iterator;
@@ -309,14 +308,14 @@ inline BaggageIteratorImp<ADAPTER> BaggageIteratorImp<ADAPTER>::operator++(int)
 }
 
 template <typename ADAPTER>
-inline BaggageIteratorImp<ADAPTER>& BaggageIteratorImp<ADAPTER>::operator++()
+BaggageIteratorImp<ADAPTER>& BaggageIteratorImp<ADAPTER>::operator++()
 {
     ++d_iterator;
     return *this;
 }
 
 template <typename ADAPTER>
-inline bool
+bool
 BaggageIteratorImp<ADAPTER>::operator==(
     const BaggageIteratorImp<ADAPTER>& other) const
 {
@@ -324,7 +323,7 @@ BaggageIteratorImp<ADAPTER>::operator==(
 }
 
 template <typename ADAPTER>
-inline bool
+bool
 BaggageIteratorImp<ADAPTER>::operator!=(
     const BaggageIteratorImp<ADAPTER>& other) const
 {
@@ -336,21 +335,21 @@ BaggageIteratorImp<ADAPTER>::operator!=(
 // ---------------------
 
 template <typename ADAPTER>
-inline BaggageRangeImp<ADAPTER>::BaggageRangeImp(const BaggageIterator& begin,
-                                                 const BaggageIterator& end)
+BaggageRangeImp<ADAPTER>::BaggageRangeImp(const BaggageIterator& begin,
+                                          const BaggageIterator& end)
 : m_begin(begin), m_end(end)
 {
 }
 
 template <typename ADAPTER>
-inline typename BaggageRangeImp<ADAPTER>::BaggageIterator
+typename BaggageRangeImp<ADAPTER>::BaggageIterator
 BaggageRangeImp<ADAPTER>::begin() const
 {
     return m_begin;
 }
 
 template <typename ADAPTER>
-inline typename BaggageRangeImp<ADAPTER>::BaggageIterator
+typename BaggageRangeImp<ADAPTER>::BaggageIterator
 BaggageRangeImp<ADAPTER>::end() const
 {
     return m_end;
