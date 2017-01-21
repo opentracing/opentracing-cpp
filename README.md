@@ -3,35 +3,57 @@ C++ implementation of the OpenTracing API http://opentracing.io
 
 [![Join the chat at https://gitter.im/opentracing/opentracing-cpp](https://badges.gitter.im/opentracing/opentracing-cpp.svg)](https://gitter.im/opentracing/opentracing-cpp?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
+
 ## Required Reading
 
-In order to understand the C++ platform API, one must first be familiar with the
-[OpenTracing project](http://opentracing.io) and
-[terminology](http://opentracing.io/spec/) more generally. This is a C++98 API that
-is used as a "common denominator". Ît's up to implementors to choose the C++ level
-they are going to use for their implementations:
+In order to understand the C++ platform API, one must first be familiar with the [OpenTracing project](http://opentracing.io) and
+[terminology](http://opentracing.io/spec/) more generally. This is a C++98 API that is used as a "common denominator".
+Ît is up to implementors to choose the C++ level they are going to use for their implementations:
 
 ![stack of libraries](img/stack-of-libraries.png "Stack of Libraries")
 
 ## Compile and install
 
-```
-libtoolize # or glibtoolize
-./autogen.sh
-./configure
-sudo make install
-```
-
-To test (requires gtest - see [here for OS X](http://stackoverflow.com/questions/20746232/how-to-properly-setup-googletest-on-os-x-aside-from-xcode), [here for ubuntu](http://www.eriksmistad.no/getting-started-with-google-test-on-ubuntu/) and [here for Red Hat](http://stackoverflow.com/questions/13513905/how-to-setup-googletest-as-a-shared-library-on-linux)/for Red Hat note also [this](http://stackoverflow.com/questions/4743233/is-usr-local-lib-searched-for-shared-libraries)):
+The default package is a header-only library. It can be installed as such
 
 ```
-cd test
+mkdir build
+cd build
+cmake ..
+make install
+```
+
+If you would like to include the NoopTracer, a static library is created in addition to the headers.
+
+```
+mkdir build
+cd build
+cmake -Denable_noop=ON ..
+make install
+```
+
+#### Tests
+
+Testing requires the use of `gtest`. The `gtest` library is added as a submodule to this repository.
+To build all of the tests, from the root repository:
+
+```
+git submodule init
+git submodule update
+mkdir build
+cd build
+cmake -Denable_tests=ON ..
 make
-./test
+./bin/unittest
 ```
+
+If you're using the `NoopTracer`, you would want to add `-Denable_noop=ON` as well.
 
 ## API overview for those adding instrumentation
 
-Everyday consumers of this `opentracing` package really only need to worry
-about a couple of key abstractions: the `StartSpan` function, the `Span`
-interface, and binding a `Tracer` at `main()`-time.
+Clients of this `OpenTracing` only need to understand the key abstractions:
+    * Installing a Tracer
+    * Using the Global `Tracer` to create `Spans` and `SpanContexts`
+    * Adding tags, logs, or baggage to `Spans`
+
+See the detailed [usage](./docs/usage.md) documentation for details.
