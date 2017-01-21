@@ -113,15 +113,15 @@ using namespace acme;
 
 int getAccount(Repsonse * resp, const Request& req)
 {
-    Tracer::Span* span(Tracer::start("get_account"));
+    Tracer* tracer = Tracer::instance();
+
+    Span* span(tracer->start("get_account"));
     assert(span);
 
-    // When our span is complete, we have to call finish
-    span->finish();
+    // ...
 
-    // When we're done with our Span, we need to return it to
-    // the Tracer implementation to be cleaned up
-    Tracer::cleanup(span);
+    span->finish();
+    tracer->cleanup(span);
 
     return 0;
 }
@@ -147,9 +147,11 @@ using namespace acme;
 class HttpWriter : public GenericBinaryWriter<HttpWriter>
 {
   public:
-    HttpWriter(HttpRequest * req): m_req(req){}
+    HttpWriter(HttpRequest * req) : m_req(req)
+    {
+    }
 
-    int injectImp(const void * const blob, const size_t len)
+    int injectImp(const void* blob, const size_t len)
     {
         std::string header(static_cast<const char* const>(blob), len);
         req->addHeader("x-acme-tracing-blob", header);
@@ -157,27 +159,28 @@ class HttpWriter : public GenericBinaryWriter<HttpWriter>
     }
 
   private:
-    HttpRequest * m_req;
+    HttpRequest* m_req;
 };
 
-int getAccount(Repsonse * resp, const Request& req)
+int getAccount(Repsonse* resp, const Request& req)
 {
-    Span* span(Tracer::start("get_account"));
+    Tracer* tracer = Tracer::instance();
+
+    Span* span(tracer->start("get_account"));
     assert(span);
 
     HttpResponse httpResponse;
-    HttpRequest httpRequest(req);
+    HttpRequest  httpRequest(req);
 
-    // Embed the details of our span into the outgoing HTTP headers:
     HttpWriter writer(&httpRequest);
-    Tracer::inject(&writer, span->context());
+    tracer->inject(&writer, span->context());
 
     sendHttpRequest(&httpResponse, httpRequest);
 
     // ...
 
     span->finish();
-    Tracer::cleanup(span);
+    tracer->cleanup(span);
     return 0;
 }
 ```
@@ -193,6 +196,7 @@ using namespace acme;
 
 struct HttpReader: public GenericBinaryReader<HttpReader>
 {
+
   public:
     int extractImp(std::vector<std::string> * const buf) const
     {
@@ -215,32 +219,34 @@ struct HttpReader: public GenericBinaryReader<HttpReader>
 
 int httpGetAccount(const HttpRequest& httpRequest)
 {
-    SpanContext* context(Tracer::extract(HttpReader(httpRequest)));
+    Tracer* tracer = Tracer::instance();
+
+    SpanContext* context(tracer->extract(HttpReader(httpRequest)));
 
     Span* span;
 
     if (!context)
     {
-        span = Tracer::start("get_account");
+        span = tracer->start("get_account");
     }
     else
     {
-        SpanOptions* opts(Tracer::makeSpanOptions());
+        SpanOptions* opts(tracer->makeSpanOptions());
 
         opts->setReference(SpanReferenceType::e_ChildOf, *context);
         opts->setOperation("get_account_server");
 
-        span = Tracer::start(opts);
+        span = tracer->start(opts);
 
-        Tracer::cleanup(context);
-        Tracer::cleanup(opts);
+        tracer->cleanup(context);
+        tracer->cleanup(opts);
     }
     assert(span);
 
     // Send back our response...
 
     span->finish();
-    Tracer::cleanup(span);
+    tracer->cleanup(span);
 
     return 0;
 }
@@ -256,7 +262,7 @@ through the entire system.
 The `opentracing-cpp` interface allows you to tag your spans with `key:value` pairs:
 
 ```
-Span* span = Tracer::start("get_bookmarks");
+Span* span = tracer->start("get_bookmarks");
 span->tag("account", account_id);
 span->tag("site", site);
 ```
@@ -271,7 +277,7 @@ The `log` functions work similarly, but logs are also implicitly associated with
 Users can control the time-stamp behavior if they wish by providing it explicitly:
 
 ```
-Span* span(Tracer::start("get_bookmarks"));
+Span* span(tracer->start("get_bookmarks"));
 span->log("db_access", account_id);             // Use current wall-time
 span->log("redis_access", site, 1484003943000); // Accessed redis on Jan 9, 2017 at 23:19:02 GMT
 ```
@@ -281,10 +287,10 @@ Baggage is special. It is a set of text-only, key:value pairs that propagates wi
 through a system. It can be prohibitively expensive if abused. It is also not a replacement for traditional message
 schemas (e.g., protobuf). Care must be taken when adding any baggage.
 
-With all that being said, it can be added directly to any Span you create through the underlying SpanContext.
+Baggage can be added directly to any Span you create through the underlying SpanContext.
 
 ```
-Span* span = Tracer::start("get_bookmarks");
+Span* span = tracer->start("get_bookmarks");
 span->context().setBaggage("database", std::to_string(database_id));
 span->context().setBaggage("user", user);
 ```
@@ -293,16 +299,17 @@ Baggage can also be read back through the original Span or SpanContexts extracte
 Note that SpanContexts created through 'extract()' are read-only.
 
 ```
-Span* span(Tracer::start("get_bookmarks"));
+Span* span(tracer->start("get_bookmarks"));
 
 span->context().setBaggage("database", std::to_string(database_id));
 span->context().setBaggage("user", user);
 
 for(SpanContext::BaggageIterator it = span->context().baggageBegin();
-                                       it != span->context().baggageEnd();
-                                     ++it)
+                                 it != span->context().baggageEnd();
+                               ++it)
 {
-    std::cout << "baggage item: " << it->key() << " val: " << it->value() << std::endl;
+    std::cout << "baggage item: " << it->key() << " val: " << it->value()
+              << std::endl;
 }
 ```
 
@@ -310,14 +317,14 @@ If you have access to C++11 features, we can use the range based for loop syntax
 
 ```
 HttpReader reader(request);
-SpanContext* context(Tracer::extract(reader));
+SpanContext* context(tracer->extract(reader));
 
 for(const auto& baggage : context->baggageRange())
 {
-    std::cout << "baggage item: " << baggage.key() << " val: " << baggage.value() << std::endl;
+    std::cout << "baggage item: " << baggage.key()
+              << " val: " << baggage.value() << std::endl;
 }
-
-Tracer::cleanup(context);
+tracer->cleanup(context);
 ```
 
 For details on the semantics of `BaggageIterators` and how they work, see [baggage.h](../opentracing/baggage.h).
