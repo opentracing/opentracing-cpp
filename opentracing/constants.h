@@ -5,11 +5,8 @@
 // constants.h
 // ===========
 // This header provides a set of macros for the "standard" OpenTracing tag and
-// log fields.
-// See
+// log fields. For a description of each value, and how it should be used, see:
 // https://github.com/opentracing/specification/blob/master/data_conventions.yaml
-// for
-// a description of each value, and how it should be used.
 
 #define OPENTRACING_TAG_ERROR "error"
 #define OPENTRACING_TAG_COMPONENT "component"
