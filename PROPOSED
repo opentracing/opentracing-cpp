@@ -1,0 +1,12 @@
+# Virtual inheritance model
+
+## Pros
+* Traditional OO/Simpler (major)
+* Decouples Tracer from span/carrier
+* Moves physical organization problem into carriers, (still messy, but much better than defining details in tracer)
+
+##Cons
+* Spec adjustment, requiring reset/externalize for carrier fallback
+* More complicated carrier code (minor)
+* more expensive 'no-ops', always hit v-table (minor)
+* No longer header only. Tracer singleton interface requires static storage is defined (more annoying, but still minor)
