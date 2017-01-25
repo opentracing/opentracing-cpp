@@ -1,200 +1,225 @@
-#ifndef OPENTRACING_SPAN_H
-#define OPENTRACING_SPAN_H
+#ifndef INCLUDED_OPENTRACING_SPAN_H
+#define INCLUDED_OPENTRACING_SPAN_H
 
-#include <string>
-#include <vector>
-#include <sstream>
+// ======
+// span.h
+// ======
+// class GenericSpan - CRTP interface for Spans
+
+#include <opentracing/spancontext.h>
+#include <opentracing/spanoptions.h>
+#include <opentracing/stringref.h>
 #include <stdint.h>
 
-namespace opentracing
-{
+namespace opentracing {
 
-class Tracer;
-class LogData;
+// =================
+// class GenericSpan
+// =================
+// The GenericSpan has three template parameters:
+//   * SPAN    - A Span implementation derived class
+//   * CONTEXT - A SpanContext implementation derived class
+//   * ADAPTER - A Baggage iterator adapter
+//
+// The CONTEXT and ADAPTER are used to alias the related GenericSpanContext
+// class as the SpanContext. This is a convenience typedef to ensure what is
+// exposed to clients is the same as the type used by the interface.
+//
+// CRTP SPAN implementations must support the following:
+//
+// class SpanImpl: GenericSpan<SpanImpl, ContextImpl, Adapter>
+// {
+//   public:
+//      const ContextImpl * contextImp() const;
+//
+//      int setOperationImp(const StringRef&);
+//      int setBaggageImp(const StringRef&, const StringRef&);
+//
+//      int getBaggageImp(const StringRef&, std::string*) const;
+//      int getBaggageImp(const StringRef&, std::vector<std::string>*) const;
+//
+//      int finishImp();
+//      int finishImp(const uint64_t);
+//
+//      template<typename T>
+//      int tagImp(const StringRef&, const T&);
+//
+//      template<typename T>
+//      int logImp(const StringRef&, const T&);
+//
+//      template<typename T>
+//      int logImp(const StringRef&, const T&, const uint64_t);
+// };
+//
+// The templated 'tagImp' and 'logImp' methods may assume that the following
+// method is defined for any type 'T':
+//      `std::ostream& ::operator<<(std::ostream&, const T& val);`
 
-/**
- * A `Span` represents an active, un-finished span in the OpenTracing system.
- * Spans are created by the `Tracer` interface.
- */
-class Span
-{
-public:
-	/**
-	 * Destroys this Span.
-	 */
-    virtual ~Span();
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+class GenericSpan {
+  public:
+    typedef GenericSpanContext<CONTEXT, ADAPTER> SpanContext;
 
-    /**
-     * Sets or changes the operation name.
-     */
-    virtual Span * setOperationName(const std::string & operationName);
-    
-    /**
-     * Adds a tag with any value to the `Span`. If there is a
-     * existing tag set for `key`, it is overwritten.
-     */
+    const SpanContext* context() const;
+    // Return a copy of the SpanContext associated with this span.
+    // The context can be injected into carriers, or added as a reference to
+    // other causally related Spans. When finished with the SpanContext, it
+    // should be cleaned up with 'Tracer::cleanup()'.
+
+    int setBaggage(const StringRef& key, const StringRef& value);
+    // Add the 'key:value' pair to this Span. Baggage is propagated with the
+    // Span
+    // in-band, throughout the lifetime of a Trace. Return 0 upon success
+    // and a non-zero value otherwise.
+
+    int getBaggage(const StringRef& key, std::string* baggage) const;
+    // Load a single 'baggage' value associated with 'key'. Returns 0 if there
+    // is only one value associated with 'key' and that value was loaded
+    // successfully. Return a non-zero value otherwise.
+
+    int getBaggage(const StringRef&          key,
+                   std::vector<std::string>* baggage) const;
+    // Load the 'baggage' associated with 'key'. Returns 0 if the
+    // baggage is loaded successfully, and a non-zero value otherwise.
+
+    int setOperation(const StringRef& operation);
+    // Modify the Span's operation. Return 0 upon success and a non-zero
+    // value otherwise. It is undefined behavior to call this method after
+    // 'finish()'.
+
+    int finish();
+    int finish(const uint64_t tsp);
+    // This should be the last method called on the Span. It marks the end of
+    // this Span (in microseconds since epoch) using the current wall-time, or
+    // an explicit timestamp 'tsp'. Returns 0 upon success and a non-zero
+    // value otherwise. Multiple calls to 'finish()' are redundant. The only
+    // other method that may be called on the span, after 'finish()' is to
+    // copy the 'context()'.
+
     template <typename T>
-    Span * setTag(const std::string & key, const T & value);
+    int tag(const StringRef& key, const T& val);
+    // Tag this span with the supplied key:val pair. Returns 0 upon success and
+    // a non-zero value otherwise. It is undefined behavior to call this method
+    // after 'finish()'.
+    //
+    // Note: Any type passed must support being externalized:
+    // `std::ostream& operator<<(std::ostream& os, const T& val);
 
-    /**
-	 * Adds a tag with a `std::string` value to the `Span`. If there is a
-	 * existing tag set for `key`, it is overwritten.
-	 */
-    virtual Span * setTag(const std::string & key, const std::string & value);
+    template <typename T>
+    int log(const StringRef& key, const T& val);
+    // Log the supplied key:val pair on this span with the current wall-time.
+    // Returns 0 upon success and a non-zero value otherwise. It is undefined
+    // behavior to call this method after 'finish()'.
+    //
+    // Note: Any type passed must support being externalized:
+    // `std::ostream& operator<<(std::ostream& os, const T& val);
 
-    /**
-     * Log() records `data` to this Span.
-     * See LogData for semantic details.
-     */
-    virtual Span * log(const LogData & data);
+    template <typename T>
+    int log(const StringRef& key, const T& val, const uint64_t tsp);
+    // Log the supplied key:val pair on this span with the supplied 'tsp'
+    // timestamp. Returns 0 upon success and a non-zero value otherwise.
+    // It is undefined behavior to call this method after 'finish()'.
+    //
+    // Note: Any type passed must support being externalized:
+    // `std::ostream& operator<<(std::ostream& os, const T& val);
 
-    /**
-     * Bulk, potentially more efficient version of log().
-     */
-    virtual Span * log(const std::vector<LogData> & logData);
-
-    /**
-     * `setBaggageItem()` sets a key:value pair on this `Span` that also
-     * propagates to future `Span` children.
-     *
-     * `setBaggageItem()` enables powerful functionality given a full-stack
-     * opentracing integration (e.g., arbitrary application data from a mobile
-     * app can make it, transparently, all the way into the depths of a storage
-     * system), and with it some powerful costs: use this feature with care.
-     *
-     * IMPORTANT NOTE #1: `setBaggageItem()` will only propagate trace
-     * baggage items to *future* children of the `Span`.
-     *
-     * IMPORTANT NOTE #2: Use this thoughtfully and with care. Every key and
-     * value is copied into every local *and remote* child of this `Span`, and
-     * that can add up to a lot of network and CPU overhead.
-     *
-     * IMPORTANT NOTE #3: Baggage item keys have a restricted format:
-     * implementations may wish to use them as HTTP header keys (or key
-     * suffixes), and of course HTTP headers are case insensitive.
-     *
-     * As such, `restrictedKey` MUST match the regular expression
-     * `(?i:[a-z0-9][-a-z0-9]*)` and is case-insensitive. That is, it must
-     * start with a letter or number, and the remaining characters must be
-     * letters, numbers, or hyphens. See `canonicalizeBaggageKey()`. If
-     * `restrictedKey` does not meet these criteria, `setBaggageItem()`
-     * results in undefined behavior.
-     *
-     * Returns a pointer to this `Span` for chaining, etc.
-     */
-    virtual Span * setBaggageItem(const std::string & restrictedKey, const std::string & value);
-
-    /*
-     * If `targetValue` is `NULL`, this method quickly returns true/false depending on
-     * if baggage is set for given key or not. If `targetValue` isn't `NULL` then the
-     * baggage value is assigned to `*targetValue` if it exists, otherwise `*targetValue`
-     * doesn't get modified.
-     *
-     * See the `setBaggageItem()` notes about `restrictedKey`.
-     */
-    virtual bool getBaggageItem(const std::string & restrictedKey, std::string * targetValue = 0) const;
-
-    /**
-     * Provides access to the `Tracer` that created this `Span`. Implementation should
-     * ensure the reference remains valid potentially in a multi-threaded context (might
-     * require some form of reference counting).
-     */
-    virtual const Tracer & getTracer() const = 0;
-
-    /**
-     * Stops this span. `finish()` should be the last call made to any span instance,
-     * and to do otherwise leads to undefined behavior.
-     */
-    virtual void finish();
-
-    /**
-     * Same as `finish()` above but also sets explicitly the finishing time
-     * in microseconds since epoch. If set to the default value (the unix
-	 * epoch), implementations should use the current time implicitly.
-     */
-    virtual void finish(const uint64_t & finishTime);
+  protected:
+    GenericSpan();
+    GenericSpan(const GenericSpan&);
+    // Protected to avoid direct construction
 };
 
-/**
- * LogData is data associated to a Span. Every LogData instance should specify
- * at least one of Event and/or Payload.
- */
-class LogData
+// -----------------
+// class GenericSpan
+// -----------------
+
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+GenericSpan<SPAN, CONTEXT, ADAPTER>::GenericSpan()
 {
-public:
-	/**
-	 * Payload should support arbitrary binary data. `std::string` can support
-	 * this.
-	 */
-	typedef std::string Payload;
+}
 
-	/**
-	 * Creates an empty `LogData` for current time and with optional parameters.
-	 */
-	explicit LogData(const std::string & event = "", const Payload & payload = Payload());
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+GenericSpan<SPAN, CONTEXT, ADAPTER>::GenericSpan(const GenericSpan&)
+{
+}
 
-	/**
-	 * Creates an empty `LogData` for the given timestamp and with optional
-	 * parameters. If set to the default value (the unix epoch), implementations
-	 * should use the current time implicitly.
-	 */
-	explicit LogData(const uint64_t & timestamp, const std::string & event = "", const Payload & payload = Payload());
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+const typename GenericSpan<SPAN, CONTEXT, ADAPTER>::SpanContext*
+GenericSpan<SPAN, CONTEXT, ADAPTER>::context() const
+{
+    return static_cast<const SPAN*>(this)->contextImp();
+}
 
-	/**
-	 * The timestamp of the log record; if set to the default value (the unix
-	 * epoch), implementations should use the current time implicitly.
-	 */
-    uint64_t timestamp;
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::setOperation(const StringRef& operation)
+{
+    return static_cast<SPAN*>(this)->setOperationImp(operation);
+}
 
-    /**
-     * Event (if non-empty) should be the stable name of some notable moment in
-     * the lifetime of a `Span`. For instance, a `Span` representing a browser page
-     * load might add an Event for each of the Performance.timing moments
-     * here: https://developer.mozilla.org/en-US/docs/Web/API/PerformanceTiming
-     *
-     * While it is not a formal requirement, Event strings will be most useful
-     * if they are *not* unique; rather, tracing systems should be able to use
-     * them to understand how two similar `Span`s relate from an internal timing
-     * perspective.
-     */
-    std::string event;
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::setBaggage(const StringRef& key,
+                                                const StringRef& value)
+{
+    return static_cast<SPAN*>(this)->setBaggageImp(key, value);
+}
 
-	/**
-	 * Payload is a free-form potentially structured object which Tracer
-	 * implementations may retain and record all, none, or part of.
-	 *
-	 * If included, `payload` should be restricted to data derived from the
-	 * instrumented application; in particular, it should not be used to pass
-	 * semantic flags to a log() implementation.
-	 *
-	 * For example, an RPC system could log the wire contents in both
-	 * directions, or a SQL library could log the query (with or without
-	 * parameter bindings); tracing implementations may truncate or otherwise
-	 * record only a snippet of these payloads (or may strip out PII, etc,
-	 * etc).
-	 */
-    Payload payload;
-};
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::getBaggage(const StringRef& key,
+                                                std::string* value) const
+{
+    return static_cast<const SPAN*>(this)->getBaggageImp(key, value);
+}
 
-/**
- * `canonicalizeBaggageKey()` returns the canonicalized version of baggage item
- * key `key`, and true if and only if the key was valid. Note: It might alter
- * `key` irrespectively of if it is valid or not.
- */
-bool canonicalizeBaggageKey(std::string & key);
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::getBaggage(
+    const StringRef& key, std::vector<std::string>* value) const
+{
+    return static_cast<const SPAN*>(this)->getBaggageImp(key, value);
+}
 
-/**
- * Default `setTag()` implementation.
- */
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::finish()
+{
+    return static_cast<SPAN*>(this)->finishImp();
+}
+
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::finish(const uint64_t tsp)
+{
+    return static_cast<SPAN*>(this)->finishImp(tsp);
+}
+
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
 template <typename T>
-Span * Span::setTag(const std::string & key, const T & value)
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::tag(const StringRef& key, const T& val)
 {
-    std::ostringstream oss;
-    oss << value;
-    setTag(key, oss.str());
-    return this;
+    return static_cast<SPAN*>(this)->tagImp(key, val);
 }
 
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+template <typename T>
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key, const T& val)
+{
+    return static_cast<SPAN*>(this)->logImp(key, val);
 }
 
-#endif // #define OPENTRACING_SPAN_H
+template <typename SPAN, typename CONTEXT, typename ADAPTER>
+template <typename T>
+int
+GenericSpan<SPAN, CONTEXT, ADAPTER>::log(const StringRef& key,
+                                         const T&       val,
+                                         const uint64_t tsp)
+{
+    return static_cast<SPAN*>(this)->logImp(key, val, tsp);
+}
+
+}  // namespace opentracing
+#endif  // INCLUDED_OPENTRACING_SPAN_H

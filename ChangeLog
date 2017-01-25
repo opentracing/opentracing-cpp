@@ -1,4 +1,46 @@
-
-opentracing-cpp ChangeLog
-
-* initial release
+f18e949 (HEAD -> master, jq/cmake-fun) Remove default contructors and handle side effects
+29e1285 Remove cmake makefile
+a83c752 Merge branch 'master' of https://bbgithub.dev.bloomberg.com/jquinn1/opentracing-cpp
+963d016 Cmake, removing unused template functionality, ditching config.h for now
+1120bb0 (jq/master) Merge pull request #3 from jquinn1/noop-shift
+bde3545 Clean up build system, ability to turn off no-op, integrate tests
+ef885ee (jq/noop-shift) Update reqs for tracerimps
+88e1e8b Merge branch 'master' of https://bbgithub.dev.bloomberg.com/jquinn1/opentracing-cpp
+a8b9017 Moving noop into its own package, updated tests
+5e3885a Merge pull request #2 from jquinn1/changes
+5ff6015 (jq/changes) Review feedback, removing guards, updated docs
+eeb6fa3 typo
+05f3bf3 Example compiler problem
+b5e5486 Update examples
+9f1daca formatting never ends
+8f1025e formatting never ends
+59e565f formatting
+1f77d05 formatting
+63ff455 Updating docs
+9656c0b Adding iterator behaviors
+3b86ccf Adding log/tags/baggage usage
+d35931b Update usage
+47a9047 Adding constants.h
+c8d422c Adding guards, updating documentation and tests
+d42770a Updating documentation
+419580e Updating tests, adding spanoptions, consistently documented
+1ee01dc Minor formatting
+94227b4 Adding No-op implementation
+b45a540 Adding noop, Baggage/BaggageWide, StringRefWide, and docs
+2f37155 Solving the wide baggage problem
+06ff151 Some documentation, StringRefWide
+70d1545 Remove bad example
+3381ca1 Testing everything, at least a little
+ded4c0c StringRef, BaggageRef, BaggageIterator drafted
+efadeda (origin/master, origin/HEAD) keep gcc specific flags specific to a gcc build (#5)
+012743c Update configure.ac
+3933120 Update configure.ac
+6623183 Update ChangeLog
+e1c9ea6 Update AUTHORS
+7fecd71 a clarification (#4)
+e0ea9eb Converting TextMapReader callback to functor (#2)
+8b1efd1 Initial opentracing C++ version
+368f2cd Merge pull request #1 from gitter-badger/gitter-badge
+574ef91 Add Gitter badge
+9ec9136 Update README.md
+bfb0b74 Initial commit
