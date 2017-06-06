@@ -8,8 +8,6 @@ using SystemClock = std::chrono::system_clock;
 using SteadyClock = std::chrono::steady_clock;
 using SystemTime = SystemClock::time_point;
 using SteadyTime = SteadyClock::time_point;
-using SteadyDuration = SteadyClock::duration;
-using SystemDuration = SystemClock::duration;
 
 // This is unsafe to do.
 //
@@ -18,15 +16,15 @@ using SystemDuration = SystemClock::duration;
 // SpanStartOption and SpanFinishOption objects.
 template <typename T>
 class option_wrapper {
-public:
-  option_wrapper(const T &opt) : ptr_(&opt) { }
+ public:
+  option_wrapper(const T &opt) : ptr_(&opt) {}
 
   // This will dangle unless it is only used for short-lived initializer lists.
-  const T& get() const { return *ptr_; }
+  const T &get() const { return *ptr_; }
 
-private:
+ private:
   const T *ptr_;
 };
-} // namespace opentracing
+}  // namespace opentracing
 
-#endif // OPENTRACING_UTIL_H
+#endif  // OPENTRACING_UTIL_H
