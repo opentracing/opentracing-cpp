@@ -4,55 +4,18 @@
 #include <opentracing/util.h>
 #include <opentracing/span.h>
 #include <opentracing/span_context.h>
+#include <opentracing/propagation.h>
 #include <memory>
+#include <vector>
+#include <utility>
 #include <initializer_list>
 
 namespace opentracing {
-enum class SpanReferenceType {
-  // ChildOfRef refers to a parent Span that caused *and* somehow depends
-  // upon the new child Span. Often (but not always), the parent Span cannot
-  // finish unitl the child Span does.
-  //
-  // An timing diagram for a ChildOfRef that's blocked on the new Span:
-  //
-  //     [-Parent Span---------]
-  //          [-Child Span----]
-  //
-  // See http://opentracing.io/spec/
-  //
-  // See opentracing.ChildOf()
-  ChildOfRef = 1,
-
-  // FollowsFromRef refers to a parent Span that does not depend in any way
-  // on the result of the new child Span. For instance, one might use
-  // FollowsFromRefs to describe pipeline stages separated by queues,
-  // or a fire-and-forget cache insert at the tail end of a web request.
-  //
-  // A FollowsFromRef Span is part of the same logical trace as the new Span:
-  // i.e., the new Span is somehow caused by the work of its FollowsFromRef.
-  //
-  // All of the following could be valid timing diagrams for children that
-  // "FollowFrom" a parent.
-  //
-  //     [-Parent Span-]  [-Child Span-]
-  //
-  //
-  //     [-Parent Span--]
-  //      [-Child Span-]
-  //
-  //
-  //     [-Parent Span-]
-  //                 [-Child Span-]
-  //
-  // See http://opentracing.io/spec/
-  //
-  // See opentracing.FollowsFrom()
-  FollowsFromRef = 2
-};
-
 struct StartSpanOptions {
   SystemTime start_system_timestamp;
   SteadyTime start_steady_timestamp;
+  std::vector<std::pair<SpanReferenceType, const SpanContext*>> references;
+  std::vector<std::pair<std::string, Value>> tags;
 };
 
 class StartSpanOption {
@@ -81,6 +44,42 @@ class StartTimestamp : public StartSpanOption {
    SteadyTime steady_when_;
 };
 
+class SpanReference : public StartSpanOption {
+ public:
+   SpanReference(SpanReferenceType type, const SpanContext* referenced)
+     : type_(type), referenced_(referenced)
+   {}
+
+   void Apply(StartSpanOptions& options) const override {
+     options.references.emplace_back(type_, referenced_);
+   }
+ private:
+   SpanReferenceType type_;
+   const SpanContext* referenced_;
+};
+
+inline SpanReference ChildOf(const SpanContext& span_context) {
+  return {SpanReferenceType::ChildOfRef, &span_context};
+}
+
+inline SpanReference FollowsFrom(const SpanContext& span_context) {
+  return {SpanReferenceType::FollowsFromRef, &span_context}; 
+}
+
+class SetTag : public StartSpanOption {
+ public:
+   SetTag(const std::string& key, const Value& value)
+     : key_(key), value_(value) {}
+   SetTag(const SetTag& other) : key_(other.key_), value_(other.value_) {}
+
+   void Apply(StartSpanOptions& options) const override {
+     options.tags.emplace_back(key_, value_);
+   }
+ private:
+     const std::string& key_;
+     const Value& value_;
+};
+
 class Tracer {
  public:
    virtual ~Tracer() = default;
@@ -96,6 +95,26 @@ class Tracer {
    virtual std::unique_ptr<Span> StartSpan(
        const std::string& operation_name,
        const StartSpanOptions& options = {}) = 0;
+
+  // Inject() takes the `sc` SpanContext instance and injects it for
+  // propagation within `carrier`. The actual type of `carrier` depends on
+  // the value of `format`.
+  //
+  // OpenTracing defines a common set of `format` values (see BuiltinFormat),
+  // and each has an expected carrier type.
+  //
+  // Returns true on success.
+   virtual bool Inject(SpanContext sc, CarrierFormat format,
+                       const CarrierWriter& writer) = 0;
+
+  // Extract() returns a SpanContext instance given `format` and `carrier`.
+  //
+  // OpenTracing defines a common set of `format` values (see BuiltinFormat),
+  // and each has an expected carrier type.
+  //
+  // Returns a `SpanContext` that is `valid()` on success.
+   virtual std::unique_ptr<SpanContext> Extract(
+       CarrierFormat format, const CarrierReader& reader) = 0;
 };
 } // namespace opentracing
 
