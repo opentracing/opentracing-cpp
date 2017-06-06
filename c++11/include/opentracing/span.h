@@ -108,6 +108,9 @@ class Span {
 	// value of context() is still valid after a call to Span.Finish(), as is
 	// a call to Span.context() after a call to Span.Finish().
   virtual const SpanContext& context() const = 0;
+
+  // Provides access to the Tracer that created this Span.
+  virtual const Tracer& tracer() const = 0;
 };
 
 // FinishTimestamp is a FinishSpanOption that sets an explicit finish timestamp

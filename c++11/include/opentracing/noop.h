@@ -13,6 +13,7 @@ class NoopSpanContext : public SpanContext {
 
 class NoopSpan : public Span {
  public:
+  NoopSpan(const Tracer& tracer) : tracer_(tracer) {}
   void Finish(const FinishSpanOptions& finish_span_options) override {}
   void SetOperationName(const std::string& name) override {}
   void SetTag(const std::string& key, const Value& value) override {}
@@ -20,8 +21,9 @@ class NoopSpan : public Span {
                               const std::string& value) override {}
   std::string BaggageItem(const std::string& restricted_key) const override {}
   const SpanContext& context() const { return span_context_; }
-
+  const Tracer& tracer() const { return tracer_; }
  private:
+  const Tracer& tracer_;
   NoopSpanContext span_context_;
 };
 
@@ -30,7 +32,7 @@ class NoopTracer : public Tracer {
   std::unique_ptr<Span> StartSpan(
       const std::string& operation_name,
       const StartSpanOptions& options) const override {
-    return std::unique_ptr<Span>(new NoopSpan());
+    return std::unique_ptr<Span>(new NoopSpan(*this));
   }
 
   bool Inject(const SpanContext& sc, CarrierFormat format,
