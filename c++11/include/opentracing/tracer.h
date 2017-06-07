@@ -165,7 +165,9 @@ class SetTag : public StartSpanOption {
  public:
   SetTag(const std::string& key, const Value& value)
       : key_(key), value_(value) {}
-  SetTag(const SetTag& other) : key_(other.key_), value_(other.value_) {}
+
+  SetTag(const SetTag& other)
+      : StartSpanOption(), key_(other.key_), value_(other.value_) {}
 
   void Apply(StartSpanOptions& options) const override {
     options.tags.emplace_back(key_, value_);
