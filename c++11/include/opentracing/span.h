@@ -2,13 +2,15 @@
 #define OPENTRACING_SPAN_H
 
 #include <chrono>
-#include <string>
 #include <functional>
+#include <string>
 
 #include <opentracing/util.h>
 #include <opentracing/value.h>
 
 namespace opentracing {
+class Tracer;
+
 // SpanContext represents Span state that must propagate to descendant Spans and
 // across process boundaries (e.g., a <trace_id, span_id, sampled> tuple).
 class SpanContext {
@@ -49,22 +51,23 @@ class Span {
  public:
   virtual ~Span() = default;
 
-	// Sets the end timestamp and finalizes Span state.
-	//
-	// With the exception of calls to context() (which are always allowed),
-	// Finish() must be the last call made to any span instance, and to do
-	// otherwise leads to undefined behavior.
+  // Sets the end timestamp and finalizes Span state.
+  //
+  // With the exception of calls to context() (which are always allowed),
+  // Finish() must be the last call made to any span instance, and to do
+  // otherwise leads to undefined behavior.
   void Finish(std::initializer_list<option_wrapper<FinishSpanOption>>
                   option_list = {}) {
     FinishSpanOptions options;
     for (const auto& option : option_list) option.get().Apply(options);
-    Finish(options);
+    FinishWithOptions(options);
   }
 
-  virtual void Finish(const FinishSpanOptions& finish_span_options) = 0;
+  virtual void FinishWithOptions(
+      const FinishSpanOptions& finish_span_options) = 0;
 
   // Sets or changes the operation name.
-  // 
+  //
   // SetOperationName may be called prior to Finish.
   virtual void SetOperationName(const std::string& name) = 0;
 
@@ -80,20 +83,20 @@ class Span {
   // SetTag may be called prior to Finish.
   virtual void SetTag(const std::string& key, const Value& value) = 0;
 
-	// SetBaggageItem sets a key:value pair on this Span and its SpanContext
-	// that also propagates to descendants of this Span.
-	//
-	// SetBaggageItem() enables powerful functionality given a full-stack
-	// opentracing integration (e.g., arbitrary application data from a mobile
-	// app can make it, transparently, all the way into the depths of a storage
-	// system), and with it some powerful costs: use this feature with care.
-	//
-	// IMPORTANT NOTE #1: SetBaggageItem() will only propagate baggage items to
-	// *future* causal descendants of the associated Span.
-	//
-	// IMPORTANT NOTE #2: Use this thoughtfully and with care. Every key and
-	// value is copied into every local *and remote* child of the associated
-	// Span, and that can add up to a lot of network and cpu overhead.
+  // SetBaggageItem sets a key:value pair on this Span and its SpanContext
+  // that also propagates to descendants of this Span.
+  //
+  // SetBaggageItem() enables powerful functionality given a full-stack
+  // opentracing integration (e.g., arbitrary application data from a mobile
+  // app can make it, transparently, all the way into the depths of a storage
+  // system), and with it some powerful costs: use this feature with care.
+  //
+  // IMPORTANT NOTE #1: SetBaggageItem() will only propagate baggage items to
+  // *future* causal descendants of the associated Span.
+  //
+  // IMPORTANT NOTE #2: Use this thoughtfully and with care. Every key and
+  // value is copied into every local *and remote* child of the associated
+  // Span, and that can add up to a lot of network and cpu overhead.
   //
   // SetBaggageItem may be be called prior to Finish.
   virtual void SetBaggageItem(const std::string& restricted_key,
@@ -103,10 +106,9 @@ class Span {
   // if the value isn't found in this Span.
   virtual std::string BaggageItem(const std::string& restricted_key) const = 0;
 
-
-	// context() yields the SpanContext for this Span. Note that the return
-	// value of context() is still valid after a call to Span.Finish(), as is
-	// a call to Span.context() after a call to Span.Finish().
+  // context() yields the SpanContext for this Span. Note that the return
+  // value of context() is still valid after a call to Span.Finish(), as is
+  // a call to Span.context() after a call to Span.Finish().
   virtual const SpanContext& context() const = 0;
 
   // Provides access to the Tracer that created this Span.

@@ -42,41 +42,41 @@ class Tracer {
  public:
   virtual ~Tracer() = default;
 
-	// Create, start, and return a new Span with the given `operationName` and
-	// incorporate the given StartSpanOption `option_list`.
-	//
-	// A Span with no SpanReference options (e.g., opentracing::ChildOf() or
-	// opentracing::FollowsFrom()) becomes the root of its own trace.
-	//
-	// Examples:
-	//
+  // Create, start, and return a new Span with the given `operationName` and
+  // incorporate the given StartSpanOption `option_list`.
+  //
+  // A Span with no SpanReference options (e.g., opentracing::ChildOf() or
+  // opentracing::FollowsFrom()) becomes the root of its own trace.
+  //
+  // Examples:
+  //
   //     opentracing::Tracer& tracer = ...
-	//
-	//     // The root-span case:
-	//     auto span = tracer.StartSpan("GetFeed")
-	//
-	//     // The vanilla child span case:
-	//     auto span = tracer.StartSpan(
-	//         "GetFeed",
-	//         {opentracing::ChildOf(parentSpan.context())})
-	//
-	//     // All the bells and whistles:
-	//     auto span = tracer.StartSpan(
-	//         "GetFeed",
-	//         {opentracing::ChildOf(parentSpan.context()),
-	//         opentracing::Tag{"user_agent", loggedReq.UserAgent},
-	//         opentracing::StartTimestamp(loggedReq.timestamp())})
-	//
+  //
+  //     // The root-span case:
+  //     auto span = tracer.StartSpan("GetFeed")
+  //
+  //     // The vanilla child span case:
+  //     auto span = tracer.StartSpan(
+  //         "GetFeed",
+  //         {opentracing::ChildOf(parentSpan.context())})
+  //
+  //     // All the bells and whistles:
+  //     auto span = tracer.StartSpan(
+  //         "GetFeed",
+  //         {opentracing::ChildOf(parentSpan.context()),
+  //         opentracing::Tag{"user_agent", loggedReq.UserAgent},
+  //         opentracing::StartTimestamp(loggedReq.timestamp())})
+  //
   std::unique_ptr<Span> StartSpan(
       const std::string& operation_name,
       std::initializer_list<option_wrapper<StartSpanOption>> option_list = {})
       const {
     StartSpanOptions options;
     for (const auto& option : option_list) option.get().Apply(options);
-    return StartSpan(operation_name, options);
+    return StartSpanWithOptions(operation_name, options);
   }
 
-  virtual std::unique_ptr<Span> StartSpan(
+  virtual std::unique_ptr<Span> StartSpanWithOptions(
       const std::string& operation_name,
       const StartSpanOptions& options) const = 0;
 
@@ -99,6 +99,13 @@ class Tracer {
   // Returns a `SpanContext` that is `non-null` on success.
   virtual std::unique_ptr<SpanContext> Extract(CarrierFormat format,
                                                const CarrierReader& reader) = 0;
+
+  // GlobalTracer returns the global tracer.
+  static std::shared_ptr<Tracer> Global();
+
+  // InitGlobalTracer sets the global tracer pointer, returns the
+  // former global tracer value.
+  static std::shared_ptr<Tracer> InitGlobal(std::shared_ptr<Tracer> tracer);
 };
 
 // StartTimestamp is a StartSpanOption that sets an explicit start timestamp for
