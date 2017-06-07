@@ -17,8 +17,8 @@ namespace opentracing {
 // StartSpan() callers should look at the StartSpanOption interface and
 // implementations available in this library.
 struct StartSpanOptions {
-  SystemTime start_system_timestamp = SystemClock::now();
-  SteadyTime start_steady_timestamp = SteadyClock::now();
+  SystemTime start_system_timestamp;
+  SteadyTime start_steady_timestamp;
   std::vector<std::pair<SpanReferenceType, const SpanContext*>> references;
   std::vector<std::pair<std::string, Value>> tags;
 };
@@ -72,6 +72,8 @@ class Tracer {
       std::initializer_list<option_wrapper<StartSpanOption>> option_list = {})
       const {
     StartSpanOptions options;
+    options.start_system_timestamp = SystemClock::now();
+    options.start_steady_timestamp = SteadyClock::now();
     for (const auto& option : option_list) option.get().Apply(options);
     return StartSpanWithOptions(operation_name, options);
   }
@@ -115,6 +117,11 @@ class StartTimestamp : public StartSpanOption {
   StartTimestamp(SystemTime system_when, SteadyTime steady_when)
       : system_when_(system_when), steady_when_(steady_when) {}
 
+  StartTimestamp(const StartTimestamp& other)
+      : StartSpanOption(),
+        system_when_(other.system_when_),
+        steady_when_(other.steady_when_) {}
+
   void Apply(StartSpanOptions& options) const override {
     options.start_system_timestamp = system_when_;
     options.start_steady_timestamp = steady_when_;
@@ -130,23 +137,26 @@ class StartTimestamp : public StartSpanOption {
 // supported relationships.
 class SpanReference : public StartSpanOption {
  public:
-  SpanReference(SpanReferenceType type, const SpanContext* referenced)
+  SpanReference(SpanReferenceType type, const SpanContext& referenced)
       : type_(type), referenced_(referenced) {}
 
+  SpanReference(const SpanReference& other)
+      : StartSpanOption(), type_(other.type_), referenced_(other.referenced_) {}
+
   void Apply(StartSpanOptions& options) const override {
-    options.references.emplace_back(type_, referenced_);
+    options.references.emplace_back(type_, &referenced_);
   }
 
  private:
   SpanReferenceType type_;
-  const SpanContext* referenced_;
+  const SpanContext& referenced_;
 };
 
 // ChildOf returns a StartSpanOption pointing to a dependent parent span.
 //
 // See ChildOfRef, SpanReference
 inline SpanReference ChildOf(const SpanContext& span_context) {
-  return {SpanReferenceType::ChildOfRef, &span_context};
+  return {SpanReferenceType::ChildOfRef, span_context};
 }
 
 // FollowsFrom returns a StartSpanOption pointing to a parent Span that caused
@@ -154,7 +164,7 @@ inline SpanReference ChildOf(const SpanContext& span_context) {
 //
 // See FollowsFromRef, SpanReference
 inline SpanReference FollowsFrom(const SpanContext& span_context) {
-  return {SpanReferenceType::FollowsFromRef, &span_context};
+  return {SpanReferenceType::FollowsFromRef, span_context};
 }
 
 // SetTag may be passed as a StartSpanOption to add a tag to new spans,

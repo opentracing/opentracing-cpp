@@ -28,7 +28,7 @@ class SpanContext {
 // FinishOptions allows Span.Finish callers to override the finish
 // timestamp.
 struct FinishSpanOptions {
-  SteadyTime finish_steady_timestamp = SteadyClock::now();
+  SteadyTime finish_steady_timestamp;
 };
 
 // FinishSpanOption instances (zero or more) may be passed to Span.Finish.
@@ -59,6 +59,7 @@ class Span {
   void Finish(std::initializer_list<option_wrapper<FinishSpanOption>>
                   option_list = {}) {
     FinishSpanOptions options;
+    options.finish_steady_timestamp = SteadyClock::now();
     for (const auto& option : option_list) option.get().Apply(options);
     FinishWithOptions(options);
   }
@@ -121,6 +122,9 @@ class FinishTimestamp : public FinishSpanOption {
  public:
   explicit FinishTimestamp(SteadyTime steady_when)
       : steady_when_(steady_when) {}
+
+  FinishTimestamp(const FinishTimestamp& other)
+      : FinishSpanOption(), steady_when_(other.steady_when_) {}
 
   void Apply(FinishSpanOptions& options) const override {
     options.finish_steady_timestamp = steady_when_;
