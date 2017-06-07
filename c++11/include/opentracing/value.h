@@ -1,9 +1,8 @@
 #ifndef OPENTRACING_VALUE_H
 #define OPENTRACING_VALUE_H
 
-#include <opentracing/3rd_party/mapbox_variant/variant.hpp>
-
 #include <cstdint>
+#include <opentracing/3rd_party/mapbox_variant/variant.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>
