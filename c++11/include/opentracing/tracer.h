@@ -91,7 +91,7 @@ class Tracer {
   //
   // Returns true on success.
   virtual bool Inject(const SpanContext& sc, CarrierFormat format,
-                      const CarrierWriter& writer) = 0;
+                      const CarrierWriter& writer) const = 0;
 
   // Extract() returns a SpanContext instance given `format` and `carrier`.
   //
@@ -99,8 +99,8 @@ class Tracer {
   // and each has an expected carrier type.
   //
   // Returns a `SpanContext` that is `non-null` on success.
-  virtual std::unique_ptr<SpanContext> Extract(CarrierFormat format,
-                                               const CarrierReader& reader) = 0;
+  virtual std::unique_ptr<SpanContext> Extract(
+      CarrierFormat format, const CarrierReader& reader) const = 0;
 
   // GlobalTracer returns the global tracer.
   static std::shared_ptr<Tracer> Global() noexcept;

@@ -40,12 +40,12 @@ class NoopTracer : public Tracer,
   }
 
   bool Inject(const SpanContext& sc, CarrierFormat format,
-              const CarrierWriter& writer) override {
+              const CarrierWriter& writer) const override {
     return true;
   }
 
-  std::unique_ptr<SpanContext> Extract(CarrierFormat format,
-                                       const CarrierReader& reader) override {
+  std::unique_ptr<SpanContext> Extract(
+      CarrierFormat format, const CarrierReader& reader) const override {
     return nullptr;
   }
 };
