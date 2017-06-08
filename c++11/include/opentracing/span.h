@@ -123,6 +123,11 @@ class FinishTimestamp : public FinishSpanOption {
   explicit FinishTimestamp(SteadyTime steady_when) noexcept
       : steady_when_(steady_when) {}
 
+  template <class Rep, class Period>
+  explicit FinishTimestamp(
+      const std::chrono::duration<Rep, Period>& time_since_epoch)
+      : steady_when_(time_since_epoch) {}
+
   FinishTimestamp(const FinishTimestamp& other) noexcept
       : FinishSpanOption(), steady_when_(other.steady_when_) {}
 

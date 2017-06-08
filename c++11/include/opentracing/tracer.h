@@ -118,6 +118,11 @@ class StartTimestamp : public StartSpanOption {
   StartTimestamp(SystemTime system_when, SteadyTime steady_when)
       : system_when_(system_when), steady_when_(steady_when) {}
 
+  template <class Rep, class Period>
+  explicit StartTimestamp(
+      const std::chrono::duration<Rep, Period>& time_since_epoch)
+      : system_when_(time_since_epoch), steady_when_(time_since_epoch) {}
+
   StartTimestamp(const StartTimestamp& other)
       : StartSpanOption(),
         system_when_(other.system_when_),
