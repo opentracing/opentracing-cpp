@@ -38,7 +38,7 @@ class FinishSpanOption {
 
   virtual ~FinishSpanOption() = default;
 
-  virtual void Apply(FinishSpanOptions& options) const = 0;
+  virtual void Apply(FinishSpanOptions& options) const noexcept = 0;
 
  protected:
   FinishSpanOption() = default;
@@ -57,7 +57,7 @@ class Span {
   // Finish() must be the last call made to any span instance, and to do
   // otherwise leads to undefined behavior.
   void Finish(std::initializer_list<option_wrapper<FinishSpanOption>>
-                  option_list = {}) {
+                  option_list = {}) noexcept {
     FinishSpanOptions options;
     options.finish_steady_timestamp = SteadyClock::now();
     for (const auto& option : option_list) option.get().Apply(options);
@@ -65,7 +65,7 @@ class Span {
   }
 
   virtual void FinishWithOptions(
-      const FinishSpanOptions& finish_span_options) = 0;
+      const FinishSpanOptions& finish_span_options) noexcept = 0;
 
   // Sets or changes the operation name.
   //
@@ -110,23 +110,23 @@ class Span {
   // context() yields the SpanContext for this Span. Note that the return
   // value of context() is still valid after a call to Span.Finish(), as is
   // a call to Span.context() after a call to Span.Finish().
-  virtual const SpanContext& context() const = 0;
+  virtual const SpanContext& context() const noexcept = 0;
 
   // Provides access to the Tracer that created this Span.
-  virtual const Tracer& tracer() const = 0;
+  virtual const Tracer& tracer() const noexcept = 0;
 };
 
 // FinishTimestamp is a FinishSpanOption that sets an explicit finish timestamp
 // for a Span.
 class FinishTimestamp : public FinishSpanOption {
  public:
-  explicit FinishTimestamp(SteadyTime steady_when)
+  explicit FinishTimestamp(SteadyTime steady_when) noexcept
       : steady_when_(steady_when) {}
 
-  FinishTimestamp(const FinishTimestamp& other)
+  FinishTimestamp(const FinishTimestamp& other) noexcept
       : FinishSpanOption(), steady_when_(other.steady_when_) {}
 
-  void Apply(FinishSpanOptions& options) const override {
+  void Apply(FinishSpanOptions& options) const noexcept override {
     options.finish_steady_timestamp = steady_when_;
   }
 

@@ -14,7 +14,7 @@ class NoopSpan : public Span {
   NoopSpan(std::shared_ptr<const Tracer>&& tracer)
       : tracer_(std::move(tracer)) {}
   void FinishWithOptions(
-      const FinishSpanOptions& finish_span_options) override {}
+      const FinishSpanOptions& finish_span_options) noexcept override {}
   void SetOperationName(const std::string& name) override {}
   void SetTag(const std::string& key, const Value& value) override {}
   void SetBaggageItem(const std::string& restricted_key,
@@ -22,8 +22,8 @@ class NoopSpan : public Span {
   std::string BaggageItem(const std::string& restricted_key) const override {
     return {};
   }
-  const SpanContext& context() const override { return span_context_; }
-  const Tracer& tracer() const override { return *tracer_; }
+  const SpanContext& context() const noexcept override { return span_context_; }
+  const Tracer& tracer() const noexcept override { return *tracer_; }
 
  private:
   std::shared_ptr<const Tracer> tracer_;
@@ -51,7 +51,7 @@ class NoopTracer : public Tracer,
 };
 }  // anonymous namespace
 
-std::shared_ptr<Tracer> make_noop_tracer() {
-  return std::shared_ptr<Tracer>(new NoopTracer());
+std::shared_ptr<Tracer> make_noop_tracer() noexcept {
+  return std::shared_ptr<Tracer>(new (std::nothrow) NoopTracer());
 }
 }  // namesapce opentracing

@@ -103,11 +103,12 @@ class Tracer {
                                                const CarrierReader& reader) = 0;
 
   // GlobalTracer returns the global tracer.
-  static std::shared_ptr<Tracer> Global();
+  static std::shared_ptr<Tracer> Global() noexcept;
 
   // InitGlobalTracer sets the global tracer pointer, returns the
   // former global tracer value.
-  static std::shared_ptr<Tracer> InitGlobal(std::shared_ptr<Tracer> tracer);
+  static std::shared_ptr<Tracer> InitGlobal(
+      std::shared_ptr<Tracer> tracer) noexcept;
 };
 
 // StartTimestamp is a StartSpanOption that sets an explicit start timestamp for
