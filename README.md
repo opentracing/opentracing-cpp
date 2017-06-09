@@ -59,7 +59,8 @@ reference.
 ```cpp
     void xyz() {
         ...
-        auto span = opentracing.StartSpan("operation_name");
+        auto tracer = /* Some Tracer */
+        auto span = tracer->StartSpan("operation_name");
         if (!span)
           // Error creating span.
           ...
@@ -73,7 +74,7 @@ reference.
 ```cpp
     void xyz(const opentracing::Span& parent_span, ...) {
         ...
-        auto tracer = Tracer::Global();
+        auto tracer = /* Some Tracer */
         auto span = tracer->StartSpan(
             "operation_name",
             {opentracing::ChildOf(parent_span.context())});
