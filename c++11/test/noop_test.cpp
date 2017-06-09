@@ -1,5 +1,5 @@
-#include <opentracing/tracer.h>
 #include <opentracing/noop.h>
+#include <opentracing/tracer.h>
 #include <cassert>
 using namespace opentracing;
 
