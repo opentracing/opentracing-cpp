@@ -7,31 +7,86 @@ C++ implementation of the OpenTracing API http://opentracing.io
 
 In order to understand the C++ platform API, one must first be familiar with the
 [OpenTracing project](http://opentracing.io) and
-[terminology](http://opentracing.io/spec/) more generally. This is a C++98 API that
-is used as a "common denominator". Ît's up to implementors to choose the C++ level
-they are going to use for their implementations:
-
-![stack of libraries](img/stack-of-libraries.png "Stack of Libraries")
+[terminology](http://opentracing.io/spec/) more generally. 
 
 ## Compile and install
 
 ```
-libtoolize # or glibtoolize
-./autogen.sh
-./configure
+mkdir .build
+cd .build
+cmake ..
+make
 sudo make install
 ```
 
-To test (requires gtest - see [here for OS X](http://stackoverflow.com/questions/20746232/how-to-properly-setup-googletest-on-os-x-aside-from-xcode), [here for ubuntu](http://www.eriksmistad.no/getting-started-with-google-test-on-ubuntu/) and [here for Red Hat](http://stackoverflow.com/questions/13513905/how-to-setup-googletest-as-a-shared-library-on-linux)/for Red Hat note also [this](http://stackoverflow.com/questions/4743233/is-usr-local-lib-searched-for-shared-libraries)):
+To test:
 
 ```
-cd test
-make
-./test
+make test
 ```
 
 ## API overview for those adding instrumentation
 
 Everyday consumers of this `opentracing` package really only need to worry
 about a couple of key abstractions: the `StartSpan` function, the `Span`
-interface, and binding a `Tracer` at `main()`-time.
+interface, and binding a `Tracer` at `main()`-time. Here are code snippets
+demonstrating some important use cases.
+
+#### Singleton initialization
+
+The simplest starting point is `opentracing/tracer.h`. As early as possible, call
+
+```cpp
+    #include <opentracing/tracer.h>
+    #include <some_tracing_impl.h>
+    
+    int main() {
+      Tracer::InitGlobal(make_some_tracing_impl());
+      ...
+    }
+```
+
+##### Non-Singleton initialization
+
+If you prefer direct control to singletons, manage ownership of the
+`opentracing::Tracer` implementation explicitly.
+
+#### Starting an empty trace by creating a "root span"
+
+It's always possible to create a "root" `Span` with no parent or other causal
+reference.
+
+```cpp
+    void xyz() {
+        ...
+        auto span = opentracing.StartSpan("operation_name");
+        if (!span)
+          // Error creating span.
+          ...
+        span->Finish();
+        ...
+    }
+```
+
+#### Creating a (child) Span given an existing (parent) Span
+
+```cpp
+    void xyz(const opentracing::Span& parent_span, ...) {
+        ...
+        auto tracer = Tracer::Global();
+        auto span = tracer->StartSpan(
+            "operation_name",
+            {opentracing::ChildOf(parent_span.context())});
+        if (!span)
+          // Error creating span.
+          ...
+        span->Finish();
+        ...
+    }
+```
+
+## API compatibility
+
+For the time being, "mild" backwards-incompatible changes may be made without
+changing the major version number. As OpenTracing and `opentracing-cpp` mature,
+backwards compatibility will become more of a priority.

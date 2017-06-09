@@ -1,3 +1,4 @@
+#include <opentracing/tracer.h>
 #include <opentracing/noop.h>
 #include <cassert>
 using namespace opentracing;
