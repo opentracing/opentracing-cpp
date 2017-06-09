@@ -1,5 +1,5 @@
-#ifndef INCLUDED_OPENTRACING_STRINGREF_H
-#define INCLUDED_OPENTRACING_STRINGREF_H
+#ifndef OPENTRACING_STRINGREF_H
+#define OPENTRACING_STRINGREF_H
 
 // ===========
 // stringref.h
@@ -50,7 +50,7 @@ inline namespace OPENTRACING_VERSION_NAMESPACE {
 class StringRef {
  public:
   // Construct an empty StringRef
-  StringRef() noexcept : data_(0), length_(0) {}
+  StringRef() noexcept : data_(nullptr), length_(0) {}
 
   // Explicitly create string reference from a const character array
   template <size_t N>
@@ -122,4 +122,4 @@ inline std::ostream& operator<<(std::ostream& os,
 }  // namespace OPENTRACING_VERSION_NAMESPACE
 }  // namespace opentracing
 
-#endif  // INCLUDED_OPENTRACING_STRINGREF_H
+#endif  // OPENTRACING_STRINGREF_H
