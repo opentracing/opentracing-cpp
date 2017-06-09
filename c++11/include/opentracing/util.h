@@ -2,12 +2,17 @@
 #define OPENTRACING_UTIL_H
 
 #include <chrono>
+#include <opentracing/martinmoene_expected/expected.hpp>
 
 namespace opentracing {
 using SystemClock = std::chrono::system_clock;
 using SteadyClock = std::chrono::steady_clock;
 using SystemTime = SystemClock::time_point;
 using SteadyTime = SteadyClock::time_point;
+
+template <class T, class E>
+using Expected = nonstd::expected<T, E>;
+using nonstd::make_unexpected;
 
 // This is unsafe to do.
 //

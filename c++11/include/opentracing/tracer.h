@@ -88,10 +88,9 @@ class Tracer {
   //
   // OpenTracing defines a common set of `format` values (see BuiltinFormat),
   // and each has an expected carrier type.
-  //
-  // Returns true on success.
-  virtual bool Inject(const SpanContext& sc, CarrierFormat format,
-                      const CarrierWriter& writer) const = 0;
+  virtual Expected<void, std::string> Inject(
+      const SpanContext& sc, CarrierFormat format,
+      const CarrierWriter& writer) const = 0;
 
   // Extract() returns a SpanContext instance given `format` and `carrier`.
   //

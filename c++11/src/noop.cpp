@@ -39,9 +39,10 @@ class NoopTracer : public Tracer,
     return std::unique_ptr<Span>(new NoopSpan(shared_from_this()));
   }
 
-  bool Inject(const SpanContext& sc, CarrierFormat format,
-              const CarrierWriter& writer) const override {
-    return true;
+  Expected<void, std::string> Inject(
+      const SpanContext& sc, CarrierFormat format,
+      const CarrierWriter& writer) const override {
+    return {};
   }
 
   std::unique_ptr<SpanContext> Extract(

@@ -118,7 +118,8 @@ class CarrierWriter {
 // Basic foundation for OpenTracing basictracer-compatible carrier writers.
 class BasicCarrierWriter : public CarrierWriter {
  public:
-  virtual void Set(const std::string& key, const std::string& value) const = 0;
+  virtual Expected<void, std::string> Set(const std::string& key,
+                                          const std::string& value) const = 0;
 };
 
 // Base class for injecting into TextMap and HTTPHeaders carriers.
