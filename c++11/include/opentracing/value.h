@@ -2,7 +2,7 @@
 #define OPENTRACING_VALUE_H
 
 #include <cstdint>
-#include <opentracing/3rd_party/mapbox_variant/variant.hpp>
+#include <opentracing/mapbox_variant/variant.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>

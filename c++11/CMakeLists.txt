@@ -11,8 +11,13 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-unused-parameter")
 endif()
 
+include_directories(SYSTEM 3rd_party/include)
+install(DIRECTORY 3rd_party/include/opentracing DESTINATION include
+            FILES_MATCHING PATTERN "*.hpp"
+                           PATTERN "*.h")
+
 include_directories(include)
-install(DIRECTORY include/opentracing DESTINATION include/opentracing 
+install(DIRECTORY include/opentracing DESTINATION include
             FILES_MATCHING PATTERN "*.h")
 
 set(SRCS src/noop.cpp src/tracer.cpp)
