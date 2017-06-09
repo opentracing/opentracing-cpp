@@ -2,6 +2,7 @@
 #define OPENTRACING_PROPAGATION_H
 
 #include <opentracing/preprocessor.h>
+#include <opentracing/stringref.h>
 #include <opentracing/util.h>
 #include <functional>
 #include <string>
@@ -107,8 +108,7 @@ class CarrierReader {
 class BasicCarrierReader : public CarrierReader {
  public:
   virtual void ForeachKey(
-      std::function<void(const std::string& key, const std::string& value)> f)
-      const = 0;
+      std::function<void(StringRef key, StringRef value)> f) const = 0;
 };
 
 // Base class for implementation-dependent Tracer::Extract carrier-type adapter.

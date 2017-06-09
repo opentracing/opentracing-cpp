@@ -2,6 +2,7 @@
 #define OPENTRACING_VALUE_H
 
 #include <opentracing/preprocessor.h>
+#include <opentracing/stringref.h>
 #include <cstdint>
 #include <opentracing/mapbox_variant/variant.hpp>
 #include <string>
@@ -16,7 +17,7 @@ class Value;
 typedef std::unordered_map<std::string, Value> Dictionary;
 typedef std::vector<Value> Values;
 typedef mapbox::util::variant<bool, double, int64_t, uint64_t, std::string,
-                              std::nullptr_t, const char*,
+                              std::nullptr_t, const char*, StringRef,
                               mapbox::util::recursive_wrapper<Values>,
                               mapbox::util::recursive_wrapper<Dictionary>>
     variant_type;

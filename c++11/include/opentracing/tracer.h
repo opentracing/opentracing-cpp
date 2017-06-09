@@ -4,6 +4,7 @@
 #include <opentracing/preprocessor.h>
 #include <opentracing/propagation.h>
 #include <opentracing/span.h>
+#include <opentracing/stringref.h>
 #include <opentracing/util.h>
 #include <initializer_list>
 #include <memory>
@@ -22,7 +23,7 @@ struct StartSpanOptions {
   SystemTime start_system_timestamp;
   SteadyTime start_steady_timestamp;
   std::vector<std::pair<SpanReferenceType, const SpanContext*>> references;
-  std::vector<std::pair<std::string, Value>> tags;
+  std::vector<std::pair<StringRef, Value>> tags;
 };
 
 // StartSpanOption instances (zero or more) may be passed to Tracer.StartSpan.
@@ -70,7 +71,7 @@ class Tracer {
   //         opentracing::StartTimestamp(loggedReq.timestamp())})
   //
   std::unique_ptr<Span> StartSpan(
-      const std::string& operation_name,
+      StringRef operation_name,
       std::initializer_list<option_wrapper<StartSpanOption>> option_list = {})
       const {
     StartSpanOptions options;
@@ -81,8 +82,7 @@ class Tracer {
   }
 
   virtual std::unique_ptr<Span> StartSpanWithOptions(
-      const std::string& operation_name,
-      const StartSpanOptions& options) const = 0;
+      StringRef operation_name, const StartSpanOptions& options) const = 0;
 
   // Inject() takes the `sc` SpanContext instance and injects it for
   // propagation within `carrier`. The actual type of `carrier` depends on
@@ -180,8 +180,7 @@ inline SpanReference FollowsFrom(const SpanContext& span_context) {
 // tracer.StartSpan("opName", SetTag{"Key", value})
 class SetTag : public StartSpanOption {
  public:
-  SetTag(const std::string& key, const Value& value)
-      : key_(key), value_(value) {}
+  SetTag(StringRef key, const Value& value) : key_(key), value_(value) {}
 
   SetTag(const SetTag& other)
       : StartSpanOption(), key_(other.key_), value_(other.value_) {}
@@ -191,7 +190,7 @@ class SetTag : public StartSpanOption {
   }
 
  private:
-  const std::string& key_;
+  StringRef key_;
   const Value& value_;
 };
 }  // namespace OPENTRACING_VERSION_NAMESPACE

@@ -2,6 +2,7 @@
 #define OPENTRACING_SPAN_H
 
 #include <opentracing/preprocessor.h>
+#include <opentracing/stringref.h>
 #include <opentracing/util.h>
 #include <opentracing/value.h>
 #include <chrono>
@@ -71,7 +72,7 @@ class Span {
   // Sets or changes the operation name.
   //
   // SetOperationName may be called prior to Finish.
-  virtual void SetOperationName(const std::string& name) = 0;
+  virtual void SetOperationName(StringRef name) = 0;
 
   // Adds a tag to the span.
   //
@@ -83,7 +84,7 @@ class Span {
   // may ignore the tag, but shall not panic.
   //
   // SetTag may be called prior to Finish.
-  virtual void SetTag(const std::string& key, const Value& value) = 0;
+  virtual void SetTag(StringRef key, const Value& value) = 0;
 
   // SetBaggageItem sets a key:value pair on this Span and its SpanContext
   // that also propagates to descendants of this Span.
@@ -101,12 +102,11 @@ class Span {
   // Span, and that can add up to a lot of network and cpu overhead.
   //
   // SetBaggageItem may be be called prior to Finish.
-  virtual void SetBaggageItem(const std::string& restricted_key,
-                              const std::string& value) = 0;
+  virtual void SetBaggageItem(StringRef restricted_key, StringRef value) = 0;
 
   // Gets the value for a baggage item given its key. Returns the empty string
   // if the value isn't found in this Span.
-  virtual std::string BaggageItem(const std::string& restricted_key) const = 0;
+  virtual std::string BaggageItem(StringRef restricted_key) const = 0;
 
   // context() yields the SpanContext for this Span. Note that the return
   // value of context() is still valid after a call to Span.Finish(), as is

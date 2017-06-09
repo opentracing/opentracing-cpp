@@ -16,11 +16,10 @@ class NoopSpan : public Span {
       : tracer_(std::move(tracer)) {}
   void FinishWithOptions(
       const FinishSpanOptions& finish_span_options) noexcept override {}
-  void SetOperationName(const std::string& name) override {}
-  void SetTag(const std::string& key, const Value& value) override {}
-  void SetBaggageItem(const std::string& restricted_key,
-                      const std::string& value) override {}
-  std::string BaggageItem(const std::string& restricted_key) const override {
+  void SetOperationName(StringRef name) override {}
+  void SetTag(StringRef key, const Value& value) override {}
+  void SetBaggageItem(StringRef restricted_key, StringRef value) override {}
+  std::string BaggageItem(StringRef restricted_key) const override {
     return {};
   }
   const SpanContext& context() const noexcept override { return span_context_; }
@@ -35,7 +34,7 @@ class NoopTracer : public Tracer,
                    public std::enable_shared_from_this<NoopTracer> {
  public:
   std::unique_ptr<Span> StartSpanWithOptions(
-      const std::string& operation_name,
+      StringRef operation_name,
       const StartSpanOptions& options) const override {
     return std::unique_ptr<Span>(new NoopSpan(shared_from_this()));
   }
