@@ -55,9 +55,7 @@ class Span {
 
   // Sets the end timestamp and finalizes Span state.
   //
-  // With the exception of calls to context() (which are always allowed),
-  // Finish() must be the last call made to any span instance, and to do
-  // otherwise leads to undefined behavior.
+  // If Finish is called a second time, it is guaranteed to do nothing.
   void Finish(std::initializer_list<option_wrapper<FinishSpanOption>>
                   option_list = {}) noexcept {
     FinishSpanOptions options;
@@ -71,7 +69,8 @@ class Span {
 
   // Sets or changes the operation name.
   //
-  // SetOperationName may be called prior to Finish.
+  // If SetOperationName is called after Finish it leaves the Span in a valid
+  // state, but its behavior is unspecified.
   virtual void SetOperationName(StringRef name) = 0;
 
   // Adds a tag to the span.
@@ -83,7 +82,8 @@ class Span {
   // tracing system does not know how to handle a particular value type, it
   // may ignore the tag, but shall not panic.
   //
-  // SetTag may be called prior to Finish.
+  // If SetTag is called after Finish it leaves the Span in a valid state, but
+  // its behavior is unspecified.
   virtual void SetTag(StringRef key, const Value& value) = 0;
 
   // SetBaggageItem sets a key:value pair on this Span and its SpanContext
@@ -101,7 +101,8 @@ class Span {
   // value is copied into every local *and remote* child of the associated
   // Span, and that can add up to a lot of network and cpu overhead.
   //
-  // SetBaggageItem may be be called prior to Finish.
+  // If SetBaggageItem is called after Finish it leaves the Span in a valid
+  // state, but its behavior is unspecified.
   virtual void SetBaggageItem(StringRef restricted_key, StringRef value) = 0;
 
   // Gets the value for a baggage item given its key. Returns the empty string
