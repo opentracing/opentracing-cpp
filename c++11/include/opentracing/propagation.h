@@ -1,11 +1,13 @@
 #ifndef OPENTRACING_PROPAGATION_H
 #define OPENTRACING_PROPAGATION_H
 
+#include <opentracing/preprocessor.h>
 #include <opentracing/util.h>
 #include <functional>
 #include <string>
 
 namespace opentracing {
+inline namespace OPENTRACING_VERSION_NAMESPACE {
 enum class SpanReferenceType {
   // ChildOfRef refers to a parent Span that caused *and* somehow depends
   // upon the new child Span. Often (but not always), the parent Span cannot
@@ -118,7 +120,8 @@ class CarrierWriter {
 // Basic foundation for OpenTracing basictracer-compatible carrier writers.
 class BasicCarrierWriter : public CarrierWriter {
  public:
-  virtual void Set(const std::string& key, const std::string& value) const = 0;
+  virtual Expected<void, std::string> Set(const std::string& key,
+                                          const std::string& value) const = 0;
 };
 
 // Base class for injecting into TextMap and HTTPHeaders carriers.
@@ -130,6 +133,7 @@ class TextMapReader : public BasicCarrierReader {
 class TextMapWriter : public BasicCarrierWriter {
   // TODO distinguish TextMap and HTTPHeaders behavior.
 };
+}  // namespace OPENTRACING_VERSION_NAMESPACE
 }  // namespace opentracing
 
 #endif  // OPENTRACING_PROPAGATION_H

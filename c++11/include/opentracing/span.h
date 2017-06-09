@@ -1,14 +1,15 @@
 #ifndef OPENTRACING_SPAN_H
 #define OPENTRACING_SPAN_H
 
+#include <opentracing/preprocessor.h>
+#include <opentracing/util.h>
+#include <opentracing/value.h>
 #include <chrono>
 #include <functional>
 #include <string>
 
-#include <opentracing/util.h>
-#include <opentracing/value.h>
-
 namespace opentracing {
+inline namespace OPENTRACING_VERSION_NAMESPACE {
 class Tracer;
 
 // SpanContext represents Span state that must propagate to descendant Spans and
@@ -138,6 +139,7 @@ class FinishTimestamp : public FinishSpanOption {
  private:
   SteadyTime steady_when_;
 };
+}  // namespace OPENTRACING_VERSION_NAMESPACE
 }  // namespace opentracing
 
 #endif  // OPENTRACING_SPAN_H

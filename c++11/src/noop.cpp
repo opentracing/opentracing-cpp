@@ -1,6 +1,7 @@
 #include <opentracing/noop.h>
 
 namespace opentracing {
+inline namespace OPENTRACING_VERSION_NAMESPACE {
 namespace {
 class NoopSpanContext : public SpanContext {
  public:
@@ -39,9 +40,10 @@ class NoopTracer : public Tracer,
     return std::unique_ptr<Span>(new NoopSpan(shared_from_this()));
   }
 
-  bool Inject(const SpanContext& sc, CarrierFormat format,
-              const CarrierWriter& writer) const override {
-    return true;
+  Expected<void, std::string> Inject(
+      const SpanContext& sc, CarrierFormat format,
+      const CarrierWriter& writer) const override {
+    return {};
   }
 
   std::unique_ptr<SpanContext> Extract(
@@ -54,4 +56,5 @@ class NoopTracer : public Tracer,
 std::shared_ptr<Tracer> make_noop_tracer() noexcept {
   return std::shared_ptr<Tracer>(new (std::nothrow) NoopTracer());
 }
+}  // namespace OPENTRACING_VERSION_NAMESPACE
 }  // namesapce opentracing

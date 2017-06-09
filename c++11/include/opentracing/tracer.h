@@ -1,6 +1,7 @@
 #ifndef OPENTRACING_TRACER_H
 #define OPENTRACING_TRACER_H
 
+#include <opentracing/preprocessor.h>
 #include <opentracing/propagation.h>
 #include <opentracing/span.h>
 #include <opentracing/util.h>
@@ -10,6 +11,7 @@
 #include <vector>
 
 namespace opentracing {
+inline namespace OPENTRACING_VERSION_NAMESPACE {
 // StartSpanOptions allows Tracer.StartSpan() callers  a mechanism to override
 // the start timestamp, specify Span References, and make a single Tag or
 // multiple Tags available at Span start time.
@@ -88,10 +90,9 @@ class Tracer {
   //
   // OpenTracing defines a common set of `format` values (see BuiltinFormat),
   // and each has an expected carrier type.
-  //
-  // Returns true on success.
-  virtual bool Inject(const SpanContext& sc, CarrierFormat format,
-                      const CarrierWriter& writer) const = 0;
+  virtual Expected<void, std::string> Inject(
+      const SpanContext& sc, CarrierFormat format,
+      const CarrierWriter& writer) const = 0;
 
   // Extract() returns a SpanContext instance given `format` and `carrier`.
   //
@@ -193,6 +194,7 @@ class SetTag : public StartSpanOption {
   const std::string& key_;
   const Value& value_;
 };
+}  // namespace OPENTRACING_VERSION_NAMESPACE
 }  // namespace opentracing
 
 #endif  // OPENTRACING_TRACER_H

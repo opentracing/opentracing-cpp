@@ -1,6 +1,7 @@
 #ifndef OPENTRACING_VALUE_H
 #define OPENTRACING_VALUE_H
 
+#include <opentracing/preprocessor.h>
 #include <cstdint>
 #include <opentracing/mapbox_variant/variant.hpp>
 #include <string>
@@ -8,6 +9,7 @@
 #include <vector>
 
 namespace opentracing {
+inline namespace OPENTRACING_VERSION_NAMESPACE {
 // Variant value types for span tags and log payloads.
 class Value;
 
@@ -29,6 +31,7 @@ class Value : public variant_type {
   template <int N>
   Value(const char (&cstr)[N]) : variant_type(std::string(cstr)) {}
 };
+}  // namespace OPENTRACING_VERSION_NAMESPACE
 }  // namespace opentracing
 
 #endif  // OPENTRACING_VALUE_H
