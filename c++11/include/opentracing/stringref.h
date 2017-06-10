@@ -71,8 +71,8 @@ class StringRef {
   template <size_t N>
   StringRef(char (&str)[N]) = delete;
 
-  // Implicit conversion to plain char *
-  operator const char*() const noexcept { return data_; }
+  // Implicit conversion to std::string
+  operator std::string() const { return {data_, length_}; }
 
   // Reset the string reference given a const character array
   template <size_t N>

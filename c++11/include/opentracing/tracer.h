@@ -33,7 +33,7 @@ class StartSpanOption {
 
   virtual ~StartSpanOption() = default;
 
-  virtual void Apply(StartSpanOptions& options) const = 0;
+  virtual void Apply(StartSpanOptions& options) const noexcept = 0;
 
  protected:
   StartSpanOption() = default;
@@ -73,7 +73,7 @@ class Tracer {
   std::unique_ptr<Span> StartSpan(
       StringRef operation_name,
       std::initializer_list<option_wrapper<StartSpanOption>> option_list = {})
-      const {
+      const noexcept {
     StartSpanOptions options;
     options.start_system_timestamp = SystemClock::now();
     options.start_steady_timestamp = SteadyClock::now();
@@ -82,7 +82,8 @@ class Tracer {
   }
 
   virtual std::unique_ptr<Span> StartSpanWithOptions(
-      StringRef operation_name, const StartSpanOptions& options) const = 0;
+      StringRef operation_name, const StartSpanOptions& options) const
+      noexcept = 0;
 
   // Inject() takes the `sc` SpanContext instance and injects it for
   // propagation within `carrier`. The actual type of `carrier` depends on
@@ -116,20 +117,20 @@ class Tracer {
 // the new Span.
 class StartTimestamp : public StartSpanOption {
  public:
-  StartTimestamp(SystemTime system_when, SteadyTime steady_when)
+  StartTimestamp(SystemTime system_when, SteadyTime steady_when) noexcept
       : system_when_(system_when), steady_when_(steady_when) {}
 
   template <class Rep, class Period>
   explicit StartTimestamp(
-      const std::chrono::duration<Rep, Period>& time_since_epoch)
+      const std::chrono::duration<Rep, Period>& time_since_epoch) noexcept
       : system_when_(time_since_epoch), steady_when_(time_since_epoch) {}
 
-  StartTimestamp(const StartTimestamp& other)
+  StartTimestamp(const StartTimestamp& other) noexcept
       : StartSpanOption(),
         system_when_(other.system_when_),
         steady_when_(other.steady_when_) {}
 
-  void Apply(StartSpanOptions& options) const override {
+  void Apply(StartSpanOptions& options) const noexcept override {
     options.start_system_timestamp = system_when_;
     options.start_steady_timestamp = steady_when_;
   }
@@ -144,14 +145,16 @@ class StartTimestamp : public StartSpanOption {
 // supported relationships.
 class SpanReference : public StartSpanOption {
  public:
-  SpanReference(SpanReferenceType type, const SpanContext& referenced)
+  SpanReference(SpanReferenceType type, const SpanContext& referenced) noexcept
       : type_(type), referenced_(referenced) {}
 
-  SpanReference(const SpanReference& other)
+  SpanReference(const SpanReference& other) noexcept
       : StartSpanOption(), type_(other.type_), referenced_(other.referenced_) {}
 
-  void Apply(StartSpanOptions& options) const override {
+  void Apply(StartSpanOptions& options) const noexcept override try {
     options.references.emplace_back(type_, &referenced_);
+  } catch (const std::bad_alloc&) {
+    // Ignore reference if memory can't be allocated for it.
   }
 
  private:
@@ -162,7 +165,7 @@ class SpanReference : public StartSpanOption {
 // ChildOf returns a StartSpanOption pointing to a dependent parent span.
 //
 // See ChildOfRef, SpanReference
-inline SpanReference ChildOf(const SpanContext& span_context) {
+inline SpanReference ChildOf(const SpanContext& span_context) noexcept {
   return {SpanReferenceType::ChildOfRef, span_context};
 }
 
@@ -170,7 +173,7 @@ inline SpanReference ChildOf(const SpanContext& span_context) {
 // the child Span but does not directly depend on its result in any way.
 //
 // See FollowsFromRef, SpanReference
-inline SpanReference FollowsFrom(const SpanContext& span_context) {
+inline SpanReference FollowsFrom(const SpanContext& span_context) noexcept {
   return {SpanReferenceType::FollowsFromRef, span_context};
 }
 
@@ -180,13 +183,16 @@ inline SpanReference FollowsFrom(const SpanContext& span_context) {
 // tracer.StartSpan("opName", SetTag{"Key", value})
 class SetTag : public StartSpanOption {
  public:
-  SetTag(StringRef key, const Value& value) : key_(key), value_(value) {}
+  SetTag(StringRef key, const Value& value) noexcept
+      : key_(key), value_(value) {}
 
-  SetTag(const SetTag& other)
+  SetTag(const SetTag& other) noexcept
       : StartSpanOption(), key_(other.key_), value_(other.value_) {}
 
-  void Apply(StartSpanOptions& options) const override {
+  void Apply(StartSpanOptions& options) const noexcept override try {
     options.tags.emplace_back(key_, value_);
+  } catch (const std::bad_alloc&) {
+    // Ignore tag if memory can't be allocated for it.
   }
 
  private:

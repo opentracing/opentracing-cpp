@@ -71,7 +71,7 @@ class Span {
   //
   // If SetOperationName is called after Finish it leaves the Span in a valid
   // state, but its behavior is unspecified.
-  virtual void SetOperationName(StringRef name) = 0;
+  virtual void SetOperationName(StringRef name) noexcept = 0;
 
   // Adds a tag to the span.
   //
@@ -84,7 +84,7 @@ class Span {
   //
   // If SetTag is called after Finish it leaves the Span in a valid state, but
   // its behavior is unspecified.
-  virtual void SetTag(StringRef key, const Value& value) = 0;
+  virtual void SetTag(StringRef key, const Value& value) noexcept = 0;
 
   // SetBaggageItem sets a key:value pair on this Span and its SpanContext
   // that also propagates to descendants of this Span.
@@ -103,11 +103,12 @@ class Span {
   //
   // If SetBaggageItem is called after Finish it leaves the Span in a valid
   // state, but its behavior is unspecified.
-  virtual void SetBaggageItem(StringRef restricted_key, StringRef value) = 0;
+  virtual void SetBaggageItem(StringRef restricted_key,
+                              StringRef value) noexcept = 0;
 
   // Gets the value for a baggage item given its key. Returns the empty string
   // if the value isn't found in this Span.
-  virtual std::string BaggageItem(StringRef restricted_key) const = 0;
+  virtual StringRef BaggageItem(StringRef restricted_key) const noexcept = 0;
 
   // context() yields the SpanContext for this Span. Note that the return
   // value of context() is still valid after a call to Span.Finish(), as is
@@ -127,7 +128,7 @@ class FinishTimestamp : public FinishSpanOption {
 
   template <class Rep, class Period>
   explicit FinishTimestamp(
-      const std::chrono::duration<Rep, Period>& time_since_epoch)
+      const std::chrono::duration<Rep, Period>& time_since_epoch) noexcept
       : steady_when_(time_since_epoch) {}
 
   FinishTimestamp(const FinishTimestamp& other) noexcept

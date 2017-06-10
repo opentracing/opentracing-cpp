@@ -1,6 +1,7 @@
 #ifndef OPENTRACING_PREPROCESSOR_H
 #define OPENTRACING_PREPROCESSOR_H
 
+// Increase when an ABI-breaking change is made.
 #define OPENTRACING_VERSION_NAMESPACE v1
 
 #endif  // OPENTRACING_PREPROCESSOR_H
