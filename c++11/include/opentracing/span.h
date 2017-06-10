@@ -108,7 +108,7 @@ class Span {
 
   // Gets the value for a baggage item given its key. Returns the empty string
   // if the value isn't found in this Span.
-  virtual StringRef BaggageItem(StringRef restricted_key) const noexcept = 0;
+  virtual std::string BaggageItem(StringRef restricted_key) const noexcept = 0;
 
   // context() yields the SpanContext for this Span. Note that the return
   // value of context() is still valid after a call to Span.Finish(), as is

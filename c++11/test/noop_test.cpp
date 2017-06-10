@@ -12,7 +12,7 @@ int main() {
   auto span2 = tracer->StartSpan("b", {ChildOf(span1->context())});
   span2->SetOperationName("b1");
   span2->SetTag("x", true);
-  assert(span2->BaggageItem("y").data() == nullptr);
+  assert(span2->BaggageItem("y").empty());
   span2->Finish();
 
   return 0;

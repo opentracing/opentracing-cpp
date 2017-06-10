@@ -20,7 +20,7 @@ class NoopSpan : public Span {
   void SetTag(StringRef key, const Value& value) noexcept override {}
   void SetBaggageItem(StringRef restricted_key,
                       StringRef value) noexcept override {}
-  StringRef BaggageItem(StringRef restricted_key) const noexcept override {
+  std::string BaggageItem(StringRef restricted_key) const noexcept override {
     return {};
   }
   const SpanContext& context() const noexcept override { return span_context_; }
