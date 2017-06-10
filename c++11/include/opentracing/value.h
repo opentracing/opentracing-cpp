@@ -17,7 +17,7 @@ class Value;
 typedef std::unordered_map<std::string, Value> Dictionary;
 typedef std::vector<Value> Values;
 typedef mapbox::util::variant<bool, double, int64_t, uint64_t, std::string,
-                              std::nullptr_t, const char*, StringRef,
+                              std::nullptr_t, const char*,
                               mapbox::util::recursive_wrapper<Values>,
                               mapbox::util::recursive_wrapper<Dictionary>>
     variant_type;
