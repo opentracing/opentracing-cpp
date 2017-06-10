@@ -12,7 +12,7 @@ class NoopSpanContext : public SpanContext {
 
 class NoopSpan : public Span {
  public:
-  NoopSpan(std::shared_ptr<const Tracer>&& tracer)
+  explicit NoopSpan(std::shared_ptr<const Tracer>&& tracer)
       : tracer_(std::move(tracer)) {}
   void FinishWithOptions(
       const FinishSpanOptions& finish_span_options) noexcept override {}
