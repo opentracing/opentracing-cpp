@@ -6,6 +6,7 @@
 #include <opentracing/span.h>
 #include <opentracing/stringref.h>
 #include <opentracing/util.h>
+#include <chrono>
 #include <initializer_list>
 #include <memory>
 #include <utility>
@@ -123,7 +124,10 @@ class StartTimestamp : public StartSpanOption {
   template <class Rep, class Period>
   explicit StartTimestamp(
       const std::chrono::duration<Rep, Period>& time_since_epoch) noexcept
-      : system_when_(time_since_epoch), steady_when_(time_since_epoch) {}
+      : system_when_(std::chrono::duration_cast<SystemClock::duration>(
+            time_since_epoch)),
+        steady_when_(std::chrono::duration_cast<SteadyClock::duration>(
+            time_since_epoch)) {}
 
   StartTimestamp(const StartTimestamp& other) noexcept
       : StartSpanOption(),
