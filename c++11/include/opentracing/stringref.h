@@ -1,6 +1,11 @@
 #ifndef OPENTRACING_STRINGREF_H
 #define OPENTRACING_STRINGREF_H
 
+#include <opentracing/preprocessor.h>
+#include <cstring>
+#include <ostream>
+#include <string>
+
 // ===========
 // stringref.h
 // ===========
@@ -29,10 +34,6 @@
 // out the implementation to a different format, there would be lots of code
 // that breaks if it was expecting wstring and starts receiving string all of a
 // sudden. That design issue still needs to be addressed.
-
-#include <cstring>
-#include <ostream>
-#include <string>
 
 namespace opentracing {
 inline namespace OPENTRACING_VERSION_NAMESPACE {
