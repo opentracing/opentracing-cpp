@@ -154,27 +154,27 @@ class StartTimestamp : public StartSpanOption {
 // supported relationships.
 class SpanReference : public StartSpanOption {
  public:
-  SpanReference(SpanReferenceType type, const SpanContext& referenced) noexcept
+  SpanReference(SpanReferenceType type, const SpanContext* referenced) noexcept
       : type_(type), referenced_(referenced) {}
 
   SpanReference(const SpanReference& other) noexcept
       : StartSpanOption(), type_(other.type_), referenced_(other.referenced_) {}
 
   void Apply(StartSpanOptions& options) const noexcept override try {
-    options.references.emplace_back(type_, &referenced_);
+    if (referenced_) options.references.emplace_back(type_, referenced_);
   } catch (const std::bad_alloc&) {
     // Ignore reference if memory can't be allocated for it.
   }
 
  private:
   SpanReferenceType type_;
-  const SpanContext& referenced_;
+  const SpanContext* referenced_;
 };
 
 // ChildOf returns a StartSpanOption pointing to a dependent parent span.
 //
 // See ChildOfRef, SpanReference
-inline SpanReference ChildOf(const SpanContext& span_context) noexcept {
+inline SpanReference ChildOf(const SpanContext* span_context) noexcept {
   return {SpanReferenceType::ChildOfRef, span_context};
 }
 
@@ -182,7 +182,7 @@ inline SpanReference ChildOf(const SpanContext& span_context) noexcept {
 // the child Span but does not directly depend on its result in any way.
 //
 // See FollowsFromRef, SpanReference
-inline SpanReference FollowsFrom(const SpanContext& span_context) noexcept {
+inline SpanReference FollowsFrom(const SpanContext* span_context) noexcept {
   return {SpanReferenceType::FollowsFromRef, span_context};
 }
 

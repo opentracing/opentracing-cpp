@@ -9,7 +9,7 @@ int main() {
   auto span1 = tracer->StartSpan("a");
   assert(&span1->tracer() == tracer.get());
 
-  auto span2 = tracer->StartSpan("b", {ChildOf(span1->context())});
+  auto span2 = tracer->StartSpan("b", {ChildOf(&span1->context())});
   span2->SetOperationName("b1");
   span2->SetTag("x", true);
   assert(span2->BaggageItem("y").empty());

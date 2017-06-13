@@ -165,13 +165,13 @@ class TextMapReader : public CarrierReader {
 // it, the caller can encode a SpanContext for propagation as entries in a map
 // of unicode strings.
 class TextMapWriter : public CarrierWriter {
-	// Set a key:value pair to the carrier. Multiple calls to Set() for the
-	// same key leads to undefined behavior.
-	//
-	// NOTE: The backing store for the TextMapWriter may contain data unrelated
-	// to SpanContext. As such, Inject() and Extract() implementations that
-	// call the TextMapWriter and TextMapReader interfaces must agree on a
-	// prefix or other convention to distinguish their own key:value pairs.
+  // Set a key:value pair to the carrier. Multiple calls to Set() for the
+  // same key leads to undefined behavior.
+  //
+  // NOTE: The backing store for the TextMapWriter may contain data unrelated
+  // to SpanContext. As such, Inject() and Extract() implementations that
+  // call the TextMapWriter and TextMapReader interfaces must agree on a
+  // prefix or other convention to distinguish their own key:value pairs.
   virtual Expected<void> Set(const std::string& key,
                              const std::string& value) const = 0;
 };
