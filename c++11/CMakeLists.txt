@@ -6,6 +6,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     -Wno-unused-parameter \
     -Wno-weak-vtables \
     -Wno-exit-time-destructors \
+    -Wno-global-constructors \
     -Wno-padded")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-unused-parameter")
@@ -20,7 +21,7 @@ include_directories(include)
 install(DIRECTORY include/opentracing DESTINATION include
             FILES_MATCHING PATTERN "*.h")
 
-set(SRCS src/noop.cpp src/tracer.cpp)
+set(SRCS src/propagation.cpp src/noop.cpp src/tracer.cpp)
 add_library(opentracing SHARED ${SRCS})
 add_library(opentracing-static STATIC ${SRCS})
 set_target_properties(opentracing-static PROPERTIES OUTPUT_NAME opentracing)

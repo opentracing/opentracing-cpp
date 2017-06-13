@@ -6,6 +6,7 @@
 #include <opentracing/util.h>
 #include <functional>
 #include <string>
+#include <system_error>
 
 namespace opentracing {
 inline namespace OPENTRACING_VERSION_NAMESPACE {
@@ -98,7 +99,44 @@ enum class CarrierFormat {
   TextMap = 3
 };
 
-// Base class for implementation-dependent Tracer::Inject carrier-type adapter.
+// Returns the std::error_category class used for opentracing propagation
+// errors.
+//
+// See
+//   http://blog.think-async.com/2010/04/system-error-support-in-c0x-part-1.html
+//   https://ned14.github.io/boost.outcome/md_doc_md_03-tutorial_b.html
+const std::error_category& propagation_error_category();
+
+// `unsupported_format_error`` occurs when the `format` passed to
+// Tracer::Inject() or Tracer::Extract() is not recognized by the Tracer
+// implementation.
+const std::error_code unsupported_format_error(0, propagation_error_category());
+
+// `span_context_not_found_error` occurs when the `carrier` passed to
+// Tracer::Extract() is valid and uncorrupted but has insufficient
+// information to extract a SpanContext.
+const std::error_code span_context_not_found_error(
+    1, propagation_error_category());
+
+// `invalid_span_context_error` errors occur when Tracer::Inject() is asked to
+// operate on a SpanContext which it is not prepared to handle (for
+// example, since it was created by a different tracer implementation).
+const std::error_code invalid_span_context_error(2,
+                                                 propagation_error_category());
+
+// `invalid_carrier_error` errors occur when Tracer::Inject() or
+// Tracer::Extract()
+// implementations expect a different type of `carrier` than they are
+// given.
+const std::error_code invalid_carrier_error(3, propagation_error_category());
+
+// `span_context_corrupted_error` occurs when the `carrier` passed to
+// Tracer::Extract() is of the expected type but is corrupted.
+const std::error_code span_context_corrupted_error(
+    4, propagation_error_category());
+
+// Base class for implementation-dependent Tracer::Inject carrier-type
+// adapter.
 class CarrierReader {
  public:
   virtual ~CarrierReader() = default;
@@ -120,8 +158,8 @@ class CarrierWriter {
 // Basic foundation for OpenTracing basictracer-compatible carrier writers.
 class BasicCarrierWriter : public CarrierWriter {
  public:
-  virtual Expected<void, std::string> Set(const std::string& key,
-                                          const std::string& value) const = 0;
+  virtual Expected<void> Set(const std::string& key,
+                             const std::string& value) const = 0;
 };
 
 // Base class for injecting into TextMap and HTTPHeaders carriers.

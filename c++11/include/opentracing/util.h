@@ -4,6 +4,7 @@
 #include <opentracing/preprocessor.h>
 #include <chrono>
 #include <opentracing/martinmoene_expected/expected.hpp>
+#include <system_error>
 
 namespace opentracing {
 inline namespace OPENTRACING_VERSION_NAMESPACE {
@@ -12,7 +13,12 @@ using SteadyClock = std::chrono::steady_clock;
 using SystemTime = SystemClock::time_point;
 using SteadyTime = SteadyClock::time_point;
 
-template <class T, class E>
+// Expected uses a C++11 implementation that follows the std::expected standard
+// library proposal.
+//
+// See https://github.com/martinmoene/expected-lite
+//     https://github.com/viboes/std-make/blob/master/doc/proposal/expected/d0323r2.md
+template <class T, class E = std::error_code>
 using Expected = nonstd::expected<T, E>;
 using nonstd::make_unexpected;
 
