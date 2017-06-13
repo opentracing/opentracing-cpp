@@ -13,8 +13,6 @@ class PropagationErrorCategory : public std::error_category {
       noexcept override {
     if (code == unsupported_format_error.value())
       return std::make_error_condition(std::errc::not_supported);
-    else if (code == span_context_not_found_error.value())
-      return std::make_error_condition(std::errc::invalid_argument);
     else if (code == invalid_span_context_error.value())
       return std::make_error_condition(std::errc::not_supported);
     else if (code == invalid_carrier_error.value())
@@ -28,8 +26,6 @@ class PropagationErrorCategory : public std::error_category {
   std::string message(int code) const override {
     if (code == unsupported_format_error.value())
       return "opentracing: Unknown or unsupported Inject/Extract format";
-    else if (code == span_context_not_found_error.value())
-      return "opentracing: SpanContext not found in Extract carrier";
     else if (code == invalid_span_context_error.value())
       return "opentracing: SpanContext type incompatible with tracer";
     else if (code == invalid_carrier_error.value())
