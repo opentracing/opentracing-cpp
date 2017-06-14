@@ -1,15 +1,15 @@
 #ifndef OPENTRACING_PROPAGATION_H
 #define OPENTRACING_PROPAGATION_H
 
-#include <opentracing/preprocessor.h>
 #include <opentracing/stringref.h>
 #include <opentracing/util.h>
+#include <opentracing/version.h>
 #include <functional>
 #include <string>
 #include <system_error>
 
 namespace opentracing {
-inline namespace OPENTRACING_VERSION_NAMESPACE {
+inline namespace OPENTRACING_INLINE_NAMESPACE {
 enum class SpanReferenceType {
   // ChildOfRef refers to a parent Span that caused *and* somehow depends
   // upon the new child Span. Often (but not always), the parent Span cannot
@@ -119,9 +119,8 @@ const std::error_code invalid_span_context_error(1,
                                                  propagation_error_category());
 
 // `invalid_carrier_error` errors occur when Tracer::Inject() or
-// Tracer::Extract()
-// implementations expect a different type of `carrier` than they are
-// given.
+// Tracer::Extract() implementations expect a different type of `carrier` than
+// they are given.
 const std::error_code invalid_carrier_error(2, propagation_error_category());
 
 // `span_context_corrupted_error` occurs when the `carrier` passed to
@@ -185,7 +184,7 @@ class HTTPHeadersReader : public TextMapReader {};
 // With it, the caller can encode a SpanContext for propagation as entries in
 // http request headers
 class HTTPHeadersWriter : public TextMapWriter {};
-}  // namespace OPENTRACING_VERSION_NAMESPACE
+}  // namespace OPENTRACING_INLINE_NAMESPACE
 }  // namespace opentracing
 
 #endif  // OPENTRACING_PROPAGATION_H

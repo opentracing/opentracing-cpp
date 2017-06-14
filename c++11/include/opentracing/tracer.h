@@ -1,11 +1,11 @@
 #ifndef OPENTRACING_TRACER_H
 #define OPENTRACING_TRACER_H
 
-#include <opentracing/preprocessor.h>
 #include <opentracing/propagation.h>
 #include <opentracing/span.h>
 #include <opentracing/stringref.h>
 #include <opentracing/util.h>
+#include <opentracing/version.h>
 #include <chrono>
 #include <initializer_list>
 #include <memory>
@@ -13,7 +13,7 @@
 #include <vector>
 
 namespace opentracing {
-inline namespace OPENTRACING_VERSION_NAMESPACE {
+inline namespace OPENTRACING_INLINE_NAMESPACE {
 // StartSpanOptions allows Tracer.StartSpan() callers  a mechanism to override
 // the start timestamp, specify Span References, and make a single Tag or
 // multiple Tags available at Span start time.
@@ -208,7 +208,7 @@ class SetTag : public StartSpanOption {
   StringRef key_;
   const Value& value_;
 };
-}  // namespace OPENTRACING_VERSION_NAMESPACE
+}  // namespace OPENTRACING_INLINE_NAMESPACE
 }  // namespace opentracing
 
 #endif  // OPENTRACING_TRACER_H

@@ -1,13 +1,13 @@
 #ifndef OPENTRACING_UTIL_H
 #define OPENTRACING_UTIL_H
 
-#include <opentracing/preprocessor.h>
+#include <opentracing/version.h>
 #include <chrono>
 #include <opentracing/martinmoene_expected/expected.hpp>
 #include <system_error>
 
 namespace opentracing {
-inline namespace OPENTRACING_VERSION_NAMESPACE {
+inline namespace OPENTRACING_INLINE_NAMESPACE {
 using SystemClock = std::chrono::system_clock;
 using SteadyClock = std::chrono::steady_clock;
 using SystemTime = SystemClock::time_point;
@@ -38,7 +38,7 @@ class option_wrapper {
  private:
   const T *ptr_;
 };
-}  // namespace OPENTRACING_VERSION_NAMESPACE
+}  // namespace OPENTRACING_INLINE_NAMESPACE
 }  // namespace opentracing
 
 #endif  // OPENTRACING_UTIL_H

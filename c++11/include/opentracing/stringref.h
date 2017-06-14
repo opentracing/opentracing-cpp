@@ -1,7 +1,7 @@
 #ifndef OPENTRACING_STRINGREF_H
 #define OPENTRACING_STRINGREF_H
 
-#include <opentracing/preprocessor.h>
+#include <opentracing/version.h>
 #include <cstring>
 #include <ostream>
 #include <string>
@@ -36,7 +36,7 @@
 // sudden. That design issue still needs to be addressed.
 
 namespace opentracing {
-inline namespace OPENTRACING_VERSION_NAMESPACE {
+inline namespace OPENTRACING_INLINE_NAMESPACE {
 // ===============
 // class StringRef
 // ===============
@@ -120,7 +120,7 @@ inline std::ostream& operator<<(std::ostream& os,
   return os.write(ref.data(), static_cast<std::streamsize>(ref.length()));
 }
 
-}  // namespace OPENTRACING_VERSION_NAMESPACE
+}  // namespace OPENTRACING_INLINE_NAMESPACE
 }  // namespace opentracing
 
 #endif  // OPENTRACING_STRINGREF_H

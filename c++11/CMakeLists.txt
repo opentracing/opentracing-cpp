@@ -12,6 +12,11 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-unused-parameter")
 endif()
 
+configure_file(version.h.in include/opentracing/version.h)
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/opentracing 
+        DESTINATION include)
+
 include_directories(SYSTEM 3rd_party/include)
 install(DIRECTORY 3rd_party/include/opentracing DESTINATION include
             FILES_MATCHING PATTERN "*.hpp"
