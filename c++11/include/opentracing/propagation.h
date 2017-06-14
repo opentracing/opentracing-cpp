@@ -146,8 +146,8 @@ class CarrierWriter {
 // of unicode strings.
 class TextMapReader : public CarrierReader {
   // ForeachKey returns TextMap contents via repeated calls to the `f`
-  // function. If any call to `handler` returns an error, ForeachKey
-  // terminates and returns that error.
+  // function. If any call to `f` returns an error, ForeachKey terminates and
+  // returns that error.
   //
   // NOTE: The backing store for the TextMapReader may contain data unrelated
   // to SpanContext. As such, Inject() and Extract() implementations that
@@ -157,7 +157,8 @@ class TextMapReader : public CarrierReader {
   // The "foreach" callback pattern reduces unnecessary copying in some cases
   // and also allows implementations to hold locks while the map is read.
   virtual Expected<void> ForeachKey(
-      std::function<void(StringRef key, StringRef value)> f) const = 0;
+      std::function<Expected<void>(StringRef key, StringRef value)> f)
+      const = 0;
 };
 
 // TextMapWriter is the Inject() carrier for the TextMap builtin format. With
