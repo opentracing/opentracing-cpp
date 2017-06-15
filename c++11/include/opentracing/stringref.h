@@ -2,6 +2,7 @@
 #define OPENTRACING_STRINGREF_H
 
 #include <opentracing/version.h>
+#include <algorithm>
 #include <cstring>
 #include <ostream>
 #include <string>
@@ -114,6 +115,47 @@ class StringRef {
   const char* data_;  // Pointer to external storage
   size_t length_;     // Length of data pointed to by 'data_'
 };
+
+inline bool operator==(StringRef lhs, StringRef rhs) noexcept {
+  return lhs.length() == rhs.length() &&
+         std::equal(lhs.data(), lhs.data() + lhs.length(), rhs.data());
+}
+
+inline bool operator==(StringRef lhs, const std::string& rhs) noexcept {
+  return lhs == StringRef(rhs);
+}
+
+inline bool operator==(const std::string& lhs, StringRef rhs) noexcept {
+  return StringRef(lhs) == rhs;
+}
+
+inline bool operator==(StringRef lhs, const char* rhs) noexcept {
+  return lhs == StringRef(rhs);
+}
+
+inline bool operator==(const char* lhs, StringRef rhs) noexcept {
+  return StringRef(lhs) == rhs;
+}
+
+inline bool operator!=(StringRef lhs, StringRef rhs) noexcept {
+  return !(lhs == rhs);
+}
+
+inline bool operator!=(StringRef lhs, const std::string& rhs) noexcept {
+  return !(lhs == rhs);
+}
+
+inline bool operator!=(const std::string& lhs, StringRef rhs) noexcept {
+  return !(lhs == rhs);
+}
+
+inline bool operator!=(StringRef lhs, const char* rhs) noexcept {
+  return !(lhs == rhs);
+}
+
+inline bool operator!=(const char* lhs, StringRef rhs) noexcept {
+  return !(lhs == rhs);
+}
 
 inline std::ostream& operator<<(std::ostream& os,
                                 const opentracing::StringRef& ref) {

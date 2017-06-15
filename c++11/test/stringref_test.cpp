@@ -54,7 +54,7 @@ static void test_reset() {
 
   ref.reset("hello world");
 
-  assert(std::string("hello world") == std::string(ref));
+  assert("hello world" == ref);
   assert(std::string("hello world") == std::string(ref.data()));
   assert(std::strlen("hello world") == ref.length());
 
@@ -85,7 +85,7 @@ static void test_reset() {
   ref.reset(p, std::strlen(p));
   assert(p == ref.data());
   assert(std::strlen(p) == ref.length());
-  assert(std::string(p) == std::string(ref));
+  assert(p == ref);
   assert(std::string(p) == std::string(ref.data()));
 }
 
