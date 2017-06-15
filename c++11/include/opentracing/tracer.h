@@ -135,7 +135,9 @@ class StartTimestamp : public StartSpanOption {
   template <class Rep, class Period>
   explicit StartTimestamp(
       const std::chrono::duration<Rep, Period>& time_since_epoch) noexcept {
-    system_when_ = SystemClock::from_time_t(std::time_t(0)) + time_since_epoch;
+    system_when_ =
+        SystemClock::from_time_t(std::time_t(0)) +
+        std::chrono::duration_cast<SystemClock::duration>(time_since_epoch);
     steady_when_ = convert_time_point<SteadyClock>(system_when_);
   }
 
