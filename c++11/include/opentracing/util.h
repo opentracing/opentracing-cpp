@@ -38,6 +38,19 @@ class option_wrapper {
  private:
   const T *ptr_;
 };
+
+// Support conversion between time_points from different clocks. There's no
+// standard way to get the difference in epochs between clocks, so this uses
+// an approximation suggested by Howard Hinnant.
+//
+// See https://stackoverflow.com/a/35282833/4447365
+template <class ToClock, class FromClock, class Duration>
+typename ToClock::time_point convert_time_point(
+    std::chrono::time_point<FromClock, Duration> src_time_point) {
+  auto from_now = FromClock::now();
+  auto to_now = ToClock::now();
+  return to_now + (src_time_point - from_now);
+}
 }  // namespace OPENTRACING_INLINE_NAMESPACE
 }  // namespace opentracing
 
