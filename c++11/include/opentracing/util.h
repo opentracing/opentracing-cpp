@@ -46,10 +46,11 @@ class option_wrapper {
 // See https://stackoverflow.com/a/35282833/4447365
 template <class ToClock, class FromClock, class Duration>
 typename ToClock::time_point convert_time_point(
-    std::chrono::time_point<FromClock, Duration> src_time_point) {
+    std::chrono::time_point<FromClock, Duration> from_time_point) {
   auto from_now = FromClock::now();
   auto to_now = ToClock::now();
-  return to_now + (src_time_point - from_now);
+  return to_now + std::chrono::duration_cast<typename ToClock::duration>(
+                      from_time_point - from_now);
 }
 }  // namespace OPENTRACING_INLINE_NAMESPACE
 }  // namespace opentracing
