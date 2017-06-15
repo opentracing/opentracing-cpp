@@ -145,6 +145,7 @@ class CarrierWriter {
 // it, the caller can encode a SpanContext for propagation as entries in a map
 // of unicode strings.
 class TextMapReader : public CarrierReader {
+ public:
   // ForeachKey returns TextMap contents via repeated calls to the `f`
   // function. If any call to `f` returns an error, ForeachKey terminates and
   // returns that error.
@@ -165,6 +166,7 @@ class TextMapReader : public CarrierReader {
 // it, the caller can encode a SpanContext for propagation as entries in a map
 // of unicode strings.
 class TextMapWriter : public CarrierWriter {
+ public:
   // Set a key:value pair to the carrier. Multiple calls to Set() for the
   // same key leads to undefined behavior.
   //
