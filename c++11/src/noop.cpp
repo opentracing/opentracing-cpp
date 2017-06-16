@@ -59,4 +59,4 @@ std::shared_ptr<Tracer> make_noop_tracer() noexcept {
   return std::shared_ptr<Tracer>(new (std::nothrow) NoopTracer());
 }
 END_OPENTRACING_ABI_NAMESPACE
-}  // namesapce opentracing
+}  // namespace opentracing
