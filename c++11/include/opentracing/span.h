@@ -147,9 +147,10 @@ class FinishTimestamp : public FinishSpanOption {
   template <class Rep, class Period>
   explicit FinishTimestamp(
       const std::chrono::duration<Rep, Period>& time_since_epoch) noexcept
-      : steady_when_(SystemClock::from_time_t(std::time_t(0)) +
-                     std::chrono::duration_cast<SystemClock::duration>(
-                         time_since_epoch)) {}
+      : steady_when_(convert_time_point<SteadyClock>(
+            SystemClock::from_time_t(std::time_t(0)) +
+            std::chrono::duration_cast<SystemClock::duration>(
+                time_since_epoch))) {}
 
   FinishTimestamp(const FinishTimestamp& other) noexcept
       : FinishSpanOption(), steady_when_(other.steady_when_) {}
