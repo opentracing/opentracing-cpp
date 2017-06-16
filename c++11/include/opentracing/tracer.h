@@ -71,6 +71,8 @@ class Tracer {
   //         opentracing::Tag{"user_agent", loggedReq.UserAgent},
   //         opentracing::StartTimestamp(loggedReq.timestamp())})
   //
+  // If StartSpan is called after Close it leaves the Tracer in a valid
+  // state, but its behavior is unspecified.
   std::unique_ptr<Span> StartSpan(
       StringRef operation_name,
       std::initializer_list<option_wrapper<StartSpanOption>> option_list = {})
@@ -109,6 +111,13 @@ class Tracer {
   // Throws only if `reader` does.
   virtual Expected<std::unique_ptr<SpanContext>> Extract(
       CarrierFormat format, const CarrierReader& reader) const = 0;
+
+  // Close is called when a tracer is finished processing spans. It is not
+  // required to be called and its effect is unspecified. For example, an
+  // implementation might use this function to flush buffered spans to its
+  // recording system and failing to call it could result in some spans being
+  // dropped.
+  virtual void Close() noexcept {}
 
   // GlobalTracer returns the global tracer.
   static std::shared_ptr<Tracer> Global() noexcept;
