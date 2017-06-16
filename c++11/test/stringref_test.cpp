@@ -52,7 +52,7 @@ static void test_reset() {
   assert(0 == ref.data());
   assert(0 == ref.length());
 
-  ref.reset("hello world");
+  ref.Reset("hello world");
 
   assert("hello world" == ref);
   assert(std::string("hello world") == std::string(ref.data()));
@@ -60,7 +60,7 @@ static void test_reset() {
 
   const char arr[] = "hello world 1";
 
-  ref.reset(arr);
+  ref.Reset(arr);
   assert(arr == ref.data());
   assert(std::strlen(arr) == ref.length());
   assert(std::string(arr) == std::string(ref));
@@ -68,7 +68,7 @@ static void test_reset() {
 
   const char* p = "hello world 2";
 
-  ref.reset(p);
+  ref.Reset(p);
   assert(p == ref.data());
   assert(std::strlen(p) == ref.length());
   assert(std::string(p) == std::string(ref));
@@ -76,13 +76,13 @@ static void test_reset() {
 
   const std::string s = "hello world 3";
 
-  ref.reset(s);
+  ref.Reset(s);
   assert(s.data() == ref.data());
   assert(s.length() == ref.length());
   assert(std::string(s.c_str()) == std::string(ref));
   assert(std::string(s.c_str()) == std::string(ref.data()));
 
-  ref.reset(p, std::strlen(p));
+  ref.Reset(p, std::strlen(p));
   assert(p == ref.data());
   assert(std::strlen(p) == ref.length());
   assert(p == ref);

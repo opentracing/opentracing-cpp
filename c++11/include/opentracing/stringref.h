@@ -78,32 +78,32 @@ class StringRef {
 
   // Reset the string reference given a const character array
   template <size_t N>
-  void reset(const char (&str)[N]) noexcept {
+  void Reset(const char (&str)[N]) noexcept {
     data_ = str;
     length_ = N;
   }
 
   // Reset this string ref to point at the supplied c-string
-  void reset(const char* str) noexcept {
+  void Reset(const char* str) noexcept {
     data_ = str;
     length_ = std::strlen(str);
   }
 
   // Reset the string reference given a std::string
-  void reset(const std::basic_string<char>& str) noexcept {
+  void Reset(const std::basic_string<char>& str) noexcept {
     data_ = str.data();
     length_ = str.length();
   }
 
   // Reset this string ref to point at the supplied 'str' of 'length' bytes.
-  void reset(const char* str, const size_t length) noexcept {
+  void Reset(const char* str, const size_t length) noexcept {
     data_ = str;
     length_ = length;
   }
 
-  // Disallow reset from non-const array
+  // Disallow Reset from non-const array
   template <size_t N>
-  void reset(char (&str)[N]) = delete;
+  void Reset(char (&str)[N]) = delete;
 
   // Return address of the referenced string
   const char* data() const noexcept { return data_; }
