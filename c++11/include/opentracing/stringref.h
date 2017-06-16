@@ -111,6 +111,12 @@ class StringRef {
   // Return the length of the referenced string
   size_t length() const noexcept { return length_; }
 
+  // Returns a RandomAccessIterator to the first element.
+  const char* begin() const noexcept { return data(); }
+
+  // Returns a RandomAccessIterator for the last element.
+  const char* end() const noexcept { return data() + length(); }
+
  private:
   const char* data_;  // Pointer to external storage
   size_t length_;     // Length of data pointed to by 'data_'
