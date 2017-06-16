@@ -3,13 +3,12 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Weverything \
     -Wno-c++98-compat \
     -Wno-c++98-compat-bind-to-temporary-copy \
-    -Wno-unused-parameter \
     -Wno-weak-vtables \
     -Wno-exit-time-destructors \
     -Wno-global-constructors \
     -Wno-padded")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-unused-parameter")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 endif()
 
 find_program(CLANG_TIDY_EXE NAMES "clang-tidy" 
