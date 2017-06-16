@@ -9,7 +9,7 @@
 #include <system_error>
 
 namespace opentracing {
-inline namespace OPENTRACING_INLINE_NAMESPACE {
+BEGIN_OPENTRACING_ABI_NAMESPACE
 enum class SpanReferenceType {
   // ChildOfRef refers to a parent Span that caused *and* somehow depends
   // upon the new child Span. Often (but not always), the parent Span cannot
@@ -187,7 +187,7 @@ class HTTPHeadersReader : public TextMapReader {};
 // With it, the caller can encode a SpanContext for propagation as entries in
 // http request headers
 class HTTPHeadersWriter : public TextMapWriter {};
-}  // namespace OPENTRACING_INLINE_NAMESPACE
+END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing
 
 #endif  // OPENTRACING_PROPAGATION_H

@@ -13,7 +13,7 @@
 #include <vector>
 
 namespace opentracing {
-inline namespace OPENTRACING_INLINE_NAMESPACE {
+BEGIN_OPENTRACING_ABI_NAMESPACE
 // StartSpanOptions allows Tracer.StartSpan() callers  a mechanism to override
 // the start timestamp, specify Span References, and make a single Tag or
 // multiple Tags available at Span start time.
@@ -226,7 +226,7 @@ class SetTag : public StartSpanOption {
   StringRef key_;
   const Value& value_;
 };
-}  // namespace OPENTRACING_INLINE_NAMESPACE
+END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing
 
 #endif  // OPENTRACING_TRACER_H

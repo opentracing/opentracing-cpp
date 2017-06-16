@@ -1,7 +1,7 @@
 #include <opentracing/noop.h>
 
 namespace opentracing {
-inline namespace OPENTRACING_INLINE_NAMESPACE {
+BEGIN_OPENTRACING_ABI_NAMESPACE
 namespace {
 class NoopSpanContext : public SpanContext {
  public:
@@ -58,5 +58,5 @@ class NoopTracer : public Tracer,
 std::shared_ptr<Tracer> make_noop_tracer() noexcept {
   return std::shared_ptr<Tracer>(new (std::nothrow) NoopTracer());
 }
-}  // namespace OPENTRACING_INLINE_NAMESPACE
+END_OPENTRACING_ABI_NAMESPACE
 }  // namesapce opentracing

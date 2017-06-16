@@ -10,7 +10,7 @@
 #include <vector>
 
 namespace opentracing {
-inline namespace OPENTRACING_INLINE_NAMESPACE {
+BEGIN_OPENTRACING_ABI_NAMESPACE
 // Variant value types for span tags and log payloads.
 class Value;
 
@@ -63,7 +63,7 @@ class Value : public variant_type {
   Value(const Dictionary& values) : variant_type(values) {}
   Value(Dictionary&& values) : variant_type(std::move(values)) {}
 };
-}  // namespace OPENTRACING_INLINE_NAMESPACE
+END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing
 
 #endif  // OPENTRACING_VALUE_H

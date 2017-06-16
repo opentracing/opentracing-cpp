@@ -37,7 +37,7 @@
 // sudden. That design issue still needs to be addressed.
 
 namespace opentracing {
-inline namespace OPENTRACING_INLINE_NAMESPACE {
+BEGIN_OPENTRACING_ABI_NAMESPACE
 // ===============
 // class StringRef
 // ===============
@@ -167,8 +167,7 @@ inline std::ostream& operator<<(std::ostream& os,
                                 const opentracing::StringRef& ref) {
   return os.write(ref.data(), static_cast<std::streamsize>(ref.length()));
 }
-
-}  // namespace OPENTRACING_INLINE_NAMESPACE
+END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing
 
 #endif  // OPENTRACING_STRINGREF_H

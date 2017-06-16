@@ -1,7 +1,7 @@
 #include <opentracing/propagation.h>
 
 namespace opentracing {
-inline namespace OPENTRACING_INLINE_NAMESPACE {
+BEGIN_OPENTRACING_ABI_NAMESPACE
 namespace {
 class PropagationErrorCategory : public std::error_category {
  public:
@@ -42,5 +42,5 @@ const std::error_category& propagation_error_category() {
   static const PropagationErrorCategory error_category;
   return error_category;
 }
-}  // namespace OPENTRACING_INLINE_NAMESPACE
+END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing

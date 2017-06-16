@@ -2,7 +2,7 @@
 #include <opentracing/tracer.h>
 
 namespace opentracing {
-inline namespace OPENTRACING_INLINE_NAMESPACE {
+BEGIN_OPENTRACING_ABI_NAMESPACE
 static std::shared_ptr<Tracer>& get_global_tracer() {
   static std::shared_ptr<Tracer> global_tracer = make_noop_tracer();
   return global_tracer;
@@ -17,5 +17,5 @@ std::shared_ptr<Tracer> Tracer::InitGlobal(
   get_global_tracer().swap(tracer);
   return tracer;
 }
-}  // namespace OPENTRACING_INLINE_NAMESPACE
+END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing

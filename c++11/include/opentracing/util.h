@@ -7,7 +7,7 @@
 #include <system_error>
 
 namespace opentracing {
-inline namespace OPENTRACING_INLINE_NAMESPACE {
+BEGIN_OPENTRACING_ABI_NAMESPACE
 using SystemClock = std::chrono::system_clock;
 using SteadyClock = std::chrono::steady_clock;
 using SystemTime = SystemClock::time_point;
@@ -52,7 +52,7 @@ typename ToClock::time_point convert_time_point(
   return to_now + std::chrono::duration_cast<typename ToClock::duration>(
                       from_time_point - from_now);
 }
-}  // namespace OPENTRACING_INLINE_NAMESPACE
+END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing
 
 #endif  // OPENTRACING_UTIL_H

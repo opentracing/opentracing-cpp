@@ -6,7 +6,7 @@
 #include <memory>
 
 namespace opentracing {
-inline namespace OPENTRACING_INLINE_NAMESPACE {
+BEGIN_OPENTRACING_ABI_NAMESPACE
 // A NoopTracer is a trivial, minimum overhead implementation of Tracer
 // for which all operations are no-ops.
 //
@@ -21,7 +21,7 @@ inline namespace OPENTRACING_INLINE_NAMESPACE {
 //
 // WARNING: NoopTracer does not support baggage propagation.
 std::shared_ptr<Tracer> make_noop_tracer() noexcept;
-}  // namespace OPENTRACING_INLINE_NAMESPACE
+END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing
 
 #endif  // OPENTRACING_NOOP_H
