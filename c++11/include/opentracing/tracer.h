@@ -126,6 +126,10 @@ class StartTimestamp : public StartSpanOption {
   StartTimestamp(SystemTime system_when, SteadyTime steady_when) noexcept
       : system_when_(system_when), steady_when_(steady_when) {}
 
+  StartTimestamp(SystemTime system_when) noexcept
+      : system_when_(system_when),
+        steady_when_(convert_time_point<SteadyClock>(system_when_)) {}
+
   // Construct a timestamp using a duration from the epoch of std::time_t.
   // From the documentation on std::time_t's epoch:
   //     Although not defined, this is almost always an integral value holding
@@ -134,12 +138,10 @@ class StartTimestamp : public StartSpanOption {
   // See http://en.cppreference.com/w/cpp/chrono/c/time_t
   template <class Rep, class Period>
   explicit StartTimestamp(
-      const std::chrono::duration<Rep, Period>& time_since_epoch) noexcept {
-    system_when_ =
-        SystemClock::from_time_t(std::time_t(0)) +
-        std::chrono::duration_cast<SystemClock::duration>(time_since_epoch);
-    steady_when_ = convert_time_point<SteadyClock>(system_when_);
-  }
+      const std::chrono::duration<Rep, Period>& time_since_epoch) noexcept
+      : StartTimestamp(SystemClock::from_time_t(std::time_t(0)) +
+                       std::chrono::duration_cast<SystemClock::duration>(
+                           time_since_epoch)) {}
 
   StartTimestamp(const StartTimestamp& other) noexcept
       : StartSpanOption(),
