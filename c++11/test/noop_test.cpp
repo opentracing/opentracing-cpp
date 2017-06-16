@@ -13,6 +13,7 @@ int main() {
   span2->SetOperationName("b1");
   span2->SetTag("x", true);
   assert(span2->BaggageItem("y").empty());
+  span2->Log({{"event", "xyz"}, {"abc", 123}});
   span2->Finish();
 
   return 0;

@@ -110,6 +110,16 @@ class Span {
   // if the value isn't found in this Span.
   virtual std::string BaggageItem(StringRef restricted_key) const noexcept = 0;
 
+  // Log is an efficient and type-checked way to record key:value logging data
+  // about a Span. Here's an example:
+  //
+  //    span.Log({
+  //        {"event", "soft error"},
+  //        {"type", "cache timeout"},
+  //        {"waited.millis", 1500}});
+  virtual void Log(
+      std::initializer_list<std::pair<StringRef, Value>> fields) noexcept = 0;
+
   // context() yields the SpanContext for this Span. Note that the return
   // value of context() is still valid after a call to Span.Finish(), as is
   // a call to Span.context() after a call to Span.Finish().

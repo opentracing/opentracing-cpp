@@ -23,6 +23,8 @@ class NoopSpan : public Span {
   std::string BaggageItem(StringRef restricted_key) const noexcept override {
     return {};
   }
+  void Log(std::initializer_list<std::pair<StringRef, Value>>
+               fields) noexcept override {}
   const SpanContext& context() const noexcept override { return span_context_; }
   const Tracer& tracer() const noexcept override { return *tracer_; }
 
