@@ -138,10 +138,18 @@ class FinishTimestamp : public FinishSpanOption {
   explicit FinishTimestamp(SteadyTime steady_when) noexcept
       : steady_when_(steady_when) {}
 
+  // Construct a timestamp using a duration from the epoch of std::time_t.
+  // From the documentation on std::time_t's epoch:
+  //     Although not defined, this is almost always an integral value holding
+  //     the number of seconds (not counting leap seconds) since 00:00, Jan 1
+  //     1970 UTC, corresponding to POSIX time
+  // See http://en.cppreference.com/w/cpp/chrono/c/time_t
   template <class Rep, class Period>
   explicit FinishTimestamp(
       const std::chrono::duration<Rep, Period>& time_since_epoch) noexcept
-      : steady_when_(time_since_epoch) {}
+      : steady_when_(SystemClock::from_time_t(std::time_t(0)) +
+                     std::chrono::duration_cast<SystemClock::duration>(
+                         time_since_epoch)) {}
 
   FinishTimestamp(const FinishTimestamp& other) noexcept
       : FinishSpanOption(), steady_when_(other.steady_when_) {}
