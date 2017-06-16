@@ -51,6 +51,8 @@ class FinishSpanOption {
 // Spans are created by the Tracer interface.
 class Span {
  public:
+  // If Finish has not already been called for the Span, it's destructor must
+  // do so.
   virtual ~Span() = default;
 
   // Sets the end timestamp and finalizes Span state.
