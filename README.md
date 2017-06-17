@@ -77,7 +77,7 @@ reference.
         auto tracer = /* Some Tracer */
         auto span = tracer->StartSpan(
             "operation_name",
-            {opentracing::ChildOf(parent_span.context())});
+            {opentracing::ChildOf(&parent_span.context())});
         if (!span)
           // Error creating span.
           ...
