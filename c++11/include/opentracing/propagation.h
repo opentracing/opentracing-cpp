@@ -71,18 +71,25 @@ enum class CarrierFormat {
   //
   // For example, Inject():
   //
-  //   std::vector<std::pair<std::string, std::string>> *headers = ...;
-  //   if (!span.tracer().Inject(span, CarrierFormat::HTTPHeadersCarrier,
-  // 	  			   make_ordered_string_pairs_writer(headers))) {
-  //     throw error("inject failed");
+  //   const HTTPHeadersReader& carrier_reader = /* some carrier */
+  //   auto was_successful = span.tracer().Inject(span,
+  //                                              CarrierFormat::HTTPHeaders,
+  //                                              carrier_reader);
+  //   if (!was_successful) {
+  //     throw std::runtime_error(was_successful.error().message());
   //   }
   //
   // Or Extract():
   //
-  //   SpanContext extracted;
-  //   extracted = Tracer::Global().Extract(CarrierFormat::HTTPHeadersCarrier,
-  //                                        make_ordered_string_pairs_reader(*headers));
-  //   auto span = Tracer::Global().StartSpan("op", { ChildOf(extracted) });
+  //   const Tracer& tracer = /* some tracer */
+  //   const HTTPHeadersWriter& carrier_writer = /* some carrier */
+  //   auto span_context_maybe = tracer.Extract(CarrierFormat::HTTPHeaders,
+  //                                            carrier_writer);
+  //   if (!span_context_maybe) {
+  //     throw std::runtime_error(span_context_maybe.error().message());
+  //   }
+  //   auto span = tracer.StartSpan("op",
+  //                                { ChildOf(span_context_maybe->get()) });
   //
   HTTPHeaders = 2,
 
