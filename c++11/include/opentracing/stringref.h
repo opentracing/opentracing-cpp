@@ -71,7 +71,7 @@ class StringRef {
   const char* data() const noexcept { return data_; }
 
   // Returns true if `length_` == 0
-  bool empty() const { return length_ == 0; }
+  bool empty() const noexcept { return length_ == 0; }
 
   // Return the length of the referenced string
   size_t length() const noexcept { return length_; }
