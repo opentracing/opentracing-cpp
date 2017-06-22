@@ -89,20 +89,25 @@ class Tracer {
       noexcept = 0;
 
   // Inject() takes the `sc` SpanContext instance and injects it for
-  // propagation within `carrier`. The actual type of `carrier` depends on
-  // the value of `format`.
+  // propagation within `carrier`.
   //
-  // OpenTracing defines a common set of `format` values (see BuiltinFormat),
-  // and each has an expected carrier type.
+  // OpenTracing defines a common set of `carrier` interfaces.
   //
   // Throws only if `writer` does.
-  virtual Expected<void> Inject(const SpanContext& sc, CarrierFormat format,
-                                const CarrierWriter& writer) const = 0;
+  virtual Expected<void> Inject(const SpanContext& sc,
+                                const TextMapWriter& writer) const = 0;
 
-  // Extract() returns a SpanContext instance given `format` and `carrier`.
+  virtual Expected<void> Inject(const SpanContext& sc,
+                                const HTTPHeadersWriter& writer) const = 0;
+
+  virtual Expected<void> Inject(const SpanContext& sc,
+                                const CustomCarrierWriter& writer) const {
+    return writer.Inject(*this, sc);
+  }
+
+  // Extract() returns a SpanContext instance given `carrier`.
   //
-  // OpenTracing defines a common set of `format` values (see BuiltinFormat),
-  // and each has an expected carrier type.
+  // OpenTracing defines a common set of `carrier` interfaces.
   //
   // Returns a `SpanContext` that is `non-null` on success or nullptr if
   // no span is found; otherwise an std::error_code from
@@ -110,7 +115,15 @@ class Tracer {
   //
   // Throws only if `reader` does.
   virtual Expected<std::unique_ptr<SpanContext>> Extract(
-      CarrierFormat format, const CarrierReader& reader) const = 0;
+      const TextMapReader& reader) const = 0;
+
+  virtual Expected<std::unique_ptr<SpanContext>> Extract(
+      const HTTPHeadersReader& reader) const = 0;
+
+  virtual Expected<std::unique_ptr<SpanContext>> Extract(
+      const CustomCarrierReader& reader) const {
+    return reader.Extract(*this);
+  }
 
   // Close is called when a tracer is finished processing spans. It is not
   // required to be called and its effect is unspecified. For example, an
