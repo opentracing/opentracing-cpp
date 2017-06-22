@@ -64,11 +64,6 @@ enum class SpanReferenceType {
 //   https://ned14.github.io/boost.outcome/md_doc_md_03-tutorial_b.html
 const std::error_category& propagation_error_category();
 
-// `unsupported_format_error`` occurs when the `format` passed to
-// Tracer::Inject() or Tracer::Extract() is not recognized by the Tracer
-// implementation.
-const std::error_code unsupported_format_error(0, propagation_error_category());
-
 // `invalid_span_context_error` errors occur when Tracer::Inject() is asked to
 // operate on a SpanContext which it is not prepared to handle (for
 // example, since it was created by a different tracer implementation).

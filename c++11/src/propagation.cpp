@@ -11,9 +11,6 @@ class PropagationErrorCategory : public std::error_category {
 
   std::error_condition default_error_condition(int code) const
       noexcept override {
-    if (code == unsupported_format_error.value()) {
-      return std::make_error_condition(std::errc::not_supported);
-    }
     if (code == invalid_span_context_error.value()) {
       return std::make_error_condition(std::errc::not_supported);
     }
@@ -27,9 +24,6 @@ class PropagationErrorCategory : public std::error_category {
   }
 
   std::string message(int code) const override {
-    if (code == unsupported_format_error.value()) {
-      return "opentracing: Unknown or unsupported Inject/Extract format";
-    }
     if (code == invalid_span_context_error.value()) {
       return "opentracing: SpanContext type incompatible with tracer";
     }
