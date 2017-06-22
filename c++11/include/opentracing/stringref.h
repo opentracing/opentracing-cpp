@@ -54,13 +54,8 @@ class StringRef {
   // Construct an empty StringRef
   StringRef() noexcept : data_(nullptr), length_(0) {}
 
-  // Explicitly create string reference from a const character array
-  template <size_t N>
-  StringRef(const char (&str)[N]) noexcept : data_(str), length_(N - 1) {}
-
-  // Explicitly create string reference from const character pointer
-  explicit StringRef(const char* str) noexcept
-      : data_(str), length_(std::strlen(str)) {}
+  // create string reference from const character pointer
+  StringRef(const char* str) noexcept : data_(str), length_(std::strlen(str)) {}
 
   // Create constant string reference from pointer and length
   StringRef(const std::basic_string<char>& str) noexcept
@@ -69,47 +64,18 @@ class StringRef {
   // Create constant string reference from pointer and length
   StringRef(const char* str, size_t len) noexcept : data_(str), length_(len) {}
 
-  // Disallow construction from non-const array
-  template <size_t N>
-  StringRef(char (&str)[N]) = delete;
-
   // Implicit conversion to std::string
   operator std::string() const { return {data_, length_}; }
-
-  // Reset the string reference given a const character array
-  template <size_t N>
-  void Reset(const char (&str)[N]) noexcept {
-    data_ = str;
-    length_ = N;
-  }
-
-  // Reset this string ref to point at the supplied c-string
-  void Reset(const char* str) noexcept {
-    data_ = str;
-    length_ = std::strlen(str);
-  }
-
-  // Reset the string reference given a std::string
-  void Reset(const std::basic_string<char>& str) noexcept {
-    data_ = str.data();
-    length_ = str.length();
-  }
-
-  // Reset this string ref to point at the supplied 'str' of 'length' bytes.
-  void Reset(const char* str, const size_t length) noexcept {
-    data_ = str;
-    length_ = length;
-  }
-
-  // Disallow Reset from non-const array
-  template <size_t N>
-  void Reset(char (&str)[N]) = delete;
 
   // Return address of the referenced string
   const char* data() const noexcept { return data_; }
 
+  // Returns true if `length_` == 0
+  bool empty() const { return length_ == 0; }
+
   // Return the length of the referenced string
   size_t length() const noexcept { return length_; }
+  size_t size() const noexcept { return length_; }
 
   // Returns a RandomAccessIterator to the first element.
   const char* begin() const noexcept { return data(); }
