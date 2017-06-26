@@ -7,7 +7,7 @@ C++ implementation of the OpenTracing API http://opentracing.io
 
 In order to understand the C++ platform API, one must first be familiar with the
 [OpenTracing project](http://opentracing.io) and
-[terminology](http://opentracing.io/spec/) more generally. This is a C++98 API that
+[terminology](http://opentracing.io/documentation/pages/spec) more generally. This is a C++98 API that
 is used as a "common denominator". Ît's up to implementors to choose the C++ level
 they are going to use for their implementations:
 
