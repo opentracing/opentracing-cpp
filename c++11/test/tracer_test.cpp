@@ -4,7 +4,7 @@
 using namespace opentracing;
 
 static void test_tracer_interface() {
-  auto tracer = make_noop_tracer();
+  auto tracer = MakeNoopTracer();
 
   auto span1 = tracer->StartSpan("a");
   assert(span1);

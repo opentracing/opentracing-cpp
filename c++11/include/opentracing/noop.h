@@ -20,7 +20,7 @@ BEGIN_OPENTRACING_ABI_NAMESPACE
 // (see Tracer::Global and Tracer::InitGlobal functions).
 //
 // WARNING: NoopTracer does not support baggage propagation.
-std::shared_ptr<Tracer> make_noop_tracer() noexcept;
+std::shared_ptr<Tracer> MakeNoopTracer() noexcept;
 END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing
 

@@ -4,7 +4,7 @@
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
 static std::shared_ptr<Tracer>& get_global_tracer() {
-  static std::shared_ptr<Tracer> global_tracer = make_noop_tracer();
+  static std::shared_ptr<Tracer> global_tracer = MakeNoopTracer();
   return global_tracer;
 }
 
