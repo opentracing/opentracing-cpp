@@ -102,6 +102,13 @@ public:
     virtual const Tracer & getTracer() const = 0;
 
     /**
+     * Prints minimal information able to identify the span (e.g. trace id/span id) to an
+     * output stream. This is useful in order to be able to corellate traces with other
+     * types of logs.
+     */
+    virtual std::ostream & print(std::ostream & os) const = 0;
+
+    /**
      * Stops this span. `finish()` should be the last call made to any span instance,
      * and to do otherwise leads to undefined behavior.
      */
