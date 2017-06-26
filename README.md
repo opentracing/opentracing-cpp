@@ -7,7 +7,7 @@ C++ implementation of the OpenTracing API http://opentracing.io
 
 In order to understand the C++ platform API, one must first be familiar with the
 [OpenTracing project](http://opentracing.io) and
-[terminology](http://opentracing.io/spec/) more generally. 
+[terminology](http://opentracing.io/documentation/pages/spec) more generally. 
 
 ## Compile and install
 
