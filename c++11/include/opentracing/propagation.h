@@ -121,8 +121,7 @@ class TextMapWriter {
   // to SpanContext. As such, Inject() and Extract() implementations that
   // call the TextMapWriter and TextMapReader interfaces must agree on a
   // prefix or other convention to distinguish their own key:value pairs.
-  virtual Expected<void> Set(const std::string& key,
-                             const std::string& value) const = 0;
+  virtual Expected<void> Set(StringRef key, StringRef value) const = 0;
 };
 
 // HTTPHeadersReader is the Inject() carrier for the HttpHeaders builtin format.
