@@ -8,6 +8,7 @@
 #include <opentracing/version.h>
 #include <chrono>
 #include <initializer_list>
+#include <iosfwd>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -88,12 +89,18 @@ class Tracer {
       StringRef operation_name, const StartSpanOptions& options) const
       noexcept = 0;
 
-  // Inject() takes the `sc` SpanContext instance and injects it for
-  // propagation within `carrier`.
+  // Inject() takes the `sc` SpanContext instance and injects it for propagation
+  // within `carrier`.
   //
   // OpenTracing defines a common set of `carrier` interfaces.
   //
   // Throws only if `writer` does.
+  //
+  // If `writer` is an `std::ostream`, then Inject() propagates `sc` as a blob
+  // of binary data.
+  virtual Expected<void> Inject(const SpanContext& sc,
+                                std::ostream& writer) const = 0;
+
   virtual Expected<void> Inject(const SpanContext& sc,
                                 const TextMapWriter& writer) const = 0;
 
@@ -109,11 +116,13 @@ class Tracer {
   //
   // OpenTracing defines a common set of `carrier` interfaces.
   //
-  // Returns a `SpanContext` that is `non-null` on success or nullptr if
-  // no span is found; otherwise an std::error_code from
-  // propagation_error_category().
+  // Returns a `SpanContext` that is `non-null` on success or nullptr if no span
+  // is found; otherwise an std::error_code.
   //
   // Throws only if `reader` does.
+  virtual Expected<std::unique_ptr<SpanContext>> Extract(
+      std::istream& reader) const = 0;
+
   virtual Expected<std::unique_ptr<SpanContext>> Extract(
       const TextMapReader& reader) const = 0;
 

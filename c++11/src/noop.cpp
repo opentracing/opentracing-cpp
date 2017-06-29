@@ -14,19 +14,27 @@ class NoopSpan : public Span {
  public:
   explicit NoopSpan(std::shared_ptr<const Tracer>&& tracer) noexcept
       : tracer_(std::move(tracer)) {}
+
   void FinishWithOptions(
       const FinishSpanOptions& /*finish_span_options*/) noexcept override {}
+
   void SetOperationName(StringRef /*name*/) noexcept override {}
+
   void SetTag(StringRef /*key*/, const Value& /*value*/) noexcept override {}
+
   void SetBaggageItem(StringRef /*restricted_key*/,
                       StringRef /*value*/) noexcept override {}
+
   std::string BaggageItem(StringRef /*restricted_key*/) const
       noexcept override {
     return {};
   }
+
   void Log(std::initializer_list<std::pair<StringRef, Value>>
            /*fields*/) noexcept override {}
+
   const SpanContext& context() const noexcept override { return span_context_; }
+
   const Tracer& tracer() const noexcept override { return *tracer_; }
 
  private:
@@ -45,6 +53,11 @@ class NoopTracer : public Tracer,
   }
 
   Expected<void> Inject(const SpanContext& /*sc*/,
+                        std::ostream& /*writer*/) const override {
+    return {};
+  }
+
+  Expected<void> Inject(const SpanContext& /*sc*/,
                         const TextMapWriter& /*writer*/) const override {
     return {};
   }
@@ -55,9 +68,15 @@ class NoopTracer : public Tracer,
   }
 
   Expected<std::unique_ptr<SpanContext>> Extract(
+      std::istream& /*reader*/) const override {
+    return std::unique_ptr<SpanContext>(nullptr);
+  }
+
+  Expected<std::unique_ptr<SpanContext>> Extract(
       const TextMapReader& /*reader*/) const override {
     return std::unique_ptr<SpanContext>(nullptr);
   }
+
   Expected<std::unique_ptr<SpanContext>> Extract(
       const HTTPHeadersReader& /*reader*/) const override {
     return std::unique_ptr<SpanContext>(nullptr);
