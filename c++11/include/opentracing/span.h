@@ -73,7 +73,7 @@ class Span {
   //
   // If SetOperationName is called after Finish it leaves the Span in a valid
   // state, but its behavior is unspecified.
-  virtual void SetOperationName(StringRef name) noexcept = 0;
+  virtual void SetOperationName(string_view name) noexcept = 0;
 
   // Adds a tag to the span.
   //
@@ -86,7 +86,7 @@ class Span {
   //
   // If SetTag is called after Finish it leaves the Span in a valid state, but
   // its behavior is unspecified.
-  virtual void SetTag(StringRef key, const Value& value) noexcept = 0;
+  virtual void SetTag(string_view key, const Value& value) noexcept = 0;
 
   // SetBaggageItem sets a key:value pair on this Span and its SpanContext
   // that also propagates to descendants of this Span.
@@ -105,12 +105,13 @@ class Span {
   //
   // If SetBaggageItem is called after Finish it leaves the Span in a valid
   // state, but its behavior is unspecified.
-  virtual void SetBaggageItem(StringRef restricted_key,
-                              StringRef value) noexcept = 0;
+  virtual void SetBaggageItem(string_view restricted_key,
+                              string_view value) noexcept = 0;
 
   // Gets the value for a baggage item given its key. Returns the empty string
   // if the value isn't found in this Span.
-  virtual std::string BaggageItem(StringRef restricted_key) const noexcept = 0;
+  virtual std::string BaggageItem(string_view restricted_key) const
+      noexcept = 0;
 
   // Log is an efficient and type-checked way to record key:value logging data
   // about a Span. Here's an example:
@@ -120,7 +121,7 @@ class Span {
   //        {"type", "cache timeout"},
   //        {"waited.millis", 1500}});
   virtual void Log(
-      std::initializer_list<std::pair<StringRef, Value>> fields) noexcept = 0;
+      std::initializer_list<std::pair<string_view, Value>> fields) noexcept = 0;
 
   // context() yields the SpanContext for this Span. Note that the return
   // value of context() is still valid after a call to Span.Finish(), as is

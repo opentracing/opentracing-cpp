@@ -25,7 +25,7 @@ struct StartSpanOptions {
   SystemTime start_system_timestamp;
   SteadyTime start_steady_timestamp;
   std::vector<std::pair<SpanReferenceType, const SpanContext*>> references;
-  std::vector<std::pair<StringRef, Value>> tags;
+  std::vector<std::pair<string_view, Value>> tags;
 };
 
 // StartSpanOption instances (zero or more) may be passed to Tracer.StartSpan.
@@ -75,7 +75,7 @@ class Tracer {
   // If StartSpan is called after Close it leaves the Tracer in a valid
   // state, but its behavior is unspecified.
   std::unique_ptr<Span> StartSpan(
-      StringRef operation_name,
+      string_view operation_name,
       std::initializer_list<option_wrapper<StartSpanOption>> option_list = {})
       const noexcept {
     StartSpanOptions options;
@@ -86,7 +86,7 @@ class Tracer {
   }
 
   virtual std::unique_ptr<Span> StartSpanWithOptions(
-      StringRef operation_name, const StartSpanOptions& options) const
+      string_view operation_name, const StartSpanOptions& options) const
       noexcept = 0;
 
   // Inject() takes the `sc` SpanContext instance and injects it for propagation
@@ -232,7 +232,7 @@ inline SpanReference FollowsFrom(const SpanContext* span_context) noexcept {
 // tracer.StartSpan("opName", SetTag{"Key", value})
 class SetTag : public StartSpanOption {
  public:
-  SetTag(StringRef key, const Value& value) noexcept
+  SetTag(string_view key, const Value& value) noexcept
       : key_(key), value_(value) {}
 
   SetTag(const SetTag& other) noexcept
@@ -245,7 +245,7 @@ class SetTag : public StartSpanOption {
   }
 
  private:
-  StringRef key_;
+  string_view key_;
   const Value& value_;
 };
 END_OPENTRACING_ABI_NAMESPACE

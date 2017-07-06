@@ -5,7 +5,7 @@
 using namespace opentracing;
 
 static void test_empty() {
-  StringRef ref;
+  string_view ref;
   assert(0 == ref.data());
   assert(0 == ref.length());
 }
@@ -13,7 +13,7 @@ static void test_empty() {
 static void test_cstring() {
   const char* val = "hello world";
 
-  StringRef ref(val);
+  string_view ref(val);
 
   assert(val == ref.data());
   assert(std::strlen(val) == ref.length());
@@ -22,7 +22,7 @@ static void test_cstring() {
 static void test_std_string() {
   const std::string val = "hello world";
 
-  StringRef ref(val);
+  string_view ref(val);
 
   assert(val == ref.data());
   assert(val.length() == ref.length());
@@ -31,8 +31,8 @@ static void test_std_string() {
 static void test_copy() {
   const std::string val = "hello world";
 
-  StringRef ref(val);
-  StringRef cpy(ref);
+  string_view ref(val);
+  string_view cpy(ref);
 
   assert(val == cpy.data());
   assert(val.length() == cpy.length());

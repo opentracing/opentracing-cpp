@@ -10,7 +10,7 @@
 // ===========
 // stringref.h
 // ===========
-// class StringRef - Constant reference to an external string
+// class string_view - Constant reference to an external string
 //
 // -----------------
 // String References
@@ -39,30 +39,32 @@
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
 // ===============
-// class StringRef
+// class string_view
 // ===============
 // Represent a constant reference to an external character array. The external
 // array need not be null-terminated, if explicitly created with a known length.
 //
 // This class does not own the data. It is expected to be used in situations
 // where the character data resides in some other buffer, whose lifetime extends
-// past that of the StringRef. For this reason, it is not in general safe to
-// store a StringRef.
+// past that of the string_view. For this reason, it is not in general safe to
+// store a string_view.
 
-class StringRef {
+class string_view {
  public:
-  // Construct an empty StringRef
-  StringRef() noexcept : data_(nullptr), length_(0) {}
+  // Construct an empty string_view
+  string_view() noexcept : data_(nullptr), length_(0) {}
 
   // create string reference from const character pointer
-  StringRef(const char* str) noexcept : data_(str), length_(std::strlen(str)) {}
+  string_view(const char* str) noexcept
+      : data_(str), length_(std::strlen(str)) {}
 
   // Create constant string reference from pointer and length
-  StringRef(const std::basic_string<char>& str) noexcept
+  string_view(const std::basic_string<char>& str) noexcept
       : data_(str.c_str()), length_(str.length()) {}
 
   // Create constant string reference from pointer and length
-  StringRef(const char* str, size_t len) noexcept : data_(str), length_(len) {}
+  string_view(const char* str, size_t len) noexcept
+      : data_(str), length_(len) {}
 
   // Implicit conversion to std::string
   operator std::string() const { return {data_, length_}; }
@@ -88,49 +90,49 @@ class StringRef {
   size_t length_;     // Length of data pointed to by 'data_'
 };
 
-inline bool operator==(StringRef lhs, StringRef rhs) noexcept {
+inline bool operator==(string_view lhs, string_view rhs) noexcept {
   return lhs.length() == rhs.length() &&
          std::equal(lhs.data(), lhs.data() + lhs.length(), rhs.data());
 }
 
-inline bool operator==(StringRef lhs, const std::string& rhs) noexcept {
-  return lhs == StringRef(rhs);
+inline bool operator==(string_view lhs, const std::string& rhs) noexcept {
+  return lhs == string_view(rhs);
 }
 
-inline bool operator==(const std::string& lhs, StringRef rhs) noexcept {
-  return StringRef(lhs) == rhs;
+inline bool operator==(const std::string& lhs, string_view rhs) noexcept {
+  return string_view(lhs) == rhs;
 }
 
-inline bool operator==(StringRef lhs, const char* rhs) noexcept {
-  return lhs == StringRef(rhs);
+inline bool operator==(string_view lhs, const char* rhs) noexcept {
+  return lhs == string_view(rhs);
 }
 
-inline bool operator==(const char* lhs, StringRef rhs) noexcept {
-  return StringRef(lhs) == rhs;
+inline bool operator==(const char* lhs, string_view rhs) noexcept {
+  return string_view(lhs) == rhs;
 }
 
-inline bool operator!=(StringRef lhs, StringRef rhs) noexcept {
+inline bool operator!=(string_view lhs, string_view rhs) noexcept {
   return !(lhs == rhs);
 }
 
-inline bool operator!=(StringRef lhs, const std::string& rhs) noexcept {
+inline bool operator!=(string_view lhs, const std::string& rhs) noexcept {
   return !(lhs == rhs);
 }
 
-inline bool operator!=(const std::string& lhs, StringRef rhs) noexcept {
+inline bool operator!=(const std::string& lhs, string_view rhs) noexcept {
   return !(lhs == rhs);
 }
 
-inline bool operator!=(StringRef lhs, const char* rhs) noexcept {
+inline bool operator!=(string_view lhs, const char* rhs) noexcept {
   return !(lhs == rhs);
 }
 
-inline bool operator!=(const char* lhs, StringRef rhs) noexcept {
+inline bool operator!=(const char* lhs, string_view rhs) noexcept {
   return !(lhs == rhs);
 }
 
 inline std::ostream& operator<<(std::ostream& os,
-                                const opentracing::StringRef& ref) {
+                                const opentracing::string_view& ref) {
   return os.write(ref.data(), static_cast<std::streamsize>(ref.length()));
 }
 END_OPENTRACING_ABI_NAMESPACE
