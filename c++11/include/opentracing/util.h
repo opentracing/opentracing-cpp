@@ -3,8 +3,14 @@
 
 #include <opentracing/version.h>
 #include <chrono>
-#include <opentracing/martinmoene_expected/expected.hpp>
 #include <system_error>
+
+// expected uses a C++11 implementation that follows the std::expected standard
+// library proposal.
+//
+// See https://github.com/martinmoene/expected-lite
+//     https://github.com/viboes/std-make/blob/master/doc/proposal/expected/d0323r2.md
+#include <opentracing/expected/expected.hpp>
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
@@ -12,15 +18,6 @@ using SystemClock = std::chrono::system_clock;
 using SteadyClock = std::chrono::steady_clock;
 using SystemTime = SystemClock::time_point;
 using SteadyTime = SteadyClock::time_point;
-
-// expected uses a C++11 implementation that follows the std::expected standard
-// library proposal.
-//
-// See https://github.com/martinmoene/expected-lite
-//     https://github.com/viboes/std-make/blob/master/doc/proposal/expected/d0323r2.md
-template <class T, class E = std::error_code>
-using expected = nonstd::expected<T, E>;
-using nonstd::make_unexpected;
 
 // This is unsafe to do.
 //

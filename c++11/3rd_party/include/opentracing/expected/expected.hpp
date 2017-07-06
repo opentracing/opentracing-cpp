@@ -8,8 +8,8 @@
 //   A proposal to add a utility class to represent expected monad - Revision 2
 //   by Vicente J. Botet Escriba and Pierre Talbot.
 
-#ifndef NONSTD_EXPECTED_LITE_HPP
-#define NONSTD_EXPECTED_LITE_HPP
+#ifndef OPENTRACING_EXPECTED_LITE_HPP
+#define OPENTRACING_EXPECTED_LITE_HPP
 
 #include <cassert>
 #include <exception>
@@ -41,9 +41,9 @@
     template< bool B = (__VA_ARGS__), typename std::enable_if<B, int>::type = 0 >
 
 #define nsel_REQUIRES_T(...) \
-    typename = typename std::enable_if< (__VA_ARGS__), nonstd::expected_detail::enabler >::type
+    typename = typename std::enable_if< (__VA_ARGS__), opentracing::expected_detail::enabler >::type
 
-namespace nonstd {
+namespace opentracing {
 
 template< typename T, typename E >
 class expected;
@@ -385,7 +385,7 @@ private:
 
 /// class expected
 
-template< typename T, typename E = std::exception_ptr >
+template< typename T, typename E = std::error_code >
 class expected
 {
 public:
@@ -1207,17 +1207,17 @@ auto make_expected_from_call( F f,
     }
 }
 
-} // namespace nonstd
+} // namespace opentracing
 
 namespace std {
 
 // expected: hash support
 
 template< typename T, typename E >
-struct hash< nonstd::expected<T,E> >
+struct hash< opentracing::expected<T,E> >
 {
     typedef typename hash<T>::result_type result_type;
-    typedef nonstd::expected<T,E> argument_type;
+    typedef opentracing::expected<T,E> argument_type;
 
     constexpr result_type operator()(argument_type const & arg) const
     {
@@ -1227,10 +1227,10 @@ struct hash< nonstd::expected<T,E> >
 
 // TBD - ?? remove? see spec.
 template< typename T, typename E >
-struct hash< nonstd::expected<T&,E> >
+struct hash< opentracing::expected<T&,E> >
 {
     typedef typename hash<T>::result_type result_type;
-    typedef nonstd::expected<T&,E> argument_type;
+    typedef opentracing::expected<T&,E> argument_type;
 
     constexpr result_type operator()(argument_type const & arg) const
     {
@@ -1244,7 +1244,7 @@ struct hash< nonstd::expected<T&,E> >
 // a combination of hashing false and hash<E>()(e.error()).
 
 template< typename E >
-struct hash< nonstd::expected<void,E> >
+struct hash< opentracing::expected<void,E> >
 {
 };
 
@@ -1254,4 +1254,4 @@ struct hash< nonstd::expected<void,E> >
 #undef nsel_REQUIRES_0
 #undef nsel_REQUIRES_T
 
-#endif // NONSTD_EXPECTED_LITE_HPP
+#endif // OPENTRACING_EXPECTED_LITE_HPP
