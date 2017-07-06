@@ -100,8 +100,8 @@ class TextMapReader {
   //
   // The "foreach" callback pattern reduces unnecessary copying in some cases
   // and also allows implementations to hold locks while the map is read.
-  virtual Expected<void> ForeachKey(
-      std::function<Expected<void>(string_view key, string_view value)> f)
+  virtual expected<void> ForeachKey(
+      std::function<expected<void>(string_view key, string_view value)> f)
       const = 0;
 };
 
@@ -121,7 +121,7 @@ class TextMapWriter {
   // to SpanContext. As such, Inject() and Extract() implementations that
   // call the TextMapWriter and TextMapReader interfaces must agree on a
   // prefix or other convention to distinguish their own key:value pairs.
-  virtual Expected<void> Set(string_view key, string_view value) const = 0;
+  virtual expected<void> Set(string_view key, string_view value) const = 0;
 };
 
 // HTTPHeadersReader is the Inject() carrier for the HttpHeaders builtin format.
@@ -163,7 +163,7 @@ class CustomCarrierReader {
 
   // Extract is expected to specialize on the tracer implementation so as to
   // most efficiently decode its context.
-  virtual Expected<std::unique_ptr<SpanContext>> Extract(
+  virtual expected<std::unique_ptr<SpanContext>> Extract(
       const Tracer& tracer) const = 0;
 };
 
@@ -176,7 +176,7 @@ class CustomCarrierWriter {
 
   // Inject is expected to specialize on the tracer implementation so as to most
   // efficiently encode its context.
-  virtual Expected<void> Inject(const Tracer& tracer,
+  virtual expected<void> Inject(const Tracer& tracer,
                                 const SpanContext& sc) const = 0;
 };
 END_OPENTRACING_ABI_NAMESPACE

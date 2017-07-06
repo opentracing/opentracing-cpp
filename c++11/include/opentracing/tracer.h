@@ -98,16 +98,16 @@ class Tracer {
   //
   // If `writer` is an `std::ostream`, then Inject() propagates `sc` as a blob
   // of binary data.
-  virtual Expected<void> Inject(const SpanContext& sc,
+  virtual expected<void> Inject(const SpanContext& sc,
                                 std::ostream& writer) const = 0;
 
-  virtual Expected<void> Inject(const SpanContext& sc,
+  virtual expected<void> Inject(const SpanContext& sc,
                                 const TextMapWriter& writer) const = 0;
 
-  virtual Expected<void> Inject(const SpanContext& sc,
+  virtual expected<void> Inject(const SpanContext& sc,
                                 const HTTPHeadersWriter& writer) const = 0;
 
-  virtual Expected<void> Inject(const SpanContext& sc,
+  virtual expected<void> Inject(const SpanContext& sc,
                                 const CustomCarrierWriter& writer) const {
     return writer.Inject(*this, sc);
   }
@@ -120,16 +120,16 @@ class Tracer {
   // is found; otherwise an std::error_code.
   //
   // Throws only if `reader` does.
-  virtual Expected<std::unique_ptr<SpanContext>> Extract(
+  virtual expected<std::unique_ptr<SpanContext>> Extract(
       std::istream& reader) const = 0;
 
-  virtual Expected<std::unique_ptr<SpanContext>> Extract(
+  virtual expected<std::unique_ptr<SpanContext>> Extract(
       const TextMapReader& reader) const = 0;
 
-  virtual Expected<std::unique_ptr<SpanContext>> Extract(
+  virtual expected<std::unique_ptr<SpanContext>> Extract(
       const HTTPHeadersReader& reader) const = 0;
 
-  virtual Expected<std::unique_ptr<SpanContext>> Extract(
+  virtual expected<std::unique_ptr<SpanContext>> Extract(
       const CustomCarrierReader& reader) const {
     return reader.Extract(*this);
   }

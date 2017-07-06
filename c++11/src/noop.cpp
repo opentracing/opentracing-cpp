@@ -52,32 +52,32 @@ class NoopTracer : public Tracer,
                                      NoopSpan(shared_from_this()));
   }
 
-  Expected<void> Inject(const SpanContext& /*sc*/,
+  expected<void> Inject(const SpanContext& /*sc*/,
                         std::ostream& /*writer*/) const override {
     return {};
   }
 
-  Expected<void> Inject(const SpanContext& /*sc*/,
+  expected<void> Inject(const SpanContext& /*sc*/,
                         const TextMapWriter& /*writer*/) const override {
     return {};
   }
 
-  Expected<void> Inject(const SpanContext& /*sc*/,
+  expected<void> Inject(const SpanContext& /*sc*/,
                         const HTTPHeadersWriter& /*writer*/) const override {
     return {};
   }
 
-  Expected<std::unique_ptr<SpanContext>> Extract(
+  expected<std::unique_ptr<SpanContext>> Extract(
       std::istream& /*reader*/) const override {
     return std::unique_ptr<SpanContext>(nullptr);
   }
 
-  Expected<std::unique_ptr<SpanContext>> Extract(
+  expected<std::unique_ptr<SpanContext>> Extract(
       const TextMapReader& /*reader*/) const override {
     return std::unique_ptr<SpanContext>(nullptr);
   }
 
-  Expected<std::unique_ptr<SpanContext>> Extract(
+  expected<std::unique_ptr<SpanContext>> Extract(
       const HTTPHeadersReader& /*reader*/) const override {
     return std::unique_ptr<SpanContext>(nullptr);
   }
