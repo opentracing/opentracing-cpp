@@ -1,5 +1,5 @@
-#ifndef MAPBOX_UTIL_RECURSIVE_WRAPPER_HPP
-#define MAPBOX_UTIL_RECURSIVE_WRAPPER_HPP
+#ifndef OPENTRACING_UTIL_RECURSIVE_WRAPPER_HPP
+#define OPENTRACING_UTIL_RECURSIVE_WRAPPER_HPP
 
 // Based on variant/recursive_wrapper.hpp from boost.
 //
@@ -15,7 +15,7 @@
 #include <cassert>
 #include <utility>
 
-namespace mapbox {
+namespace opentracing {
 namespace util {
 
 template <typename T>
@@ -117,6 +117,6 @@ inline void swap(recursive_wrapper<T>& lhs, recursive_wrapper<T>& rhs) noexcept
     lhs.swap(rhs);
 }
 } // namespace util
-} // namespace mapbox
+} // namespace opentracing
 
-#endif // MAPBOX_UTIL_RECURSIVE_WRAPPER_HPP
+#endif // OPENTRACING_UTIL_RECURSIVE_WRAPPER_HPP

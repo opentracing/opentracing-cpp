@@ -1,5 +1,5 @@
-#ifndef MAPBOX_UTIL_VARIANT_HPP
-#define MAPBOX_UTIL_VARIANT_HPP
+#ifndef OPENTRACING_UTIL_VARIANT_HPP
+#define OPENTRACING_UTIL_VARIANT_HPP
 
 #include <cassert>
 #include <cstddef>   // size_t
@@ -17,14 +17,14 @@
 // [[deprecated]] is only available in C++14, use this for the time being
 #if __cplusplus <= 201103L
 # ifdef __GNUC__
-#  define MAPBOX_VARIANT_DEPRECATED __attribute__((deprecated))
+#  define OPENTRACING_VARIANT_DEPRECATED __attribute__((deprecated))
 # elif defined(_MSC_VER)
-#  define MAPBOX_VARIANT_DEPRECATED __declspec(deprecated)
+#  define OPENTRACING_VARIANT_DEPRECATED __declspec(deprecated)
 # else
-#  define MAPBOX_VARIANT_DEPRECATED
+#  define OPENTRACING_VARIANT_DEPRECATED
 # endif
 #else
-#  define MAPBOX_VARIANT_DEPRECATED [[deprecated]]
+#  define OPENTRACING_VARIANT_DEPRECATED [[deprecated]]
 #endif
 
 
@@ -50,11 +50,11 @@
 
 #define VARIANT_VERSION (VARIANT_MAJOR_VERSION * 100000) + (VARIANT_MINOR_VERSION * 100) + (VARIANT_PATCH_VERSION)
 
-namespace mapbox {
+namespace opentracing {
 namespace util {
 
 // XXX This should derive from std::logic_error instead of std::runtime_error.
-//     See https://github.com/mapbox/variant/issues/48 for details.
+//     See https://github.com/opentracing/variant/issues/48 for details.
 class bad_variant_access : public std::runtime_error
 {
 
@@ -68,7 +68,7 @@ class bad_variant_access : public std::runtime_error
 }; // class bad_variant_access
 
 template <typename R = void>
-struct MAPBOX_VARIANT_DEPRECATED static_visitor
+struct OPENTRACING_VARIANT_DEPRECATED static_visitor
 {
     using result_type = R;
 
@@ -763,7 +763,7 @@ class variant
 
     // This function is deprecated because it returns an internal index field.
     // Use which() instead.
-    MAPBOX_VARIANT_DEPRECATED VARIANT_INLINE std::size_t get_type_index() const
+    OPENTRACING_VARIANT_DEPRECATED VARIANT_INLINE std::size_t get_type_index() const
     {
         return type_index;
     }
@@ -896,6 +896,6 @@ ResultType const& get(T const& var)
     return var.template get<ResultType>();
 }
 } // namespace util
-} // namespace mapbox
+} // namespace opentracing
 
-#endif // MAPBOX_UTIL_VARIANT_HPP
+#endif // OPENTRACING_UTIL_VARIANT_HPP

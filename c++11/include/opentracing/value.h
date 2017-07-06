@@ -4,7 +4,7 @@
 #include <opentracing/stringref.h>
 #include <opentracing/version.h>
 #include <cstdint>
-#include <opentracing/mapbox_variant/variant.hpp>
+#include <opentracing/variant/variant.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -16,10 +16,9 @@ class Value;
 
 typedef std::unordered_map<std::string, Value> Dictionary;
 typedef std::vector<Value> Values;
-typedef mapbox::util::variant<bool, double, int64_t, uint64_t, std::string,
-                              std::nullptr_t, const char*,
-                              mapbox::util::recursive_wrapper<Values>,
-                              mapbox::util::recursive_wrapper<Dictionary>>
+typedef util::variant<
+    bool, double, int64_t, uint64_t, std::string, std::nullptr_t, const char*,
+    util::recursive_wrapper<Values>, util::recursive_wrapper<Dictionary>>
     variant_type;
 
 class Value : public variant_type {
