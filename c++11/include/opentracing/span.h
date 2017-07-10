@@ -1,7 +1,7 @@
 #ifndef OPENTRACING_SPAN_H
 #define OPENTRACING_SPAN_H
 
-#include <opentracing/stringref.h>
+#include <opentracing/string_view.h>
 #include <opentracing/util.h>
 #include <opentracing/value.h>
 #include <opentracing/version.h>

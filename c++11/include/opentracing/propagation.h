@@ -1,7 +1,7 @@
 #ifndef OPENTRACING_PROPAGATION_H
 #define OPENTRACING_PROPAGATION_H
 
-#include <opentracing/stringref.h>
+#include <opentracing/string_view.h>
 #include <opentracing/util.h>
 #include <opentracing/version.h>
 #include <functional>

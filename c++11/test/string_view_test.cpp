@@ -1,5 +1,5 @@
-#include <opentracing/stringref.h>  // test include guard
-#include <opentracing/stringref.h>
+#include <opentracing/string_view.h>  // test include guard
+#include <opentracing/string_view.h>
 #include <cassert>
 
 using namespace opentracing;

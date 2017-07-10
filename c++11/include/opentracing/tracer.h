@@ -3,7 +3,7 @@
 
 #include <opentracing/propagation.h>
 #include <opentracing/span.h>
-#include <opentracing/stringref.h>
+#include <opentracing/string_view.h>
 #include <opentracing/util.h>
 #include <opentracing/version.h>
 #include <chrono>

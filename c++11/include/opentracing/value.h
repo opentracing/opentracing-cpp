@@ -1,7 +1,7 @@
 #ifndef OPENTRACING_VALUE_H
 #define OPENTRACING_VALUE_H
 
-#include <opentracing/stringref.h>
+#include <opentracing/string_view.h>
 #include <opentracing/version.h>
 #include <cstdint>
 #include <opentracing/variant/variant.hpp>

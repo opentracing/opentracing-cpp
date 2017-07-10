@@ -1,5 +1,5 @@
-#ifndef OPENTRACING_STRINGREF_H
-#define OPENTRACING_STRINGREF_H
+#ifndef OPENTRACING_STRING_VIEW_H
+#define OPENTRACING_STRING_VIEW_H
 
 #include <opentracing/version.h>
 #include <algorithm>
@@ -8,7 +8,7 @@
 #include <string>
 
 // ===========
-// stringref.h
+// string_view.h
 // ===========
 // class string_view - Constant reference to an external string
 //
@@ -138,4 +138,4 @@ inline std::ostream& operator<<(std::ostream& os,
 END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing
 
-#endif  // OPENTRACING_STRINGREF_H
+#endif  // OPENTRACING_STRING_VIEW_H
