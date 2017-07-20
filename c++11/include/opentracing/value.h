@@ -23,32 +23,32 @@ typedef util::variant<
 
 class Value : public variant_type {
  public:
-  Value() : variant_type(nullptr) {}
-  Value(std::nullptr_t) : variant_type(nullptr) {}
+  Value() noexcept : variant_type(nullptr) {}
+  Value(std::nullptr_t) noexcept : variant_type(nullptr) {}
 
   // variant_type's constructors will do some undesirable casting, for example
   //      variant_type(123)
   // will construct a bool variant; hence, constructors are expanded
   // out so as to provide more sensible behavior.
-  Value(bool x) : variant_type(x) {}
+  Value(bool x) noexcept : variant_type(x) {}
 
   template <typename T,
             typename std::enable_if<std::is_integral<T>::value &&
                                     std::is_signed<T>::value>::type* = nullptr>
-  Value(T t) : variant_type(static_cast<int64_t>(t)) {}
+  Value(T t) noexcept : variant_type(static_cast<int64_t>(t)) {}
 
   template <
       typename T,
       typename std::enable_if<std::is_integral<T>::value &&
                               std::is_unsigned<T>::value>::type* = nullptr>
-  Value(T t) : variant_type(static_cast<uint64_t>(t)) {}
+  Value(T t) noexcept : variant_type(static_cast<uint64_t>(t)) {}
 
   template <typename T,
             typename std::enable_if<std::is_floating_point<T>::value>::type* =
                 nullptr>
-  Value(T t) : variant_type(static_cast<double>(t)) {}
+  Value(T t) noexcept : variant_type(static_cast<double>(t)) {}
 
-  Value(const char* s) : variant_type(s) {}
+  Value(const char* s) noexcept : variant_type(s) {}
 
   template <int N>
   Value(const char (&cstr)[N]) : variant_type(std::string(cstr)) {}
