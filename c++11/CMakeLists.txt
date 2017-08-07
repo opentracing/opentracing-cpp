@@ -37,6 +37,8 @@ install(DIRECTORY include/opentracing DESTINATION include
 
 set(SRCS src/propagation.cpp src/noop.cpp src/tracer.cpp)
 add_library(opentracing SHARED ${SRCS})
+set_target_properties(opentracing PROPERTIES VERSION ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}
+                                             SOVERSION ${CPACK_PACKAGE_VERSION_MAJOR})
 add_library(opentracing-static STATIC ${SRCS})
 set_target_properties(opentracing-static PROPERTIES OUTPUT_NAME opentracing)
 if (CLANG_TIDY_EXE)
