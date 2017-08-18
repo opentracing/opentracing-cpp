@@ -1,0 +1,15 @@
+#ifndef OPENTRACING_VERSION_H
+#define OPENTRACING_VERSION_H
+
+#define OPENTRACING_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}." \
+                            "${CPACK_PACKAGE_VERSION_MINOR}." \
+                            "${CPACK_PACKAGE_VERSION_PATCH}"
+
+// clang-format off
+#define BEGIN_OPENTRACING_ABI_NAMESPACE \
+  inline namespace v${OPENTRACING_ABI_VERSION} {
+#define END_OPENTRACING_ABI_NAMESPACE \
+  }  // namespace v${OPENTRACING_ABI_VERSION}
+// clang-format on
+
+#endif // OPENTRACING_VERSION_H
