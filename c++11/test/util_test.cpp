@@ -1,6 +1,7 @@
 #include <opentracing/util.h>
 #include <cassert>
 #include <cmath>
+#include <cstdlib>  // Work around to https://stackoverflow.com/a/30084734.
 using namespace opentracing;
 
 static void test_convert_time_point() {
