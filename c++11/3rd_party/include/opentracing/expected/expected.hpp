@@ -110,7 +110,7 @@ private:
         return m_value;
     }
 
-    constexpr value_type && value() &&
+    constexpr value_type && value() const &&
     {
         return std::move( m_value );
     }
@@ -634,7 +634,7 @@ public:
         return assert( has_value() ), contained.value();
     }
 
-    constexpr value_type && operator *() &&
+    constexpr value_type && operator *() const &&
     {
         return assert( has_value() ), std::move( contained.value() );
     }
@@ -667,7 +667,7 @@ public:
             : ( throw bad_expected_access<error_type>( contained.error() ), contained.value() );
     }
 
-    constexpr value_type && value() &&
+    constexpr value_type && value() const &&
     {
         return has_value()
             ? std::move( contained.value() )
@@ -686,7 +686,7 @@ public:
         return assert( ! has_value() ), contained.error();
     }
 
-    constexpr error_type && error() &&
+    constexpr error_type && error() const &&
     {
         return assert( ! has_value() ), std::move( contained.error() );
     }
@@ -908,7 +908,7 @@ public:
         return assert( ! has_value() ), contained.error();
     }
 
-    constexpr error_type && error() &&
+    constexpr error_type && error() const &&
     {
         return assert( ! has_value() ), std::move( contained.error() );
     }
