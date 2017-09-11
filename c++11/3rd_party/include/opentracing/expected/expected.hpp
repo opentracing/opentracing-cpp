@@ -13,6 +13,7 @@
 
 #include <cassert>
 #include <exception>
+#include <functional>
 #include <initializer_list>
 #include <new>
 #include <stdexcept>
@@ -109,7 +110,7 @@ private:
         return m_value;
     }
 
-    constexpr value_type && value() &&
+    constexpr value_type && value() const &&
     {
         return std::move( m_value );
     }
@@ -633,7 +634,7 @@ public:
         return assert( has_value() ), contained.value();
     }
 
-    constexpr value_type && operator *() &&
+    constexpr value_type && operator *() const &&
     {
         return assert( has_value() ), std::move( contained.value() );
     }
@@ -666,7 +667,7 @@ public:
             : ( throw bad_expected_access<error_type>( contained.error() ), contained.value() );
     }
 
-    constexpr value_type && value() &&
+    constexpr value_type && value() const &&
     {
         return has_value()
             ? std::move( contained.value() )
@@ -685,7 +686,7 @@ public:
         return assert( ! has_value() ), contained.error();
     }
 
-    constexpr error_type && error() &&
+    constexpr error_type && error() const &&
     {
         return assert( ! has_value() ), std::move( contained.error() );
     }
@@ -907,7 +908,7 @@ public:
         return assert( ! has_value() ), contained.error();
     }
 
-    constexpr error_type && error() &&
+    constexpr error_type && error() const &&
     {
         return assert( ! has_value() ), std::move( contained.error() );
     }
@@ -1156,55 +1157,10 @@ inline auto make_expected() -> expected<void>
     return expected<void>( in_place );
 }
 
-template< typename T>
-constexpr auto make_expected_from_current_exception() -> expected<T>
-{
-    return expected<T>( make_unexpected_from_current_exception() );
-}
-
-template< typename T>
-auto make_expected_from_exception( std::exception_ptr v ) -> expected<T>
-{
-    return expected<T>( unexpected_type<>( std::forward<std::exception_ptr>( v ) ) );
-}
-
 template< typename T, typename E >
 constexpr auto make_expected_from_error( E e ) -> expected<T, typename std::decay<E>::type>
 {
     return expected<T, typename std::decay<E>::type>( make_unexpected( e ) );
-}
-
-template< typename F >
-/*nsel_constexpr14*/
-auto make_expected_from_call( F f,
-    nsel_REQUIRES( ! std::is_same<typename std::result_of<F()>::type, void>::value )
-) -> expected< typename std::result_of<F()>::type >
-{
-    try
-    {
-        return make_expected( f() );
-    }
-    catch (...)
-    {
-        return make_unexpected_from_current_exception();
-    }
-}
-
-template< typename F >
-/*nsel_constexpr14*/
-auto make_expected_from_call( F f,
-    nsel_REQUIRES( std::is_same<typename std::result_of<F()>::type, void>::value )
-) -> expected<void>
-{
-    try
-    {
-        f();
-        return make_expected();
-    }
-    catch (...)
-    {
-        return make_unexpected_from_current_exception();
-    }
 }
 
 } // namespace opentracing
