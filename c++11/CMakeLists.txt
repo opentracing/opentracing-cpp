@@ -37,16 +37,42 @@ install(DIRECTORY include/opentracing DESTINATION include
 
 set(SRCS src/propagation.cpp src/noop.cpp src/tracer.cpp)
 add_library(opentracing SHARED ${SRCS})
+target_include_directories(opentracing INTERFACE "$<INSTALL_INTERFACE:include/>")
 set_target_properties(opentracing PROPERTIES VERSION ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}
                                              SOVERSION ${CPACK_PACKAGE_VERSION_MAJOR})
 add_library(opentracing-static STATIC ${SRCS})
 set_target_properties(opentracing-static PROPERTIES OUTPUT_NAME opentracing)
+target_include_directories(opentracing-static INTERFACE "$<INSTALL_INTERFACE:include/>")
 if (CLANG_TIDY_EXE)
   set_target_properties(opentracing PROPERTIES
                                     CXX_CLANG_TIDY "${DO_CLANG_TIDY}")
 endif()
-install(TARGETS opentracing opentracing-static
+
+
+install(TARGETS opentracing opentracing-static EXPORT OpenTracingTargets
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib)
+
+# Package configuration setup
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/OpenTracingConfigVersion.cmake"
+    VERSION ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}
+    COMPATIBILITY AnyNewerVersion)
+export(EXPORT OpenTracingTargets
+    FILE "${CMAKE_CURRENT_BINARY_DIR}/OpenTracingTargets.cmake"
+    NAMESPACE OpenTracing::)
+configure_file(cmake/OpenTracingConfig.cmake
+    "${CMAKE_CURRENT_BINARY_DIR}/OpenTracingConfig.cmake"
+    COPYONLY)
+set(ConfigPackageLocation lib/cmake/OpenTracing)
+install(EXPORT OpenTracingTargets
+    FILE OpenTracingTargets.cmake
+    NAMESPACE OpenTracing::
+    DESTINATION ${ConfigPackageLocation})
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/OpenTracingConfig.cmake
+    "${CMAKE_CURRENT_BINARY_DIR}/OpenTracingConfigVersion.cmake"
+    DESTINATION ${ConfigPackageLocation}
+    COMPONENT Devel
+)
 
 add_subdirectory(test)
