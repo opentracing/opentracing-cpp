@@ -63,12 +63,12 @@ class Tracer {
   //     // The vanilla child span case:
   //     auto span = tracer.StartSpan(
   //         "GetFeed",
-  //         {opentracing::ChildOf(parentSpan.context())})
+  //         {opentracing::ChildOf(&parentSpan.context())})
   //
   //     // All the bells and whistles:
   //     auto span = tracer.StartSpan(
   //         "GetFeed",
-  //         {opentracing::ChildOf(parentSpan.context()),
+  //         {opentracing::ChildOf(&parentSpan.context()),
   //         opentracing::Tag{"user_agent", loggedReq.UserAgent},
   //         opentracing::StartTimestamp(loggedReq.timestamp())})
   //
