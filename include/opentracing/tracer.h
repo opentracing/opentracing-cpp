@@ -25,7 +25,7 @@ struct StartSpanOptions {
   SystemTime start_system_timestamp;
   SteadyTime start_steady_timestamp;
   std::vector<std::pair<SpanReferenceType, const SpanContext*>> references;
-  std::vector<std::pair<string_view, Value>> tags;
+  std::vector<std::pair<std::string, Value>> tags;
 };
 
 // StartSpanOption instances (zero or more) may be passed to Tracer.StartSpan.
@@ -245,7 +245,7 @@ class SetTag : public StartSpanOption {
   }
 
  private:
-  string_view key_;
+  const string_view key_;
   const Value& value_;
 };
 END_OPENTRACING_ABI_NAMESPACE
