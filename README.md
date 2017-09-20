@@ -91,3 +91,10 @@ reference.
 For the time being, "mild" backwards-incompatible changes may be made without
 changing the major version number. As OpenTracing and `opentracing-cpp` mature,
 backwards compatibility will become more of a priority.
+
+## C/C++98
+
+This library requires C++11 or later. But if you're interested in a C or C++98
+API contact us on [gitter](https://gitter.im/opentracing/opentracing-cpp?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge).
+We're open to supporting additional APIs in a separate repository if there's
+people willing to maintain it.
