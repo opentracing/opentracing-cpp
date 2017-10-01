@@ -5,6 +5,11 @@ BEGIN_OPENTRACING_ABI_NAMESPACE
 namespace {
 class PropagationErrorCategory : public std::error_category {
  public:
+  // Needed to fix bug in macOS build
+  // (https://travis-ci.org/isaachier/hunter/jobs/281868518).
+  // See https://stackoverflow.com/a/7411708/1930331 for justification.
+  PropagationErrorCategory() = default;
+
   const char* name() const noexcept override {
     return "OpenTracingPropagationError";
   }
