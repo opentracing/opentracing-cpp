@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.1)
-enable_testing()
 
 project(opentracing-cpp)
 
@@ -10,7 +9,7 @@ set(OPENTRACING_ABI_VERSION "1")
 set(OPENTRACING_VERSION_MAJOR "1")
 set(OPENTRACING_VERSION_MINOR "0")
 set(OPENTRACING_VERSION_PATCH "0")
-set(OPENTRACING_VERSION_STRING 
+set(OPENTRACING_VERSION_STRING
   "${OPENTRACING_VERSION_MAJOR}.${OPENTRACING_VERSION_MINOR}.${OPENTRACING_VERSION_PATCH}")
 
 # ==============================================================================
@@ -31,7 +30,7 @@ include(CPack)
 
 configure_file(version.h.in include/opentracing/version.h)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/opentracing 
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/opentracing
         DESTINATION include)
 
 # ==============================================================================
@@ -53,7 +52,7 @@ endif()
 # ==============================================================================
 # Set up linter
 
-find_program(CLANG_TIDY_EXE NAMES "clang-tidy" 
+find_program(CLANG_TIDY_EXE NAMES "clang-tidy"
                             DOC "Path to clang-tidy executable")
 if(NOT CLANG_TIDY_EXE)
   message(STATUS "clang-tidy not found.")
@@ -117,4 +116,7 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/OpenTracingConfig.cmake
 # ==============================================================================
 # Testing
 
-add_subdirectory(test)
+include(CTest)
+if(ENABLE_TESTING)
+  add_subdirectory(test)
+endif()
