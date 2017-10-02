@@ -120,6 +120,6 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/OpenTracingConfig.cmake
 # Testing
 
 include(CTest)
-if(ENABLE_TESTING)
+if(BUILD_TESTING)
   add_subdirectory(test)
 endif()
