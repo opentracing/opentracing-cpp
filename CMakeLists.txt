@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.1)
-enable_testing()
 
 project(opentracing-cpp)
 
@@ -10,7 +9,7 @@ set(OPENTRACING_ABI_VERSION "1")
 set(OPENTRACING_VERSION_MAJOR "1")
 set(OPENTRACING_VERSION_MINOR "0")
 set(OPENTRACING_VERSION_PATCH "0")
-set(OPENTRACING_VERSION_STRING 
+set(OPENTRACING_VERSION_STRING
   "${OPENTRACING_VERSION_MAJOR}.${OPENTRACING_VERSION_MINOR}.${OPENTRACING_VERSION_PATCH}")
 
 # ==============================================================================
@@ -31,7 +30,7 @@ include(CPack)
 
 configure_file(version.h.in include/opentracing/version.h)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/opentracing 
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/opentracing
         DESTINATION include)
 
 # ==============================================================================
@@ -53,13 +52,16 @@ endif()
 # ==============================================================================
 # Set up linter
 
-find_program(CLANG_TIDY_EXE NAMES "clang-tidy" 
-                            DOC "Path to clang-tidy executable")
-if(NOT CLANG_TIDY_EXE)
-  message(STATUS "clang-tidy not found.")
-else()
-  message(STATUS "clang-tidy found: ${CLANG_TIDY_EXE}")
-  set(DO_CLANG_TIDY "${CLANG_TIDY_EXE}" "-checks=*,-clang-analyzer-alpha.*")
+option(ENABLE_LINTING "Run clang-tidy on source files" ON)
+if(ENABLE_LINTING)
+  find_program(CLANG_TIDY_EXE NAMES "clang-tidy"
+                              DOC "Path to clang-tidy executable")
+  if(NOT CLANG_TIDY_EXE)
+    message(STATUS "clang-tidy not found.")
+  else()
+    message(STATUS "clang-tidy found: ${CLANG_TIDY_EXE}")
+    set(DO_CLANG_TIDY "${CLANG_TIDY_EXE}" "-checks=*,-clang-analyzer-alpha.*")
+  endif()
 endif()
 
 # ==============================================================================
@@ -117,4 +119,7 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/OpenTracingConfig.cmake
 # ==============================================================================
 # Testing
 
-add_subdirectory(test)
+include(CTest)
+if(BUILD_TESTING)
+  add_subdirectory(test)
+endif()
