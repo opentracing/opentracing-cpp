@@ -70,7 +70,7 @@ endif()
 include_directories(include)
 include_directories(SYSTEM 3rd_party/include)
 
-set(SRCS src/propagation.cpp src/noop.cpp src/tracer.cpp)
+set(SRCS src/propagation.cpp src/noop.cpp src/tracer.cpp src/c.cpp)
 add_library(opentracing SHARED ${SRCS})
 target_include_directories(opentracing INTERFACE "$<INSTALL_INTERFACE:include/>")
 set_target_properties(opentracing PROPERTIES VERSION ${OPENTRACING_VERSION_STRING}
