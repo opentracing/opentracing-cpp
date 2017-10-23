@@ -39,6 +39,8 @@ opentracing_valuetype_t opentracing_value_type(
 // TODO: Allocator?
 opentracing_value_t* opentracing_new_value();
 
+void opentracing_free_value(opentracing_value_t* value);
+
 bool opentracing_get_value_bool(const opentracing_value_t* value);
 
 double opentracing_get_value_double(const opentracing_value_t* value);
@@ -81,7 +83,9 @@ typedef struct opentracing_finishspanoptions_t {
 void opentracing_foreach_baggage_item(
     const opentracing_spancontext_t* span_context,
     bool (*callback_fn)(const char*,
-                        const char*));
+                        const char*,
+                        void*),
+    void* context);
 
 void opentracing_finish_span_with_options(
     opentracing_span_t* span,
@@ -111,10 +115,12 @@ void opentracing_log(
     const opentracing_tag_t** fields,
     int num_fields);
 
-const opentracing_spancontext_t* opentracing_context_from_span(
+void opentracing_context_from_span(
+    opentracing_spancontext_t* span_context,
     const opentracing_span_t* span);
 
-const opentracing_tracer_t* opentracing_tracer_from_span(
+void opentracing_tracer_from_span(
+    opentracing_tracer_t* tracer,
     const opentracing_span_t* span);
 
 opentracing_span_t* opentracing_start_span(
@@ -126,10 +132,13 @@ opentracing_span_t* opentracing_start_span_with_options(
     const char* operation_name,
     const opentracing_startspanoptions_t* options);
 
+void opentracing_free_span(opentracing_span_t* span);
+
 int opentracing_inject_binary(
     opentracing_tracer_t* tracer,
-    int (*writer_fn)(const char*, int, void*),
-    void* context);
+    const opentracing_spancontext_t* span_context,
+    char* buffer,
+    int bufferSize);
 
 int opentracing_inject_text(
     opentracing_tracer_t* tracer,
