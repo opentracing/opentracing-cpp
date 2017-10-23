@@ -70,8 +70,10 @@ template <typename Clock>
 typename Clock::time_point timespecToTimePoint(const struct timespec& time)
 {
     return typename Clock::time_point() +
-           std::chrono::seconds(time.tv_sec) +
-           std::chrono::nanoseconds(time.tv_nsec);
+           std::chrono::duration_cast<typename Clock::duration>(
+                std::chrono::seconds(time.tv_sec)) +
+           std::chrono::duration_cast<typename Clock::duration>(
+                std::chrono::nanoseconds(time.tv_nsec));
 }
 
 }  // anonymous namespace
