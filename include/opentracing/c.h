@@ -42,7 +42,6 @@ typedef enum {
 opentracing_valuetype_t opentracing_value_type(
     const opentracing_value_t* value);
 
-// TODO: Allocator?
 opentracing_value_t* opentracing_new_value();
 
 void opentracing_free_value(opentracing_value_t* value);
@@ -88,9 +87,7 @@ typedef struct opentracing_finishspanoptions_t {
 
 void opentracing_foreach_baggage_item(
     const opentracing_spancontext_t* span_context,
-    bool (*callback_fn)(const char*,
-                        const char*,
-                        void*),
+    bool (*callback_fn)(const char*, const char*, void*),
     void* context);
 
 void opentracing_finish_span_with_options(
@@ -139,66 +136,28 @@ opentracing_span_t* opentracing_start_span_with_options(
 
 void opentracing_free_span(opentracing_span_t* span);
 
+typedef struct opentracing_buffer_t {
+    char* data;
+    int size;
+} opentracing_buffer_t;
+
 int opentracing_inject_binary(
-    opentracing_tracer_t* tracer,
-    const opentracing_spancontext_t* span_context,
-    char* buffer,
-    int bufferSize);
-
-int opentracing_inject_text(
-    opentracing_tracer_t* tracer,
-    int (*writer_fn)(const char*,
-                     const char*,
-                     void*),
-    void* context);
-
-int opentracing_inject_http(
-    opentracing_tracer_t* tracer,
-    int (*writer_fn)(const char*,
-                     const char*,
-                     void*),
-    void* context);
-
-int opentracing_inject_custom(
-    opentracing_tracer_t* tracer,
-    int (*writer_fn)(const opentracing_tracer_t*,
-                     const opentracing_spancontext_t*,
-                     void*),
-    void* context);
-
-typedef int (*opentracing_reader_callback)(const char*, const char*, void*);
+    const opentracing_tracer_t* tracer,
+    const opentracing_spancontext_t* sc,
+    opentracing_buffer_t* buffer);
 
 int opentracing_extract_binary(
+    const opentracing_tracer_t* tracer,
     opentracing_spancontext_t* sc,
-    const opentracing_tracer_t* tracer,
-    int (*reader_fn)(opentracing_reader_callback, void*),
-    void* context);
-
-int opentracing_extract_text(
-    opentracing_spancontext_t* sc,
-    const opentracing_tracer_t* tracer,
-    int (*reader_fn)(opentracing_reader_callback, void*),
-    void* context);
-
-int opentracing_extract_http(
-    opentracing_spancontext_t* sc,
-    const opentracing_tracer_t* tracer,
-    int (*reader_fn)(opentracing_reader_callback, void*),
-    void* context);
-
-int opentracing_extract_custom(
-    const opentracing_tracer_t* tracer,
-    int (*reader_fn)(const opentracing_tracer_t*,
-                     const opentracing_spancontext_t*,
-                     void*),
-    void* context);
+    const opentracing_buffer_t* buffer);
 
 void opentracing_close_tracer(opentracing_tracer_t* tracer);
 
 void opentracing_global_tracer(opentracing_tracer_t* tracer);
 
+/* TODO
 opentracing_tracer_t* opentracing_init_global_tracer(
-    opentracing_tracer_t* tracer);
+    opentracing_tracer_t* tracer); */
 
 #ifdef __cplusplus
 }  /* extern "C" */

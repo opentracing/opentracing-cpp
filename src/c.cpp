@@ -13,7 +13,7 @@ struct opentracing_value_t {
 };
 
 struct opentracing_spancontext_t {
-    const opentracing::SpanContext* impl_;
+    opentracing::SpanContext* impl_;
 };
 
 struct opentracing_span_t {
@@ -21,7 +21,7 @@ struct opentracing_span_t {
 };
 
 struct opentracing_tracer_t {
-    const opentracing::Tracer* impl_;
+    opentracing::Tracer* impl_;
 };
 
 namespace {
@@ -189,11 +189,15 @@ extern "C" void opentracing_finish_span_with_options(
         timespecToTimePoint<opentracing::SteadyClock>(
             options->finish_timestamp);
     span->impl_->FinishWithOptions(cppOptions);
+    delete span->impl_;
+    delete span;
 }
 
 extern "C" void opentracing_finish_span(opentracing_span_t* span)
 {
     span->impl_->Finish();
+    delete span->impl_;
+    delete span;
 }
 
 extern "C" void opentracing_set_operation_name(
@@ -237,14 +241,15 @@ extern "C" void opentracing_context_from_span(
     opentracing_spancontext_t* span_context,
     const opentracing_span_t* span)
 {
-    span_context->impl_ = &span->impl_->context();
+    span_context->impl_ = const_cast<opentracing::SpanContext*>(
+        &span->impl_->context());
 }
 
 extern "C" void opentracing_tracer_from_span(
     opentracing_tracer_t* tracer,
     const opentracing_span_t* span)
 {
-    tracer->impl_ = &span->impl_->tracer();
+    tracer->impl_ = const_cast<opentracing::Tracer*>(&span->impl_->tracer());
 }
 
 extern "C" opentracing_span_t* opentracing_start_span(
@@ -292,70 +297,59 @@ extern "C" void opentracing_free_span(opentracing_span_t* span)
     delete span;
 }
 
-/* TODO:
 extern "C" int opentracing_inject_binary(
-    opentracing_tracer_t* tracer,
-    const opentracing_spancontext_t* span_context,
-    char* buffer,
-    int bufferSize)
+    const opentracing_tracer_t* tracer,
+    const opentracing_spancontext_t* sc,
+    opentracing_buffer_t* buffer)
 {
     std::ostringstream oss;
-    tracer->impl_->Inject(*span_context->impl_, oss);
-    const auto data = oss.str();
-    if (static_cast<int>(data.size()) > bufferSize) {
-        return -data.size();
+    try {
+        const auto result = tracer->impl_->Inject(*sc->impl_, oss);
+        if (!result) {
+            return result.error().value();
+        }
+
+        const auto dataStr = oss.str();
+        const auto dataStrSize = dataStr.size();
+        buffer->data = static_cast<char*>(malloc(dataStrSize));
+        if (!buffer->data) {
+            buffer->size = 0;
+            return -1;
+        }
+
+        buffer->size = static_cast<int>(oss.str().size());
+        std::memcpy(buffer->data, dataStr.c_str(), dataStrSize);
+        return 0;
+    } catch (...) {
+        return -1;
     }
-    std::memcpy(buffer, data.c_str(), data.size());
-    return data.size();
 }
 
-extern "C" int opentracing_inject_text(
-    opentracing_tracer_t* tracer,
-    int (*writer_fn)(const char*, const char*, void*),
-    void* context);
-
-extern "C" int opentracing_inject_http(
-    opentracing_tracer_t* tracer,
-    int (*writer_fn)(const char*, const char*, void*),
-    void* context);
-
-extern "C" int opentracing_inject_custom(
-    opentracing_tracer_t* tracer,
-    int (*writer_fn)(const opentracing_tracer_t*,
-                     const opentracing_spancontext_t*,
-                     void*),
-    void* context);
-
 extern "C" int opentracing_extract_binary(
+    const opentracing_tracer_t* tracer,
     opentracing_spancontext_t* sc,
-    const opentracing_tracer_t* tracer,
-    int (*reader_fn)(char*, int, void*),
-    void* context);
-
-extern "C" int opentracing_extract_text(
-    opentracing_spancontext_t* sc,
-    const opentracing_tracer_t* tracer,
-    int (*reader_fn)(const char*, const char*, void*),
-    void* context);
-
-extern "C" int opentracing_extract_http(
-    opentracing_spancontext_t* sc,
-    const opentracing_tracer_t* tracer,
-    int (*reader_fn)(const char*, const char*, void*),
-    void* context);
-
-extern "C" int opentracing_extract_custom(
-    const opentracing_tracer_t* tracer,
-    int (*reader_fn)(const opentracing_tracer_t*,
-                     const opentracing_spancontext_t*,
-                     void*),
-    void* context);
-*/
+    const opentracing_buffer_t* buffer)
+{
+    try {
+        std::istringstream iss(
+            opentracing::string_view(
+                buffer->data, static_cast<size_t>(buffer->size)));
+        auto result = tracer->impl_->Extract(iss);
+        if (!result) {
+            return result.error().value();
+        }
+        sc->impl_ = result->release();
+        return 0;
+    } catch (...) {
+        return -1;
+    }
+}
 
 extern "C" void opentracing_close_tracer(opentracing_tracer_t* tracer)
 {
-    auto* impl = const_cast<opentracing::Tracer*>(tracer->impl_);
-    impl->Close();
+    tracer->impl_->Close();
+    delete tracer->impl_;
+    delete tracer;
 }
 
 extern "C" void opentracing_global_tracer(opentracing_tracer_t* tracer)
