@@ -205,7 +205,7 @@ extern "C" void opentracing_set_tag(
     const char* key,
     const opentracing_value_t* value)
 {
-    span->impl_->SetTag(key, value);
+    span->impl_->SetTag(key, value->impl_);
 }
 
 extern "C" void opentracing_set_baggage_item(
@@ -226,11 +226,10 @@ extern "C" const char* opentracing_baggage_item(
 /* TODO
 extern "C" void opentracing_log(
     opentracing_span_t* span,
-    const opentracing_tag_t** fields,
-    int num_fields)
+    const opentracing_tag_t fields[])
 {
-}
-*/
+    span->impl_->Log(fields);
+}*/
 
 extern "C" void opentracing_context_from_span(
     opentracing_spancontext_t* span_context,
@@ -267,12 +266,17 @@ extern "C" opentracing_span_t* opentracing_start_span_with_options(
     cppOptions.start_system_timestamp =
         timespecToTimePoint<opentracing::SystemClock>(
             options->start_system_timestamp);
+
     for (auto i = 0; i < options->num_references; ++i) {
         const auto* ref = options->references[i];
-        cppOptions.references.push_back(
-            std::make_pair(
+        cppOptions.references.emplace_back(
                 static_cast<opentracing::SpanReferenceType>(ref->type),
-                ref->context->impl_));
+                ref->context->impl_);
+    }
+
+    for (auto i = 0; i < options->num_tags; ++i) {
+        const auto* tag = options->tags[i];
+        cppOptions.tags.emplace_back(tag->key, tag->value->impl_);
     }
 
     std::unique_ptr<opentracing_span_t> span(new opentracing_span_t());
@@ -286,6 +290,7 @@ extern "C" void opentracing_free_span(opentracing_span_t* span)
     delete span;
 }
 
+/* TODO:
 extern "C" int opentracing_inject_binary(
     opentracing_tracer_t* tracer,
     const opentracing_spancontext_t* span_context,
@@ -293,16 +298,15 @@ extern "C" int opentracing_inject_binary(
     int bufferSize)
 {
     std::ostringstream oss;
-    tracer->impl_->Inject(span_context->impl_, oss);
+    tracer->impl_->Inject(*span_context->impl_, oss);
     const auto data = oss.str();
-    if (data.size() > *bufferSize) {
+    if (static_cast<int>(data.size()) > bufferSize) {
         return -data.size();
     }
     std::memcpy(buffer, data.c_str(), data.size());
     return data.size();
 }
 
-/* TODO:
 extern "C" int opentracing_inject_text(
     opentracing_tracer_t* tracer,
     int (*writer_fn)(const char*, const char*, void*),
@@ -344,10 +348,15 @@ extern "C" int opentracing_extract_custom(
                      const opentracing_spancontext_t*,
                      void*),
     void* context);
+*/
 
-extern "C" void opentracing_close_tracer(opentracing_tracer_t* tracer);
+extern "C" void opentracing_close_tracer(opentracing_tracer_t* tracer)
+{
+    auto* impl = const_cast<opentracing::Tracer*>(tracer->impl_);
+    impl->Close();
+}
 
-extern "C" opentracing_tracer_t* opentracing_global_tracer();
-
-extern "C" opentracing_tracer_t* opentracing_init_global_tracer(
-    opentracing_tracer_t* tracer);*/
+extern "C" void opentracing_global_tracer(opentracing_tracer_t* tracer)
+{
+    tracer->impl_ = opentracing::Tracer::Global().get();
+}

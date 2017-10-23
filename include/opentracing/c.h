@@ -17,6 +17,12 @@ typedef enum {
     opentracing_spanreferencetype_followsfromref = 2
 } opentracing_spanreferencetype_t;
 
+typedef enum {
+    opentracing_invalid_span_context_error = 1,
+    opentracing_invalid_carrier_context_error = 2,
+    opentracing_span_context_corrupted_error = 3
+} opentracing_error_code_t;
+
 typedef struct opentracing_spanreference_t {
     opentracing_spanreferencetype_t type;
     const opentracing_spancontext_t* context;
@@ -112,8 +118,7 @@ const char* opentracing_baggage_item(
 
 void opentracing_log(
     opentracing_span_t* span,
-    const opentracing_tag_t** fields,
-    int num_fields);
+    const opentracing_tag_t fields[]);
 
 void opentracing_context_from_span(
     opentracing_spancontext_t* span_context,
@@ -161,26 +166,24 @@ int opentracing_inject_custom(
                      void*),
     void* context);
 
+typedef int (*opentracing_reader_callback)(const char*, const char*, void*);
+
 int opentracing_extract_binary(
     opentracing_spancontext_t* sc,
     const opentracing_tracer_t* tracer,
-    int (*reader_fn)(char*, int, void*),
+    int (*reader_fn)(opentracing_reader_callback, void*),
     void* context);
 
 int opentracing_extract_text(
     opentracing_spancontext_t* sc,
     const opentracing_tracer_t* tracer,
-    int (*reader_fn)(const char*,
-                     const char*,
-                     void*),
+    int (*reader_fn)(opentracing_reader_callback, void*),
     void* context);
 
 int opentracing_extract_http(
     opentracing_spancontext_t* sc,
     const opentracing_tracer_t* tracer,
-    int (*reader_fn)(const char*,
-                     const char*,
-                     void*),
+    int (*reader_fn)(opentracing_reader_callback, void*),
     void* context);
 
 int opentracing_extract_custom(
@@ -192,7 +195,7 @@ int opentracing_extract_custom(
 
 void opentracing_close_tracer(opentracing_tracer_t* tracer);
 
-opentracing_tracer_t* opentracing_global_tracer();
+void opentracing_global_tracer(opentracing_tracer_t* tracer);
 
 opentracing_tracer_t* opentracing_init_global_tracer(
     opentracing_tracer_t* tracer);
