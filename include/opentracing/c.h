@@ -108,6 +108,7 @@ typedef struct opentracing_span_t {
 } opentracing_span_t;
 
 typedef struct opentracing_text_map_reader_t {
+    void (*destructor)(void* self);
     int (*foreach_key)(const void* self,
                        opentracing_foreach_key_value_callback_t f);
 } opentracing_text_map_reader_t;
