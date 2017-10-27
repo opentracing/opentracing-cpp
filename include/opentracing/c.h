@@ -25,6 +25,7 @@ typedef enum opentracing_error_code_t {
 typedef struct opentracing_string_buffer_t {
     char* data;
     int size;
+    int capacity;
 } opentracing_string_buffer_t;
 
 typedef struct opentracing_string_t {
@@ -164,6 +165,7 @@ struct opentracing_tracer_t {
     void (*destructor)(void* self);
     opentracing_span_t* (*start_span_with_options)(
         const void* self,
+        const opentracing_string_t* operation_name,
         const opentracing_start_span_options_t* options);
     int (*inject_binary)(const void* self,
                          const opentracing_span_context_t* sc,

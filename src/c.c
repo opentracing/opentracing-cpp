@@ -133,6 +133,7 @@ struct noop_tracer_t {
     void (*destructor)(void* self);
     opentracing_span_t* (*start_span_with_options)(
         const void* self,
+        const opentracing_string_t* operation_name,
         const opentracing_start_span_options_t* options);
     int (*inject_binary)(const void* self,
                          const opentracing_span_context_t* sc,
@@ -162,7 +163,9 @@ struct noop_tracer_t {
 };
 
 static opentracing_span_t* noop_tracer_start_span_with_options(
-    const void* self, const opentracing_start_span_options_t* option)
+    const void* self,
+    const opentracing_string_t* operation_name,
+    const opentracing_start_span_options_t* option)
 {
     noop_span_t* span = (noop_span_t*) malloc(sizeof(noop_span_t));
     if (!span) {
