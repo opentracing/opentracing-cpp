@@ -15,16 +15,28 @@
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
-// StartSpanOptions allows Tracer.StartSpan() callers  a mechanism to override
+// StartSpanOptions allows Tracer.StartSpan() callers a mechanism to override
 // the start timestamp, specify Span References, and make a single Tag or
 // multiple Tags available at Span start time.
 //
 // StartSpan() callers should look at the StartSpanOption interface and
 // implementations available in this library.
 struct StartSpanOptions {
+  // start_system_timestamp and start_steady_timestamp override the Span's start
+  // time, or implicitly become std::chrono::system_clock::now() and
+  // std::chrono::steady_clock::now() if both are equal to the epoch (default
+  // behavior).
+  //
+  // If one of the timestamps is set but not the other, the set timestamp is
+  // used to estimate the corresponding timestamp of the other.
   SystemTime start_system_timestamp;
   SteadyTime start_steady_timestamp;
+
+  // Zero or more causal references to other Spans (via their SpanContext).
+  // If empty, start a "root" Span (i.e., start a new trace).
   std::vector<std::pair<SpanReferenceType, const SpanContext*>> references;
+
+  // Zero or more tags to apply to the newly created span.
   std::vector<std::pair<std::string, Value>> tags;
 };
 
@@ -79,8 +91,6 @@ class Tracer {
       std::initializer_list<option_wrapper<StartSpanOption>> option_list = {})
       const noexcept {
     StartSpanOptions options;
-    options.start_system_timestamp = SystemClock::now();
-    options.start_steady_timestamp = SteadyClock::now();
     for (const auto& option : option_list) option.get().Apply(options);
     return StartSpanWithOptions(operation_name, options);
   }
