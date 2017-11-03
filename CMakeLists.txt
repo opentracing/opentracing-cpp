@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 
-project(opentracing-cpp)
+project(opentracing-cpp C CXX)
 
 # ==============================================================================
 # Version information
@@ -36,6 +36,7 @@ install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/opentracing
 # ==============================================================================
 # Configure compilers
 
+set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 11)
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Weverything \
@@ -70,7 +71,7 @@ endif()
 include_directories(include)
 include_directories(SYSTEM 3rd_party/include)
 
-set(SRCS src/propagation.cpp src/noop.cpp src/tracer.cpp)
+set(SRCS src/propagation.cpp src/noop.cpp src/tracer.cpp src/c.c)
 add_library(opentracing SHARED ${SRCS})
 target_include_directories(opentracing INTERFACE "$<INSTALL_INTERFACE:include/>")
 set_target_properties(opentracing PROPERTIES VERSION ${OPENTRACING_VERSION_STRING}
