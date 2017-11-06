@@ -80,6 +80,15 @@ const std::error_code invalid_carrier_error(2, propagation_error_category());
 const std::error_code span_context_corrupted_error(
     3, propagation_error_category());
 
+// `key_not_found_error` occurs when TextMapReader::LookupKey fails to find
+// an entry for the provided key.
+const std::error_code key_not_found_error(4, propagation_error_category());
+
+// `lookup_key_not_supported_error` occurs when TextMapReader::LookupKey is
+// not supported for the provided key.
+const std::error_code lookup_key_not_supported_error(
+    5, propagation_error_category());
+
 // TextMapWriter is the Inject() carrier for the TextMap builtin format. With
 // it, the caller can encode a SpanContext for propagation as entries in a map
 // of unicode strings.
@@ -88,6 +97,18 @@ const std::error_code span_context_corrupted_error(
 class TextMapReader {
  public:
   virtual ~TextMapReader() = default;
+
+  // LookupKey returns the value for the specified `key` if available. If no
+  // such key is present, it returns `key_not_found_error`.
+  //
+  // TextMapReaders are not required to implement this method. If not supported,
+  // the function returns `lookup_key_not_supported_error`.
+  //
+  // Tracers may use this as an alternative to `ForeachKey` as a faster way to
+  // extract span context.
+  virtual expected<string_view> LookupKey(string_view /*key*/) const {
+    return make_unexpected(lookup_key_not_supported_error);
+  }
 
   // ForeachKey returns TextMap contents via repeated calls to the `f`
   // function. If any call to `f` returns an error, ForeachKey terminates and
