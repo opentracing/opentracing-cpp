@@ -130,7 +130,7 @@ reference.
     }
 ```
 
-#### Extract Span context into a TextMapReader
+#### Extract Span context from a TextMapReader
 
 ```cpp
     struct CustomCarrierReader : opentracing::TextMapReader {
