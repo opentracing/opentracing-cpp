@@ -18,8 +18,13 @@ genrule(
     ]),
     outs = ["include/opentracing/version.h"],
     cmd = """
-    cmake -DBUILD_TESTING=OFF -L $$(dirname $(location :CMakeLists.txt))
-    mv include/opentracing/version.h $@
+    TEMP_DIR=$$(mktemp -d)
+    TARGET=$${PWD}/$@
+    OPENTRACING_ROOT=$$(dirname $${PWD}/$(location :CMakeLists.txt))
+    cd $$TEMP_DIR
+    cmake -DBUILD_TESTING=OFF -L $$OPENTRACING_ROOT
+    mv include/opentracing/version.h $$TARGET
+    rm -rf $$TEMP_DIR
     """,
 )
 
