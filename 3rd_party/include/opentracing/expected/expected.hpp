@@ -678,16 +678,6 @@ public:
         return has_value_;
     }
 
-    nsel_REQUIRES_0(!std::is_same<E, std::exception_ptr>::value)
-
-    constexpr value_type const & value() const &
-    {
-      return has_value()
-                 ? contained.value()
-                 : (throw bad_expected_access<error_type>(contained.error()),
-                    contained.value());
-    }
-
     constexpr value_type const & value() const &
     {
         return has_value()
