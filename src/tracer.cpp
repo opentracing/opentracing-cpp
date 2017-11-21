@@ -10,7 +10,7 @@ expected<void> Tracer::Inject(const SpanContext& sc,
   std::ostringstream oss;
   const auto result = Inject(sc, oss);
   if (!result) {
-    return opentracing::make_unexpected(result.error());
+    return result;
   }
   if (!oss) {
     return opentracing::make_unexpected(
