@@ -41,9 +41,6 @@
 #define nsel_REQUIRES_0(...) \
     template< bool B = (__VA_ARGS__), typename std::enable_if<B, int>::type = 0 >
 
-#define nsel_REQUIRES_1(...) \
-  template <int B = (__VA_ARGS__), typename std::enable_if<B, int>::type = 0>
-
 #define nsel_REQUIRES_T(...) \
     typename = typename std::enable_if< (__VA_ARGS__), opentracing::expected_detail::enabler >::type
 
@@ -387,6 +384,35 @@ private:
     error_type m_error;
 };
 
+/// class error_traits
+
+template< typename Error >
+struct error_traits
+{
+    static void rethrow( Error const & e )
+    {
+        throw bad_expected_access<Error>{ e };
+    }
+};
+
+template<>
+struct error_traits< std::exception_ptr >
+{
+    static void rethrow( std::exception_ptr const & e )
+    {
+        std::rethrow_exception( e );
+    }
+};
+
+template<>
+struct error_traits< std::error_code >
+{
+    static void rethrow( std::error_code const & e )
+    {
+        throw std::system_error( e );
+    }
+};
+
 /// class expected
 
 template< typename T, typename E = std::error_code >
@@ -662,51 +688,25 @@ public:
                     contained.value());
     }
 
-    nsel_REQUIRES_1(std::is_same<E, std::exception_ptr>::value)
-
     constexpr value_type const & value() const &
     {
-      return has_value() ? contained.value()
-                         : (std::rethrow_exception(contained.error()),
-                            contained.value());
+        return has_value()
+            ? ( contained.value() )
+            : ( error_traits<error_type>::rethrow( contained.error() ), contained.value() );
     }
-
-    nsel_REQUIRES_0(!std::is_same<E, std::exception_ptr>::value)
 
     value_type & value() &
     {
-      return has_value()
-                 ? contained.value()
-                 : (throw bad_expected_access<error_type>(contained.error()),
-                    contained.value());
+        return has_value()
+            ? ( contained.value() )
+            : ( error_traits<error_type>::rethrow( contained.error() ), contained.value() );
     }
-
-    nsel_REQUIRES_1(std::is_same<E, std::exception_ptr>::value)
-
-    value_type & value() &
-    {
-      return has_value() ? contained.value()
-                         : (std::rethrow_exception(contained.error()),
-                            contained.value());
-    }
-
-    nsel_REQUIRES_0(!std::is_same<E, std::exception_ptr>::value)
 
     constexpr value_type && value() &&
     {
-      return has_value()
-                 ? std::move(contained.value())
-                 : (throw bad_expected_access<error_type>(contained.error()),
-                    contained.value());
-    }
-
-    nsel_REQUIRES_1(std::is_same<E, std::exception_ptr>::value)
-
-    constexpr value_type && value() &&
-    {
-      return has_value() ? std::move(contained.value())
-                         : (std::rethrow_exception(contained.error()),
-                            contained.value());
+        return has_value()
+            ? ( contained.value() )
+            : ( error_traits<error_type>::rethrow( contained.error() ), contained.value() );
     }
 
     constexpr error_type const & error() const &
@@ -1241,7 +1241,6 @@ struct hash< opentracing::expected<void,E> >
 
 #undef nsel_REQUIRES
 #undef nsel_REQUIRES_0
-#undef nsel_REQUIRES_1
 #undef nsel_REQUIRES_T
 
 #endif // OPENTRACING_EXPECTED_LITE_HPP
