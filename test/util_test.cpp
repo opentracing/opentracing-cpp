@@ -1,3 +1,6 @@
+// Make sure assert is defined.
+#undef NDEBUG
+
 #include <opentracing/util.h>
 #include <cassert>
 #include <cmath>

@@ -1,3 +1,6 @@
+// Make sure assert is defined.
+#undef NDEBUG
+
 #include <opentracing/string_view.h>  // test include guard
 #include <opentracing/string_view.h>
 #include <cassert>
