@@ -1,13 +1,14 @@
+#include "assert.h"
+
 #include <opentracing/string_view.h>  // test include guard
 #include <opentracing/string_view.h>
-#include <cassert>
 
 using namespace opentracing;
 
 static void test_empty() {
   string_view ref;
-  assert(0 == ref.data());
-  assert(0 == ref.length());
+  ASSERT(0 == ref.data());
+  ASSERT(0 == ref.length());
 }
 
 static void test_cstring() {
@@ -15,8 +16,8 @@ static void test_cstring() {
 
   string_view ref(val);
 
-  assert(val == ref.data());
-  assert(std::strlen(val) == ref.length());
+  ASSERT(val == ref.data());
+  ASSERT(std::strlen(val) == ref.length());
 }
 
 static void test_std_string() {
@@ -24,8 +25,8 @@ static void test_std_string() {
 
   string_view ref(val);
 
-  assert(val == ref.data());
-  assert(val.length() == ref.length());
+  ASSERT(val == ref.data());
+  ASSERT(val.length() == ref.length());
 }
 
 static void test_copy() {
@@ -34,8 +35,8 @@ static void test_copy() {
   string_view ref(val);
   string_view cpy(ref);
 
-  assert(val == cpy.data());
-  assert(val.length() == cpy.length());
+  ASSERT(val == cpy.data());
+  ASSERT(val.length() == cpy.length());
 }
 
 int main() {

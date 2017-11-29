@@ -7,6 +7,6 @@ TEST_NAMES = [
 
 [cc_test(
     name = test_name,
-    srcs = [test_name + ".cpp"],
+    srcs = [test_name + ".cpp", "assert.h"],
     deps = ["//:opentracing"],
 ) for test_name in TEST_NAMES]
