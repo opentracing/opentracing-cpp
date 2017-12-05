@@ -1,0 +1,35 @@
+cc_library(
+    name = "opentracing",
+    srcs = glob(["src/*.cpp"]),
+    hdrs = glob(["include/opentracing/*.h"]) + [
+        ":include/opentracing/version.h",
+    ],
+    strip_include_prefix = "include",
+    visibility = ["//visibility:public"],
+    deps = [":3rd_party_lib"],
+)
+
+genrule(
+    name = "generate_version_h",
+    srcs = glob([
+        "*",
+        "cmake/*",
+        "src/*",
+    ]),
+    outs = ["include/opentracing/version.h"],
+    cmd = """
+    TEMP_DIR=$$(mktemp -d)
+    TARGET=$${PWD}/$@
+    OPENTRACING_ROOT=$$(dirname $${PWD}/$(location :CMakeLists.txt))
+    cd $$TEMP_DIR
+    cmake -DBUILD_TESTING=OFF -L $$OPENTRACING_ROOT
+    mv include/opentracing/version.h $$TARGET
+    rm -rf $$TEMP_DIR
+    """,
+)
+
+cc_library(
+    name = "3rd_party_lib",
+    hdrs = glob(["3rd_party/include/**/*.hpp"]),
+    strip_include_prefix = "3rd_party/include",
+)

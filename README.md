@@ -86,6 +86,105 @@ reference.
     }
 ```
 
+#### Inject Span context into a TextMapWriter
+
+```cpp
+    struct CustomCarrierWriter : opentracing::TextMapWriter {
+      explicit CustomCarrierWriter(
+          std::unordered_map<std::string, std::string>& data_)
+          : data{data_} {}
+    
+      opentracing::expected<void> Set(
+          opentracing::string_view key,
+          opentracing::string_view value) const override {
+        // OpenTracing uses opentracing::expected for error handling. This closely
+        // follows the expected proposal for the C++ Standard Library. See
+        //    http://open-std.org/JTC1/SC22/WG21/docs/papers/2017/p0323r3.pdf
+        // for more background.
+        opentracing::expected<void> result;
+    
+        auto was_successful = data.emplace(key, value);
+        if (was_successful.second) {
+          // Use a default constructed opentracing::expected<void> to indicate
+          // success.
+          return result;
+        } else {
+          // `key` clashes with existing data, so the span context can't be encoded
+          // successfully; set opentracing::expected<void> to an std::error_code.
+          return opentracing::make_unexpected(
+              std::make_error_code(std::errc::not_supported));
+        }
+      }
+    
+      std::unordered_map<std::string, std::string>& data;
+    };
+
+    ...
+    
+    std::unordered_map<std::string, std::string> data;
+    CustomCarrierWriter carrier{data};
+    auto was_successful = tracer->Inject(span->context(), carrier);
+    if (!was_successful) {
+      // Injection failed, log an error message.
+      std::cerr << was_successful.error().message() << "\n";
+    }
+```
+
+#### Extract Span context from a TextMapReader
+
+```cpp
+    struct CustomCarrierReader : opentracing::TextMapReader {
+      explicit CustomCarrierReader(
+          const std::unordered_map<std::string, std::string>& data_)
+          : data{data_} {}
+    
+      using F = std::function<opentracing::expected<void>(
+          opentracing::string_view, opentracing::string_view)>;
+    
+      opentracing::expected<void> ForeachKey(F f) const override {
+        // Iterate through all key-value pairs, the tracer use the relevant keys to
+        // extract a span context.
+        for (auto& key_value : data) {
+          auto was_successful = f(key_value.first, key_value.second);
+          if (!was_successful) {
+            // If the callback returns and unexpected value, bail out of the loop.
+            return was_successful;
+          }
+        }
+    
+        // Indicate successful iteration.
+        return {};
+      }
+    
+      // Optional, define TextMapReader::LookupKey to allow for faster extraction.
+      opentracing::expected<opentracing::string_view> LookupKey(
+          opentracing::string_view key) const override {
+        auto iter = data.find(key);
+        if (iter != data.end()) {
+          return opentracing::make_unexpected(opentracing::key_not_found_error);
+        }
+        return opentracing::string_view{iter->second};
+      }
+    
+      const std::unordered_map<std::string, std::string>& data;
+    };
+    
+    ...
+
+    CustomCarrierReader carrier{data};
+    auto span_context_maybe = tracer->Extract(carrier);
+    if (!span_context_maybe) {
+      // Extraction failed, log an error message.
+      std::cerr << span_context_maybe.error().message() << "\n";
+    }
+  
+    // If `carrier` contained a span context, `span_context` will point to a
+    // representation of it; otherwise, if no span context existed, `span_context`
+    // will be nullptr;
+    std::unique_ptr<opentracing::SpanContext> span_context =
+        std::move(*span_context_maybe);
+```
+
 ## API compatibility
 
 For the time being, "mild" backwards-incompatible changes may be made without

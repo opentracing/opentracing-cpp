@@ -8,9 +8,7 @@ class PropagationErrorCategory : public std::error_category {
   // Needed to fix bug in macOS build
   // (https://travis-ci.org/isaachier/hunter/jobs/281868518).
   // See https://stackoverflow.com/a/7411708/1930331 for justification.
-  PropagationErrorCategory()
-  {
-  }
+  PropagationErrorCategory() {}
 
   const char* name() const noexcept override {
     return "OpenTracingPropagationError";
@@ -27,6 +25,12 @@ class PropagationErrorCategory : public std::error_category {
     if (code == span_context_corrupted_error.value()) {
       return std::make_error_condition(std::errc::invalid_argument);
     }
+    if (code == key_not_found_error.value()) {
+      return std::make_error_condition(std::errc::invalid_argument);
+    }
+    if (code == lookup_key_not_supported_error.value()) {
+      return std::make_error_condition(std::errc::not_supported);
+    }
     return std::error_condition(code, *this);
   }
 
@@ -39,6 +43,12 @@ class PropagationErrorCategory : public std::error_category {
     }
     if (code == span_context_corrupted_error.value()) {
       return "opentracing: SpanContext data corrupted in Extract carrier";
+    }
+    if (code == key_not_found_error.value()) {
+      return "opentracing: SpanContext key not found";
+    }
+    if (code == lookup_key_not_supported_error.value()) {
+      return "opentracing: Lookup for the given key is not supported";
     }
     return "opentracing: unknown propagation error";
   }
