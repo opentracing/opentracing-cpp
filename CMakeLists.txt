@@ -40,6 +40,7 @@ set(CMAKE_CXX_STANDARD 11)
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Weverything \
     -Wno-c++98-compat \
+    -Wno-c++98-compat-pedantic \
     -Wno-c++98-compat-bind-to-temporary-copy \
     -Wno-weak-vtables \
     -Wno-exit-time-destructors \
@@ -71,6 +72,15 @@ include_directories(include)
 include_directories(SYSTEM 3rd_party/include)
 
 set(SRCS src/propagation.cpp src/dynamic_load.cpp src/noop.cpp src/tracer.cpp)
+
+if (UNIX)
+  list(APPEND SRCS src/dynamic_load_unix.cpp)
+elseif(MSVS OR MSYS OR MINGW)
+  list(APPEND SRCS src/dynamic_load_windows.cpp)
+else()
+  list(APPEND SRCS src/dynamic_load_unsupported.cpp)
+endif()
+
 add_library(opentracing SHARED ${SRCS})
 target_include_directories(opentracing INTERFACE "$<INSTALL_INTERFACE:include/>")
 set_target_properties(opentracing PROPERTIES VERSION ${OPENTRACING_VERSION_STRING}
@@ -78,6 +88,13 @@ set_target_properties(opentracing PROPERTIES VERSION ${OPENTRACING_VERSION_STRIN
 add_library(opentracing-static STATIC ${SRCS})
 set_target_properties(opentracing-static PROPERTIES OUTPUT_NAME opentracing)
 target_include_directories(opentracing-static INTERFACE "$<INSTALL_INTERFACE:include/>")
+if (UNIX)
+  target_link_libraries(opentracing dl)
+  target_link_libraries(opentracing-static dl)
+elseif(MSVS OR MSYS OR MINGW)
+  # TODO
+endif()
+
 if (CLANG_TIDY_EXE)
   set_target_properties(opentracing PROPERTIES
                                     CXX_CLANG_TIDY "${DO_CLANG_TIDY}")
