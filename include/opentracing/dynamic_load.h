@@ -2,7 +2,10 @@
 #define OPENTRACING_DYNAMIC_LOAD_H
 
 #include <opentracing/tracer.h>
+#include <opentracing/tracer_factory.h>
+#include <opentracing/version.h>
 #include <system_error>
+
 extern "C" int __attribute((weak))
 opentracing_make_tracer_factory(const char* opentracing_version,
                                 void** tracer_factory);
@@ -20,25 +23,9 @@ const std::error_code dynamic_load_not_supported_error(
 const std::error_code incompatible_library_versions_error(
     3, dynamic_load_error_category());
 
-const std::error_code configuration_parse_error(4,
-                                                dynamic_load_error_category());
-
-const std::error_code invalid_configuration_error(
-    5, dynamic_load_error_category());
-
-const std::error_code internal_tracer_error(6, dynamic_load_error_category());
-
 class DynamicLibraryHandle {
  public:
   virtual ~DynamicLibraryHandle() = default;
-};
-
-class TracerFactory {
- public:
-  virtual ~TracerFactory() = default;
-
-  virtual expected<std::shared_ptr<Tracer>> MakeTracer(
-      const char* configuration, std::string& error_message) const noexcept = 0;
 };
 
 // Provides a handle to a dynamically loaded tracing library.

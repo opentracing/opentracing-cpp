@@ -71,7 +71,11 @@ endif()
 include_directories(include)
 include_directories(SYSTEM 3rd_party/include)
 
-set(SRCS src/propagation.cpp src/dynamic_load.cpp src/noop.cpp src/tracer.cpp)
+set(SRCS src/propagation.cpp
+         src/dynamic_load.cpp
+         src/noop.cpp
+         src/tracer.cpp
+         src/tracer_factory.cpp)
 
 if (UNIX)
   list(APPEND SRCS src/dynamic_load_unix.cpp)

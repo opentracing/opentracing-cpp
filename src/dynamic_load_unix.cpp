@@ -43,7 +43,7 @@ expected<DynamicTracingLibraryHandle> dynamically_load_tracing_library(
     return make_unexpected(incompatible_library_versions_error);
   }
   if (rcode != 0 || tracer_factory == nullptr) {
-    return make_unexpected(internal_tracer_error);
+    return make_unexpected(dynamic_load_not_supported_error);
   }
 
   return DynamicTracingLibraryHandle{

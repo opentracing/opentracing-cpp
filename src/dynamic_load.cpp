@@ -21,10 +21,7 @@ class DynamicLoadErrorCategory : public std::error_category {
     if (code == dynamic_load_not_supported_error.value()) {
       return std::make_error_condition(std::errc::not_supported);
     }
-    if (code == configuration_parse_error.value()) {
-      return std::make_error_condition(std::errc::invalid_argument);
-    }
-    if (code == invalid_configuration_error.value()) {
+    if (code == incompatible_library_versions_error.value()) {
       return std::make_error_condition(std::errc::invalid_argument);
     }
     return std::error_condition(code, *this);
@@ -37,11 +34,8 @@ class DynamicLoadErrorCategory : public std::error_category {
     if (code == dynamic_load_not_supported_error.value()) {
       return "openracing: dynamic library loading is not supported";
     }
-    if (code == configuration_parse_error.value()) {
-      return "opentracing: failed to parse configuration";
-    }
-    if (code == invalid_configuration_error.value()) {
-      return "opentracing: configuration is invalid";
+    if (code == incompatible_library_versions_error.value()) {
+      return "opentracing: versions of opentracing libraries are incompatible";
     }
     return "openracing: unknown dynamic load error";
   }

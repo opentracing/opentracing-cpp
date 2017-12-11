@@ -37,15 +37,13 @@ class Value : public variant_type {
                                     std::is_signed<T>::value>::type* = nullptr>
   Value(T t) noexcept : variant_type(static_cast<int64_t>(t)) {}
 
-  template <
-      typename T,
-      typename std::enable_if<std::is_integral<T>::value &&
-                              std::is_unsigned<T>::value>::type* = nullptr>
+  template <typename T, typename std::enable_if<
+                            std::is_integral<T>::value &&
+                            std::is_unsigned<T>::value>::type* = nullptr>
   Value(T t) noexcept : variant_type(static_cast<uint64_t>(t)) {}
 
-  template <typename T,
-            typename std::enable_if<std::is_floating_point<T>::value>::type* =
-                nullptr>
+  template <typename T, typename std::enable_if<
+                            std::is_floating_point<T>::value>::type* = nullptr>
   Value(T t) noexcept : variant_type(static_cast<double>(t)) {}
 
   Value(const char* s) noexcept : variant_type(s) {}
