@@ -37,13 +37,24 @@ expected<DynamicTracingLibraryHandle> dynamically_load_tracing_library(
     return make_unexpected(dynamic_load_failure_error);
   }
 
+  const void* error_category = nullptr;
   void* tracer_factory = nullptr;
-  const auto rcode = make_tracer_factory(OPENTRACING_VERSION, &tracer_factory);
-  if (rcode == incompatible_library_versions_error.value()) {
-    return make_unexpected(incompatible_library_versions_error);
+  const auto rcode = make_tracer_factory(OPENTRACING_VERSION, &error_category,
+                                         &tracer_factory);
+  if (rcode != 0) {
+    if (error_category != nullptr) {
+      return make_unexpected(std::error_code{
+          rcode, *static_cast<const std::error_category*>(error_category)});
+    } else {
+      error_message = "failed to construct a TracerFactory: unknown error code";
+      return make_unexpected(dynamic_load_failure_error);
+    }
   }
-  if (rcode != 0 || tracer_factory == nullptr) {
-    return make_unexpected(dynamic_load_not_supported_error);
+
+  if (tracer_factory == nullptr) {
+    error_message =
+        "failed to construct a TracerFactory: `tracer_factory` is null";
+    return make_unexpected(dynamic_load_failure_error);
   }
 
   return DynamicTracingLibraryHandle{

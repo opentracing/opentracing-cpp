@@ -8,6 +8,7 @@
 
 extern "C" int __attribute((weak))
 opentracing_make_tracer_factory(const char* opentracing_version,
+                                const void** error_category,
                                 void** tracer_factory);
 
 namespace opentracing {
