@@ -35,6 +35,8 @@ class DynamicLibraryHandle {
 // still in use.
 class DynamicTracingLibraryHandle {
  public:
+  DynamicTracingLibraryHandle() = default;
+
   DynamicTracingLibraryHandle(
       std::unique_ptr<const TracerFactory>&& tracer_factory,
       std::unique_ptr<DynamicLibraryHandle>&& dynamic_library_handle) noexcept;
