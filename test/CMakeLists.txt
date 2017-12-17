@@ -2,6 +2,10 @@ add_executable(tracer_test tracer_test.cpp)
 target_link_libraries(tracer_test opentracing) 
 add_test(tracer_test tracer_test)
 
+add_executable(in_memory_stream_test in_memory_stream_test.cpp)
+target_link_libraries(in_memory_stream_test opentracing) 
+add_test(in_memory_stream_test in_memory_stream_test)
+
 add_executable(string_view_test string_view_test.cpp)
 add_test(string_view_test string_view_test)
 
