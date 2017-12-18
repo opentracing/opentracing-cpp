@@ -6,10 +6,46 @@
 #include <opentracing/version.h>
 #include <system_error>
 
-extern "C" int __attribute((weak))
+// opentracing_make_tracer_factory provides common hook that can be used to
+// create a TracerFactory from a dynamically loaded library. Users should prefer
+// to use the function dynamically_load_tracing_library over calling it
+// directly.
+//
+// It takes the parameter `opentracing_version` representing the version of
+// opentracing used by the caller. Upon success it returns the code `0` and
+// sets `tracer_factory` to point to an instance of TracerFactory.
+//
+// On failure, it returns a non-zero error code and sets `error_category` to
+// point to an std::error_category for the returned error code.
+//
+// Example usage,
+//
+//   const std::error_category* error_category = nullptr;
+//   opentracing::TracerFactory* tracer_factory = nullptr;
+//   int rcode = opentracing_make_factory(
+//                  OPENTRACING_VERSION,
+//                  &static_cast<const void*>(error_category),
+//                  &static_cast<void*>(tracer_factory));
+//   if (rcode == 0) {
+//      // success
+//      assert(tracer_factory != nullptr);
+//   } else {
+//      // failure
+//      assert(error_category != 0);
+//      std::error_code error{rcode, *error_cateogry};
+//   }
+extern "C" {
+#ifdef _MSC_VER
+__declspec(selectany) int (*opentracing_make_tracer_factory)(
+    const char* opentracing_version, const void** error_category,
+    void** tracer_factory);
+#else
+int __attribute((weak))
 opentracing_make_tracer_factory(const char* opentracing_version,
                                 const void** error_category,
                                 void** tracer_factory);
+#endif
+}  // extern "C"
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
