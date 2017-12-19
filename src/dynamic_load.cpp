@@ -50,7 +50,8 @@ const std::error_category& dynamic_load_error_category() {
 DynamicTracingLibraryHandle::DynamicTracingLibraryHandle(
     std::unique_ptr<const TracerFactory>&& tracer_factory,
     std::unique_ptr<DynamicLibraryHandle>&& dynamic_library_handle) noexcept
-    : tracer_factory_{std::move(tracer_factory)},
-      dynamic_library_handle_{std::move(dynamic_library_handle)} {}
+    : dynamic_library_handle_{std::move(dynamic_library_handle)},
+      tracer_factory_{std::move(tracer_factory)} {}
+
 END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing

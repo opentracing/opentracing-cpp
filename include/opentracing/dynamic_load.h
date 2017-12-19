@@ -98,8 +98,8 @@ class DynamicTracingLibraryHandle {
   }
 
  private:
-  std::unique_ptr<const TracerFactory> tracer_factory_;
   std::unique_ptr<DynamicLibraryHandle> dynamic_library_handle_;
+  std::unique_ptr<const TracerFactory> tracer_factory_;
 };
 
 // Dynamically loads a tracing library and returns a handle that can be used
