@@ -108,7 +108,7 @@ class DynamicTracingLibraryHandle {
 // Example:
 //   std::string error_message;
 //   auto handle_maybe = dynamically_load_tracing_library(
-//                                 'libtracing_vendor.so',
+//                                 "libtracing_vendor.so",
 //                                 error_message);
 //   if (handle_maybe) {
 //      // success
