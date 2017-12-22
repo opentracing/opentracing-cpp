@@ -70,18 +70,36 @@ endif()
 include_directories(include)
 include_directories(SYSTEM 3rd_party/include)
 
-set(SRCS src/propagation.cpp src/noop.cpp src/tracer.cpp)
-add_library(opentracing SHARED ${SRCS})
-target_include_directories(opentracing INTERFACE "$<INSTALL_INTERFACE:include/>")
-set_target_properties(opentracing PROPERTIES VERSION ${OPENTRACING_VERSION_STRING}
-                                             SOVERSION ${OPENTRACING_VERSION_MAJOR})
-add_library(opentracing-static STATIC ${SRCS})
-set_target_properties(opentracing-static PROPERTIES OUTPUT_NAME opentracing)
-target_include_directories(opentracing-static INTERFACE "$<INSTALL_INTERFACE:include/>")
-if (CLANG_TIDY_EXE)
-  set_target_properties(opentracing PROPERTIES
-                                    CXX_CLANG_TIDY "${DO_CLANG_TIDY}")
+option(BUILD_SHARED_LIBS "Build as a shared library" ON)
+option(BUILD_STATIC_LIBS "Build as a static library" ON)
+
+if (NOT BUILD_SHARED_LIBS AND NOT BUILD_STATIC_LIBS)
+    message(FATAL_ERROR "One or both of BUILD_SHARED_LIBS or BUILD_STATIC_LIBS must be set to ON to build")
 endif()
+
+set(SRCS src/propagation.cpp src/noop.cpp src/tracer.cpp)
+
+if (BUILD_SHARED_LIBS)
+  add_library(opentracing SHARED ${SRCS})
+  target_include_directories(opentracing INTERFACE "$<INSTALL_INTERFACE:include/>")
+  set_target_properties(opentracing PROPERTIES VERSION ${OPENTRACING_VERSION_STRING}
+                                             SOVERSION ${OPENTRACING_VERSION_MAJOR})
+  install(TARGETS opentracing EXPORT OpenTracingTargets
+          LIBRARY DESTINATION lib
+          ARCHIVE DESTINATION lib)
+  if (CLANG_TIDY_EXE)
+    set_target_properties(opentracing PROPERTIES
+                                    CXX_CLANG_TIDY "${DO_CLANG_TIDY}")
+  endif()
+endif(BUILD_SHARED_LIBS)
+
+if (BUILD_STATIC_LIBS)
+  add_library(opentracing-static STATIC ${SRCS})
+  set_target_properties(opentracing-static PROPERTIES OUTPUT_NAME opentracing)
+  target_include_directories(opentracing-static INTERFACE "$<INSTALL_INTERFACE:include/>")
+  install(TARGETS opentracing-static EXPORT OpenTracingTargets
+          ARCHIVE DESTINATION lib)
+endif(BUILD_STATIC_LIBS)
 
 
 install(DIRECTORY 3rd_party/include/opentracing DESTINATION include
@@ -89,9 +107,7 @@ install(DIRECTORY 3rd_party/include/opentracing DESTINATION include
                            PATTERN "*.h")
 install(DIRECTORY include/opentracing DESTINATION include
             FILES_MATCHING PATTERN "*.h")
-install(TARGETS opentracing opentracing-static EXPORT OpenTracingTargets
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib)
+
 
 # ==============================================================================
 # Package configuration setup
