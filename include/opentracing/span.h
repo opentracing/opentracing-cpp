@@ -45,7 +45,7 @@ struct FinishSpanOptions {
   //
   // None of the LogRecord.timestamp values may be SystemTime() (i.e., they must
   // be set explicitly). Also, they must be >= the Span's start system timestamp
-  // and <= the finish_steady_timestamp converted to steady timestamp
+  // and <= the finish_steady_timestamp converted to system timestamp
   // (or SystemTime::now() if finish_steady_timestamp is default-constructed).
   // Otherwise the behavior of FinishWithOptions() is undefined.
   std::vector<LogRecord> log_records;
