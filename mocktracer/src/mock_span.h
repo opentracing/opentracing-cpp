@@ -3,6 +3,8 @@
 
 #include <opentracing/mock_tracer.h>
 #include "mock_span_context.h"
+#include <atomic>
+#include <mutex>
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
@@ -13,11 +15,11 @@ class MockSpan : public Span {
   MockSpan(std::shared_ptr<const Tracer>&& tracer, Recorder& recorder,
            string_view operation_name, const StartSpanOptions& options);
 
-  void FinishWithOptions(const FinishSpanOptions& options) noexcept override {}
+  ~MockSpan() override;
 
-  void SetOperationName(string_view name) noexcept override {
-    data_.operation_name = name;
-  }
+  void FinishWithOptions(const FinishSpanOptions& options) noexcept override;
+
+  void SetOperationName(string_view name) noexcept override;
 
   void SetTag(string_view key,
               const opentracing::Value& value) noexcept override {}
@@ -45,6 +47,11 @@ class MockSpan : public Span {
   Recorder& recorder_;
   MockSpanContext span_context_;
   SteadyTime start_steady_;
+
+  std::atomic<bool> is_finished_{false};
+
+  // Mutex protects data_
+  std::mutex mutex_;
   SpanData data_;
 };
 

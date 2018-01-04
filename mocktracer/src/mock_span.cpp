@@ -92,6 +92,37 @@ MockSpan::MockSpan(std::shared_ptr<const Tracer>&& tracer, Recorder& recorder,
   span_context_ = MockSpanContext{std::move(span_context_data)};
 }
 
+MockSpan::~MockSpan() {
+  if (!is_finished_) {
+    Finish();
+  }
+}
+
+void MockSpan::FinishWithOptions(const FinishSpanOptions& options) noexcept {
+  // Ensure the span is only finished once.
+  if (is_finished_.exchange(true)) {
+    return;
+  }
+
+  auto finish_timestamp = options.finish_steady_timestamp;
+  if (finish_timestamp == SteadyTime{}) {
+    finish_timestamp = SteadyClock::now();
+  }
+
+  data_.duration = finish_timestamp - start_steady_;
+
+  span_context_.SetData(data_.span_context);
+
+  recorder_.RecordSpan(std::move(data_));
+}
+
+void MockSpan::SetOperationName(string_view name) noexcept try {
+  std::lock_guard<std::mutex> lock_guard{mutex_};
+  data_.operation_name = name;
+} catch (const std::exception& /*e*/) {
+  // Ignore operation
+}
+
 }  // namespace mocktracer
 END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing
