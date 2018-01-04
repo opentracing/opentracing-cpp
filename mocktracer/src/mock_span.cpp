@@ -124,35 +124,46 @@ void MockSpan::SetOperationName(string_view name) noexcept try {
 }
 
 void MockSpan::SetTag(string_view key,
-              const opentracing::Value& value) noexcept try {
+                      const opentracing::Value& value) noexcept try {
   std::lock_guard<std::mutex> lock_guard{mutex_};
   data_.tags[key] = value;
 } catch (const std::exception&) {
   // Ignore upon error.
 }
 
+void MockSpan::Log(
+    std::initializer_list<std::pair<string_view, Value>> fields) noexcept try {
+  std::lock_guard<std::mutex> lock_guard{mutex_};
+  LogRecordData log_record_data;
+  log_record_data.timestamp = SystemClock::now();
+  for (auto& field : fields) {
+    log_record_data.fields.emplace_back(field.first, field.second);
+  }
+  data_.logs.emplace_back(std::move(log_record_data));
+} catch (const std::exception&) {
+  // Drop log record upon error.
+}
+
 void MockSpan::SetBaggageItem(string_view restricted_key,
-                      string_view value) noexcept try {
+                              string_view value) noexcept try {
   std::lock_guard<std::mutex> lock_guard{span_context_.baggage_mutex_};
   span_context_.data_.baggage.emplace(restricted_key, value);
 } catch (const std::exception&) {
   // Drop baggage item upon error.
 }
 
-std::string MockSpan::BaggageItem(string_view restricted_key) const noexcept try {
+std::string MockSpan::BaggageItem(string_view restricted_key) const
+    noexcept try {
   std::lock_guard<std::mutex> lock_guard{span_context_.baggage_mutex_};
   auto lookup = span_context_.data_.baggage.find(restricted_key);
   if (lookup != span_context_.data_.baggage.end()) {
     return lookup->second;
   }
   return {};
-} catch(const std::exception&) {
+} catch (const std::exception&) {
   // Return empty string upon error.
   return {};
 }
-
-void MockSpan::Log(std::initializer_list<std::pair<string_view, Value>>
-                       fields) noexcept {}
 
 }  // namespace mocktracer
 END_OPENTRACING_ABI_NAMESPACE
