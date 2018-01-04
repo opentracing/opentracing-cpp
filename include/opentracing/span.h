@@ -47,7 +47,7 @@ struct FinishSpanOptions {
   // be set explicitly). Also, they must be >= the Span's start system timestamp
   // and <= the finish_steady_timestamp converted to system timestamp
   // (or SystemTime::now() if finish_steady_timestamp is default-constructed).
-  // Otherwise the behavior of FinishWithOptions() is undefined.
+  // Otherwise the behavior of FinishWithOptions() is unspecified.
   std::vector<LogRecord> log_records;
 };
 
