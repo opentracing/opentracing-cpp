@@ -1,0 +1,38 @@
+language: cpp
+sudo: true
+dist: trusty
+matrix:
+  include:
+  - os: osx
+    osx_image: xcode9
+    env:
+    - MATRIX_EVAL="CC=clang && CXX=clang++"
+  - os: linux
+    addons:
+      apt:
+        sources:
+        - ubuntu-toolchain-r-test
+        packages:
+        - g++-6
+        - cmake
+    env:
+    - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+  - os: linux
+    addons:
+      apt:
+        sources:
+        - ubuntu-toolchain-r-test
+        packages:
+        - g++-4.9
+        - cmake
+    env:
+    - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+
+before_install:
+  - eval "${MATRIX_EVAL}"
+script:
+  - mkdir -p build
+  - cd build
+  - cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON ..
+  - make
+  - make test

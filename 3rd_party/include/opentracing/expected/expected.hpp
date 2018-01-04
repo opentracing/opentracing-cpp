@@ -188,7 +188,7 @@ private:
 
 /// class unexpected_type
 
-template< typename E = std::exception_ptr >
+template< typename E = std::error_code >
 class unexpected_type
 {
 public:
@@ -382,6 +382,35 @@ public:
 
 private:
     error_type m_error;
+};
+
+/// class error_traits
+
+template< typename Error >
+struct error_traits
+{
+    static void rethrow( Error const & e )
+    {
+        throw bad_expected_access<Error>{ e };
+    }
+};
+
+template<>
+struct error_traits< std::exception_ptr >
+{
+    static void rethrow( std::exception_ptr const & e )
+    {
+        std::rethrow_exception( e );
+    }
+};
+
+template<>
+struct error_traits< std::error_code >
+{
+    static void rethrow( std::error_code const & e )
+    {
+        throw std::system_error( e );
+    }
 };
 
 /// class expected
@@ -652,28 +681,22 @@ public:
     constexpr value_type const & value() const &
     {
         return has_value()
-            ? contained.value()
-            : std::is_same<error_type, std::exception_ptr>::value
-            ? ( std::rethrow_exception( contained.error() ), contained.value() )
-            : ( throw bad_expected_access<error_type>( contained.error() ), contained.value() );
+            ? ( contained.value() )
+            : ( error_traits<error_type>::rethrow( contained.error() ), contained.value() );
     }
 
     value_type & value() &
     {
         return has_value()
-            ? contained.value()
-            : std::is_same<error_type, std::exception_ptr>::value
-            ? ( std::rethrow_exception( contained.error() ), contained.value() )
-            : ( throw bad_expected_access<error_type>( contained.error() ), contained.value() );
+            ? ( contained.value() )
+            : ( error_traits<error_type>::rethrow( contained.error() ), contained.value() );
     }
 
-    constexpr value_type && value() const &&
+    constexpr value_type && value() &&
     {
         return has_value()
-            ? std::move( contained.value() )
-            : std::is_same<error_type, std::exception_ptr>::value
-            ? ( std::rethrow_exception( contained.error() ), contained.value() )
-            : ( throw bad_expected_access<error_type>( contained.error() ), contained.value() );
+            ? ( contained.value() )
+            : ( error_traits<error_type>::rethrow( contained.error() ), contained.value() );
     }
 
     constexpr error_type const & error() const &
