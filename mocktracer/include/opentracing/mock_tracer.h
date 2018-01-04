@@ -1,5 +1,5 @@
-#ifndef OPENTRACING_MOCKTRACER_H
-#define OPENTRACING_MOCKTRACER_H
+#ifndef OPENTRACING_MOCK_TRACER_H
+#define OPENTRACING_MOCK_TRACER_H
 
 #include <opentracing/tracer.h>
 #include <cstdint>
@@ -22,10 +22,15 @@ struct SpanContextData {
   std::unordered_map<std::string, std::string> baggage;
 };
 
+struct SpanReferenceData {
+  SpanReferenceType reference_type;
+  uint64_t trace_id;
+  uint64_t span_id;
+};
+
 struct SpanData {
   SpanContextData span_context;
-  std::vector<int64_t> parent_span_ids;
-  std::vector<int64_t> follows_from_span_ids;
+  std::vector<SpanReferenceData> references;
   std::string operation_name;
   SystemTime start_timestamp;
   SteadyClock::duration duration;
@@ -103,4 +108,4 @@ class MockTracer : public Tracer,
 } // namespace mocktracer
 END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing
-#endif  // OPENTRACING_MOCKTRACER_H
+#endif  // OPENTRACING_MOCK_TRACER_H

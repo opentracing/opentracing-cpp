@@ -1,6 +1,6 @@
 include_directories(include)
 
-set(SRCS src/mocktracer.cpp)
+set(SRCS src/mock_span_context.cpp src/mock_span.cpp src/mock_tracer.cpp)
 
 add_library(opentracing_mocktracer SHARED ${SRCS})
 target_include_directories(opentracing_mocktracer INTERFACE "$<INSTALL_INTERFACE:include/>")
