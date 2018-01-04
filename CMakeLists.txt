@@ -93,6 +93,8 @@ install(TARGETS opentracing opentracing-static EXPORT OpenTracingTargets
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib)
 
+add_subdirectory(mocktracer)
+
 # ==============================================================================
 # Package configuration setup
 

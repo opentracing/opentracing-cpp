@@ -1,0 +1,14 @@
+include_directories(include)
+
+set(SRCS src/mocktracer.cpp)
+
+add_library(opentracing_mocktracer SHARED ${SRCS})
+target_include_directories(opentracing_mocktracer INTERFACE "$<INSTALL_INTERFACE:include/>")
+set_target_properties(opentracing_mocktracer PROPERTIES VERSION ${OPENTRACING_VERSION_STRING}
+                                             SOVERSION ${OPENTRACING_VERSION_MAJOR})
+target_link_libraries(opentracing_mocktracer opentracing)
+
+add_library(opentracing_mocktracer-static STATIC ${SRCS})
+set_target_properties(opentracing_mocktracer-static PROPERTIES OUTPUT_NAME opentracing_mocktracer)
+target_include_directories(opentracing_mocktracer-static INTERFACE "$<INSTALL_INTERFACE:include/>")
+target_link_libraries(opentracing_mocktracer-static opentracing-static)
