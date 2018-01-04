@@ -22,17 +22,15 @@ class MockSpan : public Span {
   void SetOperationName(string_view name) noexcept override;
 
   void SetTag(string_view key,
-              const opentracing::Value& value) noexcept override {}
+              const opentracing::Value& value) noexcept override;
 
   void SetBaggageItem(string_view restricted_key,
-                      string_view value) noexcept override {}
+                      string_view value) noexcept override;
 
-  std::string BaggageItem(string_view restricted_key) const noexcept override {
-    return {};
-   }
+  std::string BaggageItem(string_view restricted_key) const noexcept override;
 
    void Log(std::initializer_list<std::pair<string_view, Value>>
-                fields) noexcept override {}
+                fields) noexcept override;
 
    const SpanContext& context() const noexcept override {
      return span_context_;

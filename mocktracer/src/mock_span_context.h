@@ -8,6 +8,8 @@ namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
 namespace mocktracer {
 
+class MockSpan;
+
 class MockSpanContext : public SpanContext {
  public:
   MockSpanContext() = default;
@@ -32,6 +34,8 @@ class MockSpanContext : public SpanContext {
 
   void SetData(SpanContextData& data);
  private:
+  friend MockSpan;
+
   mutable std::mutex baggage_mutex_;
   SpanContextData data_;
 };
