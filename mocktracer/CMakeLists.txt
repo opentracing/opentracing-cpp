@@ -1,6 +1,8 @@
 include_directories(include)
+include_directories(3rd_party/base64/include)
 
-set(SRCS src/mock_span_context.cpp
+set(SRCS 3rd_party/base64/src/base64.cpp
+         src/mock_span_context.cpp
          src/mock_span.cpp
          src/in_memory_recorder.cpp
          src/propagation.cpp
