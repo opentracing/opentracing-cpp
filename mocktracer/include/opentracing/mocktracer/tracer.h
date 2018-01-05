@@ -29,35 +29,23 @@ class MockTracer : public Tracer,
 
   const std::vector<SpanData>& spans() const noexcept { return spans_; }
 
-  expected<void> Inject(const SpanContext& /*sc*/,
-                        std::ostream& /*writer*/) const override {
-    return {};
-  }
+  expected<void> Inject(const SpanContext& sc,
+                        std::ostream& writer) const override;
 
-  expected<void> Inject(const SpanContext& /*sc*/,
-                        const TextMapWriter& /*writer*/) const override {
-    return {};
-  }
+  expected<void> Inject(const SpanContext& sc,
+                        const TextMapWriter& writer) const override;
 
-  expected<void> Inject(const SpanContext& /*sc*/,
-                        const HTTPHeadersWriter& /*writer*/) const override {
-    return {};
-  }
+  expected<void> Inject(const SpanContext& sc,
+                        const HTTPHeadersWriter& writer) const override;
 
   expected<std::unique_ptr<SpanContext>> Extract(
-      std::istream& /*reader*/) const override {
-    return std::unique_ptr<SpanContext>(nullptr);
-  }
+      std::istream& reader) const override;
 
   expected<std::unique_ptr<SpanContext>> Extract(
-      const TextMapReader& /*reader*/) const override {
-    return std::unique_ptr<SpanContext>(nullptr);
-  }
+      const TextMapReader& reader) const override;
 
   expected<std::unique_ptr<SpanContext>> Extract(
-      const HTTPHeadersReader& /*reader*/) const override {
-    return std::unique_ptr<SpanContext>(nullptr);
-  }
+      const HTTPHeadersReader& reader) const override;
 
  private:
   std::unique_ptr<Recorder> recorder_;

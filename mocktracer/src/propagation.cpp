@@ -78,6 +78,26 @@ expected<bool> ExtractSpanContext(std::istream& carrier,
   return opentracing::make_unexpected(
       std::make_error_code(std::errc::not_enough_memory));
 }
+
+expected<void> InjectSpanContext(const TextMapWriter& carrier,
+                                 const SpanContextData& span_context_data) {
+  return {};
+}
+
+expected<bool> ExtractSpanContext(const TextMapReader& carrier,
+                                  SpanContextData& span_context_data) {
+  return false;
+}
+
+expected<void> InjectSpanContext(const HTTPHeadersWriter& carrier,
+                                 const SpanContextData& span_context_data) {
+  return {};
+}
+
+expected<bool> ExtractSpanContext(const HTTPHeadersReader& carrier,
+                                  SpanContextData& span_context_data) {
+  return false;
+}
 }  // namespace mocktracer
 END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing

@@ -2,6 +2,7 @@
 #define OPENTRACING_MOCKTRACER_SPAN_CONTEXT_H
 
 #include <opentracing/mocktracer/tracer.h>
+#include "propagation.h"
 #include <mutex>
 
 namespace opentracing {
@@ -33,6 +34,19 @@ class MockSpanContext : public SpanContext {
   uint64_t span_id() const noexcept { return data_.span_id; }
 
   void SetData(SpanContextData& data);
+
+  template <class Carrier>
+  expected<void> Inject(Carrier& writer) const {
+    std::lock_guard<std::mutex> lock_guard{baggage_mutex_};
+    return InjectSpanContext(writer, data_);
+  }
+
+  template <class Carrier>
+  expected<bool> Extract(Carrier& reader) {
+    std::lock_guard<std::mutex> lock_guard{baggage_mutex_};
+    return ExtractSpanContext(reader, data_);
+  }
+
  private:
   friend MockSpan;
 

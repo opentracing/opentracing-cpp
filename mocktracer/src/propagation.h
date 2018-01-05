@@ -12,6 +12,18 @@ expected<void> InjectSpanContext(std::ostream& carrier,
 
 expected<bool> ExtractSpanContext(std::istream& carrier,
                                   SpanContextData& span_context_data);
+
+expected<void> InjectSpanContext(const TextMapWriter& carrier,
+                                 const SpanContextData& span_context_data);
+
+expected<bool> ExtractSpanContext(const TextMapReader& carrier,
+                                  SpanContextData& span_context_data);
+
+expected<void> InjectSpanContext(const HTTPHeadersWriter& carrier,
+                                 const SpanContextData& span_context_data);
+
+expected<bool> ExtractSpanContext(const HTTPHeadersReader& carrier,
+                                  SpanContextData& span_context_data);
 }  // namespace mocktracer
 END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing
