@@ -1,9 +1,16 @@
 #include "propagation.h"
+#include <opentracing/mocktracer/base64.h>
 #include <iostream>
+#include <sstream>
+#include <functional>
+#include <algorithm>
+#include <cctype>
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
 namespace mocktracer {
+const opentracing::string_view propagation_key = "x-ot-span-context";
+
 static void WriteString(std::ostream& ostream, const std::string& s) {
   const uint32_t size = static_cast<uint32_t>(s.size());
   ostream.write(reinterpret_cast<const char*>(&size), sizeof(size));
@@ -81,22 +88,110 @@ expected<bool> ExtractSpanContext(std::istream& carrier,
 
 expected<void> InjectSpanContext(const TextMapWriter& carrier,
                                  const SpanContextData& span_context_data) {
+  std::ostringstream ostream;
+  auto result = InjectSpanContext(ostream, span_context_data);
+  if (!result) {
+    return result;
+  }
+  std::string context_value;
+  try {
+    auto binary_encoding = ostream.str();
+    context_value =
+        Base64::encode(binary_encoding.data(), binary_encoding.size());
+  } catch (const std::bad_alloc&) {
+    return opentracing::make_unexpected(
+        std::make_error_code(std::errc::not_enough_memory));
+  }
+
+  result = carrier.Set(propagation_key, context_value);
+  if (!result) {
+    return result;
+  }
   return {};
+}
+
+template <class KeyCompare>
+static opentracing::expected<opentracing::string_view> LookupKey(
+    const opentracing::TextMapReader& carrier, opentracing::string_view key,
+    KeyCompare key_compare) {
+  // First try carrier.LookupKey since that can potentially be the fastest
+  // approach.
+  auto result = carrier.LookupKey(key);
+  if (result || result.error() != opentracing::lookup_key_not_supported_error) {
+    return result;
+  }
+
+  // Fall back to iterating through all of the keys.
+  result = opentracing::make_unexpected(opentracing::key_not_found_error);
+  auto was_successful = carrier.ForeachKey(
+      [&](opentracing::string_view carrier_key,
+          opentracing::string_view value) -> opentracing::expected<void> {
+        if (!key_compare(carrier_key, key)) {
+          return {};
+        }
+        result = value;
+
+        // Found key, so bail out of the loop with a success error code.
+        return opentracing::make_unexpected(std::error_code{});
+      });
+  if (!was_successful && was_successful.error() != std::error_code{}) {
+    return opentracing::make_unexpected(was_successful.error());
+  }
+  return result;
+}
+
+
+template <class KeyCompare>
+static opentracing::expected<bool> ExtractSpanContext(
+    const opentracing::TextMapReader& carrier,
+    SpanContextData& span_context_data, KeyCompare key_compare) {
+  auto value_maybe = LookupKey(carrier, propagation_key, key_compare);
+  if (!value_maybe) {
+    if (value_maybe.error() == opentracing::key_not_found_error) {
+      return false;
+    } else {
+      return opentracing::make_unexpected(value_maybe.error());
+    }
+  }
+  auto value = *value_maybe;
+  std::string base64_decoding;
+  try {
+    base64_decoding = Base64::decode(value.data(), value.size());
+  } catch (const std::bad_alloc&) {
+    return opentracing::make_unexpected(
+        std::make_error_code(std::errc::not_enough_memory));
+  }
+  if (base64_decoding.empty()) {
+    return opentracing::make_unexpected(
+        opentracing::span_context_corrupted_error);
+  }
+  std::istringstream istream{base64_decoding};
+  return ExtractSpanContext(istream, span_context_data);
 }
 
 expected<bool> ExtractSpanContext(const TextMapReader& carrier,
                                   SpanContextData& span_context_data) {
-  return false;
+  return ExtractSpanContext(carrier, span_context_data,
+                            std::equal_to<string_view>{});
 }
 
 expected<void> InjectSpanContext(const HTTPHeadersWriter& carrier,
                                  const SpanContextData& span_context_data) {
-  return {};
+  return InjectSpanContext(static_cast<const TextMapWriter&>(carrier),
+                           span_context_data);
 }
 
 expected<bool> ExtractSpanContext(const HTTPHeadersReader& carrier,
                                   SpanContextData& span_context_data) {
-  return false;
+  auto iequals = [](opentracing::string_view lhs,
+                    opentracing::string_view rhs) {
+    return lhs.length() == rhs.length() &&
+           std::equal(std::begin(lhs), std::end(lhs), std::begin(rhs),
+                      [](char a, char b) {
+                        return std::tolower(a) == std::tolower(b);
+                      });
+  };
+  return ExtractSpanContext(carrier, span_context_data, iequals);
 }
 }  // namespace mocktracer
 END_OPENTRACING_ABI_NAMESPACE
