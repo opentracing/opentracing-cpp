@@ -1,5 +1,5 @@
-#ifndef OPENTRACING_MOCK_SPAN_CONTEXT_H
-#define OPENTRACING_MOCK_SPAN_CONTEXT_H
+#ifndef OPENTRACING_MOCKTRACER_SPAN_CONTEXT_H
+#define OPENTRACING_MOCKTRACER_SPAN_CONTEXT_H
 
 #include <opentracing/mocktracer/tracer.h>
 #include <mutex>
@@ -44,4 +44,4 @@ class MockSpanContext : public SpanContext {
 END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing
 
-#endif // OPENTRACING_MOCK_SPAN_CONTEXT_H
+#endif // OPENTRACING_MOCKTRACER_SPAN_CONTEXT_H

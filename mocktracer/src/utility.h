@@ -1,5 +1,5 @@
-#ifndef OPENTRACING_UTILITY_H
-#define OPENTRACING_UTILITY_H
+#ifndef OPENTRACING_MOCKTRACER_UTILITY_H
+#define OPENTRACING_MOCKTRACER_UTILITY_H
 
 #include <opentracing/mocktracer/tracer.h>
 
@@ -11,4 +11,4 @@ namespace mocktracer {
 END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing
 
-#endif // OPENTRACING_UTILITY_H
+#endif // OPENTRACING_MOCKTRACER_UTILITY_H
