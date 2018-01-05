@@ -41,9 +41,6 @@ class Recorder {
    virtual void RecordSpan(SpanData&& span_data) noexcept = 0;
 };
 
-class InMemoryRecorder : public Recorder {
-  void RecordSpan(SpanData&& span_data) noexcept override {}
-};
 } // namespace mocktracer
 END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing
