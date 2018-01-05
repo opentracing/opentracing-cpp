@@ -1,4 +1,4 @@
-#include <opentracing/mock_tracer.h>
+#include <opentracing/mocktracer/tracer.h>
 #include <exception>
 
 #include "mock_span_context.h"

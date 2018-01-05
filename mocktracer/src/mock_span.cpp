@@ -7,7 +7,7 @@ namespace mocktracer {
 
 static uint64_t GenerateId() {
   static thread_local std::mt19937_64 rand_source{std::random_device()()};
-  return rand_source();
+  return static_cast<uint64_t>(rand_source());
 }
 
 static std::tuple<SystemTime, SteadyTime> ComputeStartTimestamps(

@@ -1,7 +1,7 @@
 #ifndef OPENTRACING_MOCK_SPAN_H
 #define OPENTRACING_MOCK_SPAN_H
 
-#include <opentracing/mock_tracer.h>
+#include <opentracing/mocktracer/tracer.h>
 #include "mock_span_context.h"
 #include <atomic>
 #include <mutex>

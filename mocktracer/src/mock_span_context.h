@@ -1,7 +1,7 @@
 #ifndef OPENTRACING_MOCK_SPAN_CONTEXT_H
 #define OPENTRACING_MOCK_SPAN_CONTEXT_H
 
-#include <opentracing/mock_tracer.h>
+#include <opentracing/mocktracer/tracer.h>
 #include <mutex>
 
 namespace opentracing {
