@@ -1,0 +1,3 @@
+add_executable(mocktracer_tracer_test tracer_test.cpp)
+target_link_libraries(mocktracer_tracer_test opentracing_mocktracer)
+add_test(mocktracer_tracer_test mocktracer_tracer_test)
