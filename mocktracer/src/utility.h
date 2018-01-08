@@ -5,10 +5,8 @@
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
-namespace mocktracer {
-
-}  // namespace mocktracer
+namespace mocktracer {}  // namespace mocktracer
 END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing
 
-#endif // OPENTRACING_MOCKTRACER_UTILITY_H
+#endif  // OPENTRACING_MOCKTRACER_UTILITY_H

@@ -42,12 +42,12 @@ struct SpanData {
 
 class Recorder {
  public:
-   virtual ~Recorder() = default;
+  virtual ~Recorder() = default;
 
-   virtual void RecordSpan(SpanData&& span_data) noexcept = 0;
+  virtual void RecordSpan(SpanData&& span_data) noexcept = 0;
 };
 
-} // namespace mocktracer
+}  // namespace mocktracer
 END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing
 

@@ -1,8 +1,8 @@
 #ifndef OPENTRACING_MOCKTRACER_PROPAGATION_H
 #define OPENTRACING_MOCKTRACER_PROPAGATION_H
 
-#include <opentracing/propagation.h>
 #include <opentracing/mocktracer/recorder.h>
+#include <opentracing/propagation.h>
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
@@ -28,4 +28,4 @@ expected<bool> ExtractSpanContext(const HTTPHeadersReader& carrier,
 END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing
 
-#endif // OPENTRACING_MOCKTRACER_PROPAGATION_H
+#endif  // OPENTRACING_MOCKTRACER_PROPAGATION_H

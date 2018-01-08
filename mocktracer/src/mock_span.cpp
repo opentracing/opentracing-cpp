@@ -1,6 +1,6 @@
 #include "mock_span.h"
-#include <random>
 #include <cstdio>
+#include <random>
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
@@ -134,7 +134,7 @@ void MockSpan::SetTag(string_view key,
                       const opentracing::Value& value) noexcept try {
   std::lock_guard<std::mutex> lock_guard{mutex_};
   data_.tags[key] = value;
-} catch (const std::exception&e ) {
+} catch (const std::exception& e) {
   // Ignore upon error.
   fprintf(stderr, "Failed to set tag: %s\n", e.what());
 }

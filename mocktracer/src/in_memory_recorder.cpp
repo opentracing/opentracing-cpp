@@ -7,7 +7,7 @@ namespace mocktracer {
 void InMemoryRecorder::RecordSpan(SpanData&& span_data) noexcept try {
   std::lock_guard<std::mutex> lock_guard{mutex_};
   spans_.emplace_back(std::move(span_data));
-} catch(const std::exception&) {
+} catch (const std::exception&) {
   // Drop span.
 }
 
@@ -28,6 +28,6 @@ SpanData InMemoryRecorder::top() const {
   }
   return spans_.back();
 }
-} // namespace mocktracer
+}  // namespace mocktracer
 END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing

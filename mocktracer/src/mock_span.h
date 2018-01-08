@@ -2,9 +2,9 @@
 #define OPENTRACING_MOCKTRACER_SPAN_H
 
 #include <opentracing/mocktracer/tracer.h>
-#include "mock_span_context.h"
 #include <atomic>
 #include <mutex>
+#include "mock_span_context.h"
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
@@ -24,17 +24,15 @@ class MockSpan : public Span {
   void SetTag(string_view key,
               const opentracing::Value& value) noexcept override;
 
-   void Log(std::initializer_list<std::pair<string_view, Value>>
-                fields) noexcept override;
+  void Log(std::initializer_list<std::pair<string_view, Value>>
+               fields) noexcept override;
 
   void SetBaggageItem(string_view restricted_key,
                       string_view value) noexcept override;
 
   std::string BaggageItem(string_view restricted_key) const noexcept override;
 
-   const SpanContext& context() const noexcept override {
-     return span_context_;
-  }
+  const SpanContext& context() const noexcept override { return span_context_; }
 
   const opentracing::Tracer& tracer() const noexcept override {
     return *tracer_;
@@ -57,4 +55,4 @@ class MockSpan : public Span {
 END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing
 
-#endif // OPENTRACING_MOCKTRACER_SPAN_H
+#endif  // OPENTRACING_MOCKTRACER_SPAN_H

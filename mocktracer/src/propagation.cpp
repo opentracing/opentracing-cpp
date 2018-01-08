@@ -1,10 +1,10 @@
 #include "propagation.h"
 #include <opentracing/mocktracer/base64.h>
-#include <iostream>
-#include <sstream>
-#include <functional>
 #include <algorithm>
 #include <cctype>
+#include <functional>
+#include <iostream>
+#include <sstream>
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
@@ -139,7 +139,6 @@ static opentracing::expected<opentracing::string_view> LookupKey(
   }
   return result;
 }
-
 
 template <class KeyCompare>
 static opentracing::expected<bool> ExtractSpanContext(

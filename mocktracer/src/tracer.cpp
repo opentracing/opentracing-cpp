@@ -1,19 +1,18 @@
 #include <opentracing/mocktracer/tracer.h>
-#include <exception>
 #include <cstdio>
+#include <exception>
 
-#include "mock_span_context.h"
 #include "mock_span.h"
+#include "mock_span_context.h"
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
 namespace mocktracer {
 
 template <class Carrier>
-static expected<void> InjectImpl(
-    const opentracing::SpanContext& span_context, Carrier& writer) {
-  auto mock_span_context =
-      dynamic_cast<const MockSpanContext*>(&span_context);
+static expected<void> InjectImpl(const opentracing::SpanContext& span_context,
+                                 Carrier& writer) {
+  auto mock_span_context = dynamic_cast<const MockSpanContext*>(&span_context);
   if (mock_span_context == nullptr) {
     return opentracing::make_unexpected(
         opentracing::invalid_span_context_error);
@@ -23,7 +22,7 @@ static expected<void> InjectImpl(
 
 template <class Carrier>
 opentracing::expected<std::unique_ptr<opentracing::SpanContext>> ExtractImpl(
-     Carrier& reader) {
+    Carrier& reader) {
   MockSpanContext* mock_span_context;
   try {
     mock_span_context = new MockSpanContext{};
@@ -31,8 +30,7 @@ opentracing::expected<std::unique_ptr<opentracing::SpanContext>> ExtractImpl(
     return opentracing::make_unexpected(
         make_error_code(std::errc::not_enough_memory));
   }
-  std::unique_ptr<opentracing::SpanContext> span_context(
-      mock_span_context);
+  std::unique_ptr<opentracing::SpanContext> span_context(mock_span_context);
   auto result = mock_span_context->Extract(reader);
   if (!result) {
     return opentracing::make_unexpected(result.error());

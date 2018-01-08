@@ -1,8 +1,8 @@
 #ifndef OPENTRACING_MOCKTRACER_TRACER_H
 #define OPENTRACING_MOCKTRACER_TRACER_H
 
-#include <opentracing/tracer.h>
 #include <opentracing/mocktracer/recorder.h>
+#include <opentracing/tracer.h>
 #include <memory>
 #include <mutex>
 #include <unordered_map>
@@ -53,7 +53,7 @@ class MockTracer : public Tracer,
   std::vector<SpanData> spans_;
 };
 
-} // namespace mocktracer
+}  // namespace mocktracer
 END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing
 

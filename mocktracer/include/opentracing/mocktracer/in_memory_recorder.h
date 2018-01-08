@@ -17,11 +17,12 @@ class InMemoryRecorder : public Recorder {
   size_t size() const;
 
   SpanData top() const;
+
  private:
   mutable std::mutex mutex_;
   std::vector<SpanData> spans_;
 };
-} // namespace mocktracer
+}  // namespace mocktracer
 END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing
 

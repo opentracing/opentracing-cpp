@@ -1,8 +1,8 @@
 #include <opentracing/mocktracer/in_memory_recorder.h>
 #include <opentracing/mocktracer/tracer.h>
 #include <opentracing/noop.h>
-#include <string>
 #include <sstream>
+#include <string>
 #include <unordered_map>
 
 #define CATCH_CONFIG_MAIN
@@ -111,14 +111,13 @@ TEST_CASE("propagation") {
     CHECK(span_context_maybe->get() == nullptr);
   }
 
-
-  SECTION(
-      "Injecting a non-Mock span returns invalid_span_context_error.") {
+  SECTION("Injecting a non-Mock span returns invalid_span_context_error.") {
     auto noop_tracer = opentracing::MakeNoopTracer();
     CHECK(noop_tracer);
     auto noop_span = noop_tracer->StartSpan("a");
     CHECK(noop_span);
-    auto was_successful = tracer->Inject(noop_span->context(), text_map_carrier);
+    auto was_successful =
+        tracer->Inject(noop_span->context(), text_map_carrier);
     CHECK(!was_successful);
     CHECK(was_successful.error() == opentracing::invalid_span_context_error);
   }
@@ -158,7 +157,7 @@ TEST_CASE("propagation") {
     CHECK(!span_context_maybe);
   }
 
- SECTION("Calling Extract on an empty stream yields a nullptr.") {
+  SECTION("Calling Extract on an empty stream yields a nullptr.") {
     std::string blob;
     std::istringstream iss(blob, std::ios::binary);
     auto span_context_maybe = tracer->Extract(iss);
