@@ -23,7 +23,9 @@ TEST_CASE("Value") {
 
   SECTION("Bool values are deduced as bool.") {
     Value v1(true);
-    CHECK(v1.is<bool>());
+    // Workaround for "disabled expansion of recursive macro" warning.
+    const auto is_bool = v1.is<bool>();
+    CHECK(is_bool);
   }
 
   SECTION("Floating point numbers are converted to double.") {
