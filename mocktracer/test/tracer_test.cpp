@@ -14,6 +14,12 @@ TEST_CASE("tracer") {
   auto tracer = std::shared_ptr<opentracing::Tracer>{
       new MockTracer{std::move(tracer_options)}};
 
+  SECTION("MockTracer can be constructed without a recorder.") {
+    auto norecorder_tracer = std::shared_ptr<opentracing::Tracer>{
+        new MockTracer{MockTracerOptions{}}};
+    auto span = norecorder_tracer->StartSpan("a");
+  }
+
   SECTION("StartSpan applies the provided tags.") {
     {
       auto span =

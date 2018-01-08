@@ -12,7 +12,7 @@ namespace mocktracer {
 
 class MockSpan : public Span {
  public:
-  MockSpan(std::shared_ptr<const Tracer>&& tracer, Recorder& recorder,
+  MockSpan(std::shared_ptr<const Tracer>&& tracer, Recorder* recorder,
            string_view operation_name, const StartSpanOptions& options);
 
   ~MockSpan() override;
@@ -40,7 +40,7 @@ class MockSpan : public Span {
 
  private:
   std::shared_ptr<const Tracer> tracer_;
-  Recorder& recorder_;
+  Recorder* recorder_;
   MockSpanContext span_context_;
   SteadyTime start_steady_;
 

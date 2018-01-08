@@ -44,8 +44,8 @@ opentracing::expected<std::unique_ptr<opentracing::SpanContext>> ExtractImpl(
 std::unique_ptr<Span> MockTracer::StartSpanWithOptions(
     string_view operation_name, const StartSpanOptions& options) const
     noexcept try {
-  return std::unique_ptr<Span>{
-      new MockSpan{shared_from_this(), *recorder_, operation_name, options}};
+  return std::unique_ptr<Span>{new MockSpan{shared_from_this(), recorder_.get(),
+                                            operation_name, options}};
 } catch (const std::exception& e) {
   fprintf(stderr, "Failed to start span: %s\n", e.what());
   return nullptr;

@@ -61,7 +61,7 @@ static bool SetSpanReference(
   return true;
 }
 
-MockSpan::MockSpan(std::shared_ptr<const Tracer>&& tracer, Recorder& recorder,
+MockSpan::MockSpan(std::shared_ptr<const Tracer>&& tracer, Recorder* recorder,
                    string_view operation_name, const StartSpanOptions& options)
     : tracer_{std::move(tracer)}, recorder_{recorder} {
   data_.operation_name = operation_name;
@@ -119,7 +119,9 @@ void MockSpan::FinishWithOptions(const FinishSpanOptions& options) noexcept {
 
   span_context_.SetData(data_.span_context);
 
-  recorder_.RecordSpan(std::move(data_));
+  if (recorder_ != nullptr) {
+    recorder_->RecordSpan(std::move(data_));
+  }
 }
 
 void MockSpan::SetOperationName(string_view name) noexcept try {
