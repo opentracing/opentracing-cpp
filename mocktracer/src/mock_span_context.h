@@ -15,7 +15,7 @@ class MockSpanContext : public SpanContext {
  public:
   MockSpanContext() = default;
 
-  MockSpanContext(SpanContextData&& data) noexcept : data_{std::move(data)} {}
+  MockSpanContext(SpanContextData&& data) noexcept : data_(std::move(data)) {}
 
   MockSpanContext(const MockSpanContext&) = delete;
   MockSpanContext(MockSpanContext&&) = delete;
