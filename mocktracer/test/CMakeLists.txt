@@ -1,7 +1,13 @@
+if (BUILD_SHARED_LIBS)
+  set(OPENTRACING_MOCKTRACER_LIBRARY opentracing_mocktracer)
+else()
+  set(OPENTRACING_MOCKTRACER_LIBRARY opentracing_mocktracer-static)
+endif()
+
 add_executable(mocktracer_tracer_test tracer_test.cpp)
-target_link_libraries(mocktracer_tracer_test opentracing_mocktracer)
+target_link_libraries(mocktracer_tracer_test ${OPENTRACING_MOCKTRACER_LIBRARY})
 add_test(mocktracer_tracer_test mocktracer_tracer_test)
 
 add_executable(mocktracer_propagation_test propagation_test.cpp)
-target_link_libraries(mocktracer_propagation_test opentracing_mocktracer)
+target_link_libraries(mocktracer_propagation_test ${OPENTRACING_MOCKTRACER_LIBRARY})
 add_test(mocktracer_propagation_test mocktracer_propagation_test)
