@@ -1,5 +1,6 @@
 #include <opentracing/mocktracer/tracer.h>
 #include <exception>
+#include <cstdio>
 
 #include "mock_span_context.h"
 #include "mock_span.h"
@@ -48,6 +49,7 @@ std::unique_ptr<Span> MockTracer::StartSpanWithOptions(
   return std::unique_ptr<Span>{
       new MockSpan{shared_from_this(), *recorder_, operation_name, options}};
 } catch (const std::exception& e) {
+  fprintf(stderr, "Failed to start span: %s\n", e.what());
   return nullptr;
 }
 

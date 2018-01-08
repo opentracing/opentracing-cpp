@@ -1,5 +1,6 @@
 #include "mock_span.h"
 #include <random>
+#include <cstdio>
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
@@ -124,16 +125,18 @@ void MockSpan::FinishWithOptions(const FinishSpanOptions& options) noexcept {
 void MockSpan::SetOperationName(string_view name) noexcept try {
   std::lock_guard<std::mutex> lock_guard{mutex_};
   data_.operation_name = name;
-} catch (const std::exception&) {
+} catch (const std::exception& e) {
   // Ignore operation
+  fprintf(stderr, "Failed to set operation name: %s\n", e.what());
 }
 
 void MockSpan::SetTag(string_view key,
                       const opentracing::Value& value) noexcept try {
   std::lock_guard<std::mutex> lock_guard{mutex_};
   data_.tags[key] = value;
-} catch (const std::exception&) {
+} catch (const std::exception&e ) {
   // Ignore upon error.
+  fprintf(stderr, "Failed to set tag: %s\n", e.what());
 }
 
 void MockSpan::Log(
@@ -145,16 +148,18 @@ void MockSpan::Log(
     log_record.fields.emplace_back(field.first, field.second);
   }
   data_.logs.emplace_back(std::move(log_record));
-} catch (const std::exception&) {
+} catch (const std::exception& e) {
   // Drop log record upon error.
+  fprintf(stderr, "Failed to log: %s\n", e.what());
 }
 
 void MockSpan::SetBaggageItem(string_view restricted_key,
                               string_view value) noexcept try {
   std::lock_guard<std::mutex> lock_guard{span_context_.baggage_mutex_};
   span_context_.data_.baggage.emplace(restricted_key, value);
-} catch (const std::exception&) {
+} catch (const std::exception& e) {
   // Drop baggage item upon error.
+  fprintf(stderr, "Failed to set baggage item: %s\n", e.what());
 }
 
 std::string MockSpan::BaggageItem(string_view restricted_key) const
@@ -165,8 +170,9 @@ std::string MockSpan::BaggageItem(string_view restricted_key) const
     return lookup->second;
   }
   return {};
-} catch (const std::exception&) {
+} catch (const std::exception& e) {
   // Return empty string upon error.
+  fprintf(stderr, "Failed to retrieve baggage item: %s\n", e.what());
   return {};
 }
 
