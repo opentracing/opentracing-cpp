@@ -14,6 +14,9 @@ if (BUILD_SHARED_LIBS)
   set_target_properties(opentracing_mocktracer PROPERTIES VERSION ${OPENTRACING_VERSION_STRING}
                                                SOVERSION ${OPENTRACING_VERSION_MAJOR})
   target_link_libraries(opentracing_mocktracer opentracing)
+  install(TARGETS opentracing_mocktracer EXPORT OpenTracingTargets
+          LIBRARY DESTINATION lib
+          ARCHIVE DESTINATION lib)
 endif(BUILD_SHARED_LIBS)
 
 if (BUILD_STATIC_LIBS)
@@ -21,7 +24,12 @@ if (BUILD_STATIC_LIBS)
   set_target_properties(opentracing_mocktracer-static PROPERTIES OUTPUT_NAME opentracing_mocktracer)
   target_include_directories(opentracing_mocktracer-static INTERFACE "$<INSTALL_INTERFACE:include/>")
   target_link_libraries(opentracing_mocktracer-static opentracing-static)
+  install(TARGETS opentracing_mocktracer-static EXPORT OpenTracingTargets
+          ARCHIVE DESTINATION lib)
 endif(BUILD_STATIC_LIBS)
+
+install(DIRECTORY include/opentracing DESTINATION include
+            FILES_MATCHING PATTERN "*.h")
 
 # ==============================================================================
 # Testing
