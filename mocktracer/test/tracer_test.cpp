@@ -119,6 +119,33 @@ TEST_CASE("tracer") {
     CHECK(recorder->size() == 1);
   }
 
+  SECTION("FinishWithOptions applies provided log records.") {
+    std::vector<LogRecord> logs;
+    {
+      auto span = tracer->StartSpan("a");
+      CHECK(span);
+      FinishSpanOptions options;
+      auto timestamp = SystemClock::now();
+      logs = {{timestamp, {{"abc", 123}}}};
+      options.log_records = logs;
+      span->FinishWithOptions(options);
+    }
+    auto span = recorder->top();
+    CHECK(span.operation_name == "a");
+    CHECK(span.logs == logs);
+  }
+
+  SECTION("Logs can be added to an active span.") {
+    {
+      auto span = tracer->StartSpan("a");
+      CHECK(span);
+      span->Log({{"abc", 123}});
+    }
+    auto span = recorder->top();
+    std::vector<std::pair<std::string, Value>> fields = {{"abc", 123}};
+    CHECK(span.logs.at(0).fields == fields);
+  }
+
   SECTION("The operation name can be changed after the span is started.") {
     auto span = tracer->StartSpan("a");
     CHECK(span);

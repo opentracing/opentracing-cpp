@@ -7,11 +7,6 @@
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
 namespace mocktracer {
-struct LogRecordData {
-  SystemTime timestamp;
-  std::vector<std::pair<std::string, Value>> fields;
-};
-
 struct SpanContextData {
   uint64_t trace_id;
   uint64_t span_id;
@@ -42,7 +37,7 @@ struct SpanData {
   SystemTime start_timestamp;
   SteadyClock::duration duration;
   std::unordered_map<std::string, Value> tags;
-  std::vector<LogRecordData> logs;
+  std::vector<LogRecord> logs;
 };
 
 class Recorder {

@@ -50,4 +50,11 @@ TEST_CASE("Value") {
     Value v2(Dictionary{{"abc", Value(123)}});
     (void)v2;
   }
+
+  SECTION("Value types can be compared for equality.") {
+    Value v1{1}, v2{2}, v3{1.0};
+    CHECK(v1 == v1);
+    CHECK(v1 != v2);
+    CHECK(v1 != v3);
+  }
 }

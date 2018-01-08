@@ -35,6 +35,14 @@ struct LogRecord {
   std::vector<Field> fields;
 };
 
+inline bool operator==(const LogRecord& lhs, const LogRecord& rhs) {
+  return lhs.timestamp == rhs.timestamp && lhs.fields == rhs.fields;
+}
+
+inline bool operator!=(const LogRecord& lhs, const LogRecord& rhs) {
+  return !(lhs == rhs);
+}
+
 // FinishOptions allows Span.Finish callers to override the finish
 // timestamp.
 struct FinishSpanOptions {

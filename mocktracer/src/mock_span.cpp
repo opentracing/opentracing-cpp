@@ -104,6 +104,11 @@ void MockSpan::FinishWithOptions(const FinishSpanOptions& options) noexcept {
     return;
   }
 
+  data_.logs.reserve(data_.logs.size() + options.log_records.size());
+  for (auto& log_record : options.log_records) {
+    data_.logs.push_back(log_record);
+  }
+
   auto finish_timestamp = options.finish_steady_timestamp;
   if (finish_timestamp == SteadyTime{}) {
     finish_timestamp = SteadyClock::now();
@@ -134,12 +139,12 @@ void MockSpan::SetTag(string_view key,
 void MockSpan::Log(
     std::initializer_list<std::pair<string_view, Value>> fields) noexcept try {
   std::lock_guard<std::mutex> lock_guard{mutex_};
-  LogRecordData log_record_data;
-  log_record_data.timestamp = SystemClock::now();
+  LogRecord log_record;
+  log_record.timestamp = SystemClock::now();
   for (auto& field : fields) {
-    log_record_data.fields.emplace_back(field.first, field.second);
+    log_record.fields.emplace_back(field.first, field.second);
   }
-  data_.logs.emplace_back(std::move(log_record_data));
+  data_.logs.emplace_back(std::move(log_record));
 } catch (const std::exception&) {
   // Drop log record upon error.
 }
