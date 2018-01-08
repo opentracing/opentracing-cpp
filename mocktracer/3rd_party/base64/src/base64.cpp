@@ -31,7 +31,7 @@ std::string Base64::decode(const char* input, size_t length) {
 
   // First position of "valid" padding character.
   uint64_t first_padding_index = length;
-  int max_length = length / 4 * 3;
+  int max_length = static_cast<int>(length) / 4 * 3;
   // At most last two chars can be '='.
   if (input[length - 1] == '=') {
     max_length--;
@@ -42,7 +42,7 @@ std::string Base64::decode(const char* input, size_t length) {
     }
   }
   std::string result;
-  result.reserve(max_length);
+  result.reserve(static_cast<size_t>(max_length));
 
   uint64_t bytes_left = length;
   uint64_t cur_read = 0;
@@ -60,7 +60,7 @@ std::string Base64::decode(const char* input, size_t length) {
       // Input contains an invalid character.
       return {};
     }
-    result.push_back(a << 2 | b >> 4);
+    result.push_back(static_cast<char>(a << 2 | b >> 4));
     const unsigned char c = REVERSE_LOOKUP_TABLE[static_cast<uint32_t>(input[cur_read + 2])];
 
     // Decoded value 64 means invalid character unless we already know it is a valid padding.
@@ -70,7 +70,7 @@ std::string Base64::decode(const char* input, size_t length) {
       if (first_padding_index != cur_read + 2) {
         // Input contains an invalid character.
         return {};
-      } else if (b & 0b1111) {
+      } else if (b & 15) {
         // There are unused bits at tail.
         return {};
       } else {
@@ -78,14 +78,14 @@ std::string Base64::decode(const char* input, size_t length) {
       }
     }
     // Take last 4 bits from 2nd converted char and 4 first bits from 3rd converted char.
-    result.push_back(b << 4 | c >> 2);
+    result.push_back(static_cast<char>(b << 4 | c >> 2));
 
     const unsigned char d = REVERSE_LOOKUP_TABLE[static_cast<uint32_t>(input[cur_read + 3])];
     if (d == 64) {
       if (first_padding_index != cur_read + 3) {
         // Input contains an invalid character.
         return {};
-      } else if (c & 0b11) {
+      } else if (c & 3) {
         // There are unused bits at tail.
         return {};
       } else {
@@ -93,7 +93,7 @@ std::string Base64::decode(const char* input, size_t length) {
       }
     }
     // Take last 2 bits from 3rd converted char and all(6) bits from 4th converted char.
-    result.push_back(c << 6 | d);
+    result.push_back(static_cast<char>(c << 6 | d));
 
     cur_read += 4;
     bytes_left -= 4;
@@ -106,11 +106,11 @@ void Base64::encodeBase(const uint8_t cur_char, uint64_t pos, uint8_t& next_c, s
   switch (pos % 3) {
   case 0:
     ret.push_back(CHAR_TABLE[cur_char >> 2]);
-    next_c = (cur_char & 0x03) << 4;
+    next_c = static_cast<uint8_t>((cur_char & 0x03) << 4);
     break;
   case 1:
     ret.push_back(CHAR_TABLE[next_c | (cur_char >> 4)]);
-    next_c = (cur_char & 0x0f) << 2;
+    next_c = static_cast<uint8_t>((cur_char & 0x0f) << 2);
     break;
   case 2:
     ret.push_back(CHAR_TABLE[next_c | (cur_char >> 6)]);
@@ -145,7 +145,7 @@ std::string Base64::encode(const char* input, uint64_t length) {
   uint8_t next_c = 0;
 
   for (uint64_t i = 0; i < length; ++i) {
-    encodeBase(input[i], pos++, next_c, ret);
+    encodeBase(static_cast<uint8_t>(input[i]), pos++, next_c, ret);
   }
 
   encodeLast(pos, next_c, ret);
