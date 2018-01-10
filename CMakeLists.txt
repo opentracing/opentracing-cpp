@@ -103,10 +103,10 @@ if (BUILD_STATIC_LIBS)
 endif(BUILD_STATIC_LIBS)
 
 
-install(DIRECTORY 3rd_party/include/opentracing/expected DESTINATION include
+install(DIRECTORY 3rd_party/include/opentracing/expected DESTINATION include/opentracing
             FILES_MATCHING PATTERN "*.hpp"
                            PATTERN "*.h")
-install(DIRECTORY 3rd_party/include/opentracing/variant DESTINATION include
+install(DIRECTORY 3rd_party/include/opentracing/variant DESTINATION include/opentracing
             FILES_MATCHING PATTERN "*.hpp"
                            PATTERN "*.h")
 install(DIRECTORY include/opentracing DESTINATION include
