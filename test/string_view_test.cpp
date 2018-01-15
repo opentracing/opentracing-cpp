@@ -1,48 +1,43 @@
-#include "assert.h"
-
 #include <opentracing/string_view.h>  // test include guard
 #include <opentracing/string_view.h>
 
+#define CATCH_CONFIG_MAIN
+#include <opentracing/catch2/catch.hpp>
+
 using namespace opentracing;
 
-static void test_empty() {
-  string_view ref;
-  ASSERT(0 == ref.data());
-  ASSERT(0 == ref.length());
-}
+TEST_CASE("string_view") {
+  SECTION("A default-constructed string_view is empty.") {
+    string_view ref;
+    CHECK(nullptr == ref.data());
+    CHECK(0 == ref.length());
+  }
 
-static void test_cstring() {
-  const char* val = "hello world";
+  SECTION("string_view can be initialized from a c-string.") {
+    const char* val = "hello world";
 
-  string_view ref(val);
+    string_view ref(val);
 
-  ASSERT(val == ref.data());
-  ASSERT(std::strlen(val) == ref.length());
-}
+    CHECK(val == ref.data());
+    CHECK(std::strlen(val) == ref.length());
+  }
 
-static void test_std_string() {
-  const std::string val = "hello world";
+  SECTION("string_view can be initialized from an std::string.") {
+    const std::string val = "hello world";
 
-  string_view ref(val);
+    string_view ref(val);
 
-  ASSERT(val == ref.data());
-  ASSERT(val.length() == ref.length());
-}
+    CHECK(val == ref.data());
+    CHECK(val.length() == ref.length());
+  }
 
-static void test_copy() {
-  const std::string val = "hello world";
+  SECTION("A copied string_view points to the same data as its source.") {
+    const std::string val = "hello world";
 
-  string_view ref(val);
-  string_view cpy(ref);
+    string_view ref(val);
+    string_view cpy(ref);
 
-  ASSERT(val == cpy.data());
-  ASSERT(val.length() == cpy.length());
-}
-
-int main() {
-  test_empty();
-  test_cstring();
-  test_std_string();
-  test_copy();
-  return 0;
+    CHECK(val == cpy.data());
+    CHECK(val.length() == cpy.length());
+  }
 }

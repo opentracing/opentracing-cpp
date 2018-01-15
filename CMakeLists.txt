@@ -72,6 +72,7 @@ include_directories(SYSTEM 3rd_party/include)
 
 option(BUILD_SHARED_LIBS "Build as a shared library" ON)
 option(BUILD_STATIC_LIBS "Build as a static library" ON)
+option(BUILD_MOCKTRACER "Build mocktracer library" ON)
 
 if (NOT BUILD_SHARED_LIBS AND NOT BUILD_STATIC_LIBS)
     message(FATAL_ERROR "One or both of BUILD_SHARED_LIBS or BUILD_STATIC_LIBS must be set to ON to build")
@@ -102,12 +103,19 @@ if (BUILD_STATIC_LIBS)
 endif(BUILD_STATIC_LIBS)
 
 
-install(DIRECTORY 3rd_party/include/opentracing DESTINATION include
+install(DIRECTORY 3rd_party/include/opentracing/expected DESTINATION include/opentracing
+            FILES_MATCHING PATTERN "*.hpp"
+                           PATTERN "*.h")
+install(DIRECTORY 3rd_party/include/opentracing/variant DESTINATION include/opentracing
             FILES_MATCHING PATTERN "*.hpp"
                            PATTERN "*.h")
 install(DIRECTORY include/opentracing DESTINATION include
             FILES_MATCHING PATTERN "*.h")
 
+
+if (BUILD_MOCKTRACER)
+  add_subdirectory(mocktracer)
+endif()
 
 # ==============================================================================
 # Package configuration setup
