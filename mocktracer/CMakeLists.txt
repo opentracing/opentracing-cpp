@@ -19,7 +19,7 @@ if (BUILD_SHARED_LIBS)
   install(TARGETS opentracing_mocktracer EXPORT OpenTracingTargets
           LIBRARY DESTINATION lib
           ARCHIVE DESTINATION lib)
-endif(BUILD_SHARED_LIBS)
+endif()
 
 if (BUILD_STATIC_LIBS)
   add_library(opentracing_mocktracer-static STATIC ${SRCS})
@@ -28,7 +28,7 @@ if (BUILD_STATIC_LIBS)
   target_link_libraries(opentracing_mocktracer-static opentracing-static)
   install(TARGETS opentracing_mocktracer-static EXPORT OpenTracingTargets
           ARCHIVE DESTINATION lib)
-endif(BUILD_STATIC_LIBS)
+endif()
 
 install(DIRECTORY include/opentracing DESTINATION include
             FILES_MATCHING PATTERN "*.h")

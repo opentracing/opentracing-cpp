@@ -92,7 +92,7 @@ if (BUILD_SHARED_LIBS)
     set_target_properties(opentracing PROPERTIES
                                     CXX_CLANG_TIDY "${DO_CLANG_TIDY}")
   endif()
-endif(BUILD_SHARED_LIBS)
+endif()
 
 if (BUILD_STATIC_LIBS)
   add_library(opentracing-static STATIC ${SRCS})
@@ -100,7 +100,7 @@ if (BUILD_STATIC_LIBS)
   target_include_directories(opentracing-static INTERFACE "$<INSTALL_INTERFACE:include/>")
   install(TARGETS opentracing-static EXPORT OpenTracingTargets
           ARCHIVE DESTINATION lib)
-endif(BUILD_STATIC_LIBS)
+endif()
 
 
 install(DIRECTORY 3rd_party/include/opentracing/expected DESTINATION include/opentracing
