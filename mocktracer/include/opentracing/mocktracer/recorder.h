@@ -3,6 +3,7 @@
 
 #include <opentracing/tracer.h>
 #include <cstdint>
+#include <iosfwd>
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
@@ -12,6 +13,18 @@ struct SpanContextData {
   uint64_t span_id;
   std::unordered_map<std::string, std::string> baggage;
 };
+
+inline bool operator==(const SpanContextData& lhs, const SpanContextData& rhs) {
+  return lhs.trace_id == rhs.trace_id && lhs.span_id == rhs.span_id &&
+         lhs.baggage == rhs.baggage;
+}
+
+inline bool operator!=(const SpanContextData& lhs, const SpanContextData& rhs) {
+  return !(lhs == rhs);
+}
+
+std::ostream& operator<<(std::ostream& out,
+                         const SpanContextData& span_context_data);
 
 struct SpanReferenceData {
   SpanReferenceType reference_type;
@@ -39,6 +52,22 @@ struct SpanData {
   std::unordered_map<std::string, Value> tags;
   std::vector<LogRecord> logs;
 };
+
+inline bool operator==(const SpanData& lhs, const SpanData& rhs) {
+  return lhs.span_context == rhs.span_context &&
+         lhs.references == rhs.references &&
+         lhs.operation_name == rhs.operation_name &&
+         lhs.start_timestamp == rhs.start_timestamp &&
+         lhs.duration == rhs.duration && 
+         lhs.tags == rhs.tags &&
+         lhs.logs == rhs.logs;
+}
+
+inline bool operator!=(const SpanData& lhs, const SpanData& rhs) {
+  return !(lhs == rhs);
+}
+
+std::ostream& operator<<(std::ostream& out, const SpanData& span_data);
 
 class Recorder {
  public:

@@ -1,5 +1,6 @@
 #include <opentracing/mocktracer/json.h>
 #include <opentracing/mocktracer/nlohmann/json.hpp>
+#include <iostream>
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
@@ -63,13 +64,13 @@ template <class Rep, class Period>
 struct adl_serializer<std::chrono::duration<Rep, Period>> {
   static void to_json(json& j,
                       const std::chrono::duration<Rep, Period>& duration) {
-    j = std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
+    j = duration.count();
   }
 
   static void from_json(const json& j,
                    std::chrono::duration<Rep, Period>& duration) {
-    const Rep microseconds = j;
-    duration = std::chrono::microseconds{microseconds};
+    const Rep ticks = j;
+    duration = std::chrono::duration<Rep, Period>{ticks};
   }
 };
 
@@ -159,6 +160,9 @@ static void FromJson(const json& j, Value& value) {
   std::string type = j["type"];
   if (type == "nullptr") {
     value = nullptr;
+  } else if (type == "string") {
+    std::string s = j["value"];
+    value = s;
   } else if (type == "bool") {
     value = bool{j["value"]};
   } else if (type == "int64") {
@@ -205,7 +209,7 @@ struct adl_serializer<Value> {
 template <>
 struct adl_serializer<LogRecord> {
   static void to_json(json& j, const LogRecord& log_record) {
-    j["timetamp"] = log_record.timestamp;
+    j["timestamp"] = log_record.timestamp;
     std::vector<json> json_fields;
     json_fields.reserve(log_record.fields.size());
     for (auto& field : log_record.fields) {
@@ -275,6 +279,17 @@ std::vector<SpanData> FromJson(string_view s) {
   return result;
 }
 
+std::ostream& operator<<(std::ostream& out, const SpanContextData& span_context_data) {
+  json j = span_context_data;
+  out << j.dump();
+  return out;
+}
+
+std::ostream& operator<<(std::ostream& out, const SpanData& span_data) {
+  json j = span_data;
+  out << j.dump();
+  return out;
+}
 }  // namespace mocktracer
 END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing
