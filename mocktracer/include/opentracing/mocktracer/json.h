@@ -10,7 +10,8 @@ namespace mocktracer {
 // Serialize provided spans to JSON.
 std::string ToJson(const std::vector<SpanData>& spans);
 
-// Deserialize a JSON representation of spans.
+// Deserialize a JSON representation of spans. Throws exception upon parse
+// error.
 std::vector<SpanData> FromJson(string_view s);
 }  // namespace mocktracer
 END_OPENTRACING_ABI_NAMESPACE
