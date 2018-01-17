@@ -179,7 +179,7 @@ TEST_CASE("json_recorder") {
   tracer_options.recorder = std::unique_ptr<Recorder>{
       new JsonRecorder{std::unique_ptr<std::ostream>{oss}}};
   auto tracer =
-      std::shared_ptr<MockTracer>{new MockTracer{std::move(tracer_options)}};
+      std::shared_ptr<Tracer>{new MockTracer{std::move(tracer_options)}};
 
   SECTION("Spans are serialized to the stream upon Close.") {
     auto span = tracer->StartSpan("a");

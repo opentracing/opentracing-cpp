@@ -10,6 +10,10 @@
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
 namespace mocktracer {
+// JsonRecorder serializes finished spans to a provided std::ostream in a JSON
+// format.
+//
+// See also FromJson.
 class JsonRecorder : public Recorder {
  public:
   explicit JsonRecorder(std::unique_ptr<std::ostream>&& out);

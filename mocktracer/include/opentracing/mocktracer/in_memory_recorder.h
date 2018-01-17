@@ -8,14 +8,18 @@
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
 namespace mocktracer {
+// InMemoryRecorder stores finished spans and provides accessors to them.
 class InMemoryRecorder : public Recorder {
  public:
   void RecordSpan(SpanData&& span_data) noexcept override;
 
+  // Returns a vector of all finished spans.
   std::vector<SpanData> spans() const;
 
+  // Returns the number of finished spans.
   size_t size() const;
 
+  // Returns the last finished span. Throws if no spans have been finished.
   SpanData top() const;
 
  private:
