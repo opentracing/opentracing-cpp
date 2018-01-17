@@ -6,6 +6,7 @@ set(SRCS 3rd_party/base64/src/base64.cpp
          src/mock_span_context.cpp
          src/mock_span.cpp
          src/in_memory_recorder.cpp
+         src/json_recorder.cpp
          src/propagation.cpp
          src/json.cpp
          src/tracer.cpp)

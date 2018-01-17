@@ -27,6 +27,8 @@ class MockTracer : public Tracer,
 
   void Close() noexcept override;
 
+  void Flush() noexcept;
+
   const std::vector<SpanData>& spans() const noexcept { return spans_; }
 
   expected<void> Inject(const SpanContext& sc,

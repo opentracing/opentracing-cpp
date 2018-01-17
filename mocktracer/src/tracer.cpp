@@ -51,7 +51,15 @@ std::unique_ptr<Span> MockTracer::StartSpanWithOptions(
   return nullptr;
 }
 
-void MockTracer::Close() noexcept {}
+void MockTracer::Close() noexcept {
+  Flush();
+}
+
+void MockTracer::Flush() noexcept {
+  if (recorder_ != nullptr) {
+    recorder_->Flush();
+  }
+}
 
 expected<void> MockTracer::Inject(const SpanContext& sc,
                                   std::ostream& writer) const {
