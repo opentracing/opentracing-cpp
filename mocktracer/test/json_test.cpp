@@ -44,8 +44,26 @@ TEST_CASE("json") {
     }
     auto spans = recorder->spans();
     auto j = ToJson(spans);
-    CHECK(!j.empty());
     auto spans_from_json = FromJson(j);
     CHECK(spans == spans_from_json);
+  }
+
+  SECTION("Value(const char*) gets deserialized as a string.") {
+    {
+      auto span_a = tracer->StartSpan("a");
+      CHECK(span_a);
+      span_a->SetTag("const char* tag", "abc");
+    }
+    auto spans = recorder->spans();
+    auto j = ToJson(spans);
+    auto spans_from_json = FromJson(j);
+    CHECK(spans_from_json.at(0).tags ==
+          std::unordered_map<std::string, Value>{
+              {"const char* tag", std::string{"abc"}}});
+  }
+
+  SECTION("If deserialization fails, an exception is thrown.") {
+    const char* s = "invalid serialization";
+    CHECK_THROWS(FromJson(s));
   }
 }
