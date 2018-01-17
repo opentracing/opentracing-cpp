@@ -1,6 +1,6 @@
 #include <opentracing/mocktracer/in_memory_recorder.h>
-#include <opentracing/mocktracer/tracer.h>
 #include <opentracing/mocktracer/json.h>
+#include <opentracing/mocktracer/tracer.h>
 
 #define CATCH_CONFIG_MAIN
 #include <opentracing/catch2/catch.hpp>

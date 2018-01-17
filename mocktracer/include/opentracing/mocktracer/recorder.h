@@ -58,8 +58,7 @@ inline bool operator==(const SpanData& lhs, const SpanData& rhs) {
          lhs.references == rhs.references &&
          lhs.operation_name == rhs.operation_name &&
          lhs.start_timestamp == rhs.start_timestamp &&
-         lhs.duration == rhs.duration && 
-         lhs.tags == rhs.tags &&
+         lhs.duration == rhs.duration && lhs.tags == rhs.tags &&
          lhs.logs == rhs.logs;
 }
 

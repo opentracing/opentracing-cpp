@@ -1,6 +1,6 @@
 #include <opentracing/mocktracer/json.h>
-#include <opentracing/mocktracer/nlohmann/json.hpp>
 #include <iostream>
+#include <opentracing/mocktracer/nlohmann/json.hpp>
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
@@ -22,7 +22,7 @@ struct adl_serializer<SpanContextData> {
   }
 };
 
-template<>
+template <>
 struct adl_serializer<SpanReferenceType> {
   static void to_json(json& j, const SpanReferenceType& reference_type) {
     if (reference_type == SpanReferenceType::ChildOfRef) {
@@ -45,7 +45,7 @@ struct adl_serializer<SpanReferenceType> {
   }
 };
 
-template<>
+template <>
 struct adl_serializer<SpanReferenceData> {
   static void to_json(json& j, const SpanReferenceData& span_reference_data) {
     j["reference_type"] = span_reference_data.reference_type;
@@ -68,7 +68,7 @@ struct adl_serializer<std::chrono::duration<Rep, Period>> {
   }
 
   static void from_json(const json& j,
-                   std::chrono::duration<Rep, Period>& duration) {
+                        std::chrono::duration<Rep, Period>& duration) {
     const Rep ticks = j;
     duration = std::chrono::duration<Rep, Period>{ticks};
   }
@@ -99,32 +99,30 @@ struct JsonValueVisitor {
 
   void operator()(bool value) {
     j["type"] = "bool";
-    j["value"] =  value;
+    j["value"] = value;
   }
 
   void operator()(double value) {
     j["type"] = "double";
-    j["value"] =  value;
+    j["value"] = value;
   }
 
   void operator()(int64_t value) {
     j["type"] = "int64";
-    j["value"] =  value;
+    j["value"] = value;
   }
 
   void operator()(uint64_t value) {
     j["type"] = "uint64";
-    j["value"] =  value;
+    j["value"] = value;
   }
 
   void operator()(const std::string& value) {
     j["type"] = "string";
-    j["value"] =  value;
+    j["value"] = value;
   }
 
-  void operator()(const char* s) {
-    this->operator()(std::string{s});
-  }
+  void operator()(const char* s) { this->operator()(std::string{s}); }
 
   void operator()(const Values& values) {
     j["type"] = "array";
@@ -149,7 +147,7 @@ struct JsonValueVisitor {
     j["value"] = json_values;
   }
 };
-} // namespace
+}  // namespace
 
 static void ToJson(json& j, const Value& value) {
   JsonValueVisitor value_visitor{j};
@@ -187,7 +185,7 @@ static void FromJson(const json& j, Value& value) {
     for (auto& element : json::iterator_wrapper(json_values)) {
       Value value_item;
       FromJson(element.value(), value_item);
-      values[element.key()]  = std::move(value_item);
+      values[element.key()] = std::move(value_item);
     }
     value = std::move(values);
   } else {
@@ -197,13 +195,9 @@ static void FromJson(const json& j, Value& value) {
 
 template <>
 struct adl_serializer<Value> {
-  static void to_json(json& j, const Value& value) {
-    ToJson(j, value);
-  }
+  static void to_json(json& j, const Value& value) { ToJson(j, value); }
 
-  static void from_json(const json& j, Value& value) {
-    FromJson(j, value);
-  }
+  static void from_json(const json& j, Value& value) { FromJson(j, value); }
 };
 
 template <>
@@ -233,7 +227,7 @@ struct adl_serializer<LogRecord> {
   }
 };
 
-template<>
+template <>
 struct adl_serializer<SpanData> {
   static void to_json(json& j, const SpanData& span_data) {
     j["span_context"] = span_data.span_context;
@@ -279,7 +273,8 @@ std::vector<SpanData> FromJson(string_view s) {
   return result;
 }
 
-std::ostream& operator<<(std::ostream& out, const SpanContextData& span_context_data) {
+std::ostream& operator<<(std::ostream& out,
+                         const SpanContextData& span_context_data) {
   json j = span_context_data;
   out << j.dump();
   return out;
