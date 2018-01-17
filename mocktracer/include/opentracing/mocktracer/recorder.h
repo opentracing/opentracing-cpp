@@ -74,7 +74,7 @@ class Recorder {
 
   virtual void RecordSpan(SpanData&& span_data) noexcept = 0;
 
-  virtual void Flush() noexcept {}
+  virtual void Close() noexcept {}
 };
 
 }  // namespace mocktracer

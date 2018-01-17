@@ -52,12 +52,8 @@ std::unique_ptr<Span> MockTracer::StartSpanWithOptions(
 }
 
 void MockTracer::Close() noexcept {
-  Flush();
-}
-
-void MockTracer::Flush() noexcept {
   if (recorder_ != nullptr) {
-    recorder_->Flush();
+    recorder_->Close();
   }
 }
 

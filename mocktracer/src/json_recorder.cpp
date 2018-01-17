@@ -1,13 +1,11 @@
-#include <opentracing/mocktracer/json_recorder.h>
 #include <opentracing/mocktracer/json.h>
+#include <opentracing/mocktracer/json_recorder.h>
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
 namespace mocktracer {
-JsonRecorder::JsonRecorder(std::unique_ptr<std::ostream>&& out) 
-  : out_{std::move(out)}
-{
-}
+JsonRecorder::JsonRecorder(std::unique_ptr<std::ostream>&& out)
+    : out_{std::move(out)} {}
 
 void JsonRecorder::RecordSpan(SpanData&& span_data) noexcept try {
   std::lock_guard<std::mutex> lock_guard{mutex_};
@@ -16,12 +14,13 @@ void JsonRecorder::RecordSpan(SpanData&& span_data) noexcept try {
   // Drop span.
 }
 
-void JsonRecorder::Flush() noexcept try {
+void JsonRecorder::Close() noexcept try {
   if (out_ == nullptr) {
     return;
   }
   std::lock_guard<std::mutex> lock_guard{mutex_};
   *out_ << ToJson(spans_);
+  out_->flush();
   spans_.clear();
 } catch (const std::exception&) {
   // Ignore errors.

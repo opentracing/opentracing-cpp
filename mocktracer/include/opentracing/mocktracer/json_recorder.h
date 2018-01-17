@@ -2,10 +2,10 @@
 #define OPENTRACING_MOCKTRACER_JSON_RECORDER_H
 
 #include <opentracing/mocktracer/recorder.h>
-#include <mutex>
-#include <vector>
 #include <iosfwd>
 #include <memory>
+#include <mutex>
+#include <vector>
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
@@ -16,7 +16,8 @@ class JsonRecorder : public Recorder {
 
   void RecordSpan(SpanData&& span_data) noexcept override;
 
-  void Flush() noexcept override;
+  void Close() noexcept override;
+
  private:
   std::mutex mutex_;
   std::unique_ptr<std::ostream> out_;
