@@ -19,6 +19,7 @@
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
+#include <opentracing/version.h>
 
 #define  expected_lite_VERSION "0.0.0"
 
@@ -45,6 +46,7 @@
     typename = typename std::enable_if< (__VA_ARGS__), opentracing::expected_detail::enabler >::type
 
 namespace opentracing {
+BEGIN_OPENTRACING_ABI_NAMESPACE
 
 template< typename T, typename E >
 class expected;
@@ -1186,6 +1188,7 @@ constexpr auto make_expected_from_error( E e ) -> expected<T, typename std::deca
     return expected<T, typename std::decay<E>::type>( make_unexpected( e ) );
 }
 
+END_OPENTRACING_ABI_NAMESPACE
 } // namespace opentracing
 
 namespace std {

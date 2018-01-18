@@ -107,6 +107,7 @@ SOFTWARE.
 */
 namespace opentracing 
 {
+BEGIN_OPENTRACING_ABI_NAMESPACE
 namespace mocktracer
 {
 
@@ -12913,6 +12914,7 @@ uses the standard template types.
 */
 using json = basic_json<>;
 } // namespace mocktracer
+END_OPENTRACING_ABI_NAMESPACE
 } // namespace opentracing
 
 
