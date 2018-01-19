@@ -1,5 +1,11 @@
+if (BUILD_SHARED_LIBS)
+  set(OPENTRACING_LIBRARY opentracing)
+else()
+  set(OPENTRACING_LIBRARY opentracing-static)
+endif()
+
 add_executable(tracer_test tracer_test.cpp)
-target_link_libraries(tracer_test opentracing) 
+target_link_libraries(tracer_test ${OPENTRACING_LIBRARY}) 
 add_test(tracer_test tracer_test)
 
 add_executable(string_view_test string_view_test.cpp)

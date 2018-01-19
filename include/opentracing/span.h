@@ -8,6 +8,7 @@
 #include <chrono>
 #include <functional>
 #include <string>
+#include <vector>
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
@@ -27,10 +28,35 @@ class SpanContext {
       const = 0;
 };
 
+struct LogRecord {
+  using Field = std::pair<std::string, Value>;
+
+  SystemTime timestamp;
+  std::vector<Field> fields;
+};
+
+inline bool operator==(const LogRecord& lhs, const LogRecord& rhs) {
+  return lhs.timestamp == rhs.timestamp && lhs.fields == rhs.fields;
+}
+
+inline bool operator!=(const LogRecord& lhs, const LogRecord& rhs) {
+  return !(lhs == rhs);
+}
+
 // FinishOptions allows Span.Finish callers to override the finish
 // timestamp.
 struct FinishSpanOptions {
   SteadyTime finish_steady_timestamp;
+
+  // log_records allows the caller to specify the contents of many Log() calls
+  // with a single vector. May be empty.
+  //
+  // None of the LogRecord.timestamp values may be SystemTime() (i.e., they must
+  // be set explicitly). Also, they must be >= the Span's start system timestamp
+  // and <= the finish_steady_timestamp converted to system timestamp
+  // (or SystemTime::now() if finish_steady_timestamp is default-constructed).
+  // Otherwise the behavior of FinishWithOptions() is unspecified.
+  std::vector<LogRecord> log_records;
 };
 
 // FinishSpanOption instances (zero or more) may be passed to Span.Finish.

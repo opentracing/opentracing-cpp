@@ -1,34 +1,33 @@
 #include <opentracing/noop.h>
 #include <opentracing/tracer.h>
-#include <cassert>
 using namespace opentracing;
 
-static void test_tracer_interface() {
+#define CATCH_CONFIG_MAIN
+#include <opentracing/catch2/catch.hpp>
+
+TEST_CASE("tracer") {
   auto tracer = MakeNoopTracer();
 
   auto span1 = tracer->StartSpan("a");
-  assert(span1);
-  assert(&span1->tracer() == tracer.get());
+  CHECK(span1);
 
-  auto span2 = tracer->StartSpan("b", {ChildOf(&span1->context())});
-  assert(span2);
-  span2->SetOperationName("b1");
-  span2->SetTag("x", true);
-  assert(span2->BaggageItem("y").empty());
-  span2->Log({{"event", "xyz"}, {"abc", 123}});
-  span2->Finish();
-}
+  SECTION("Spans provide references to the tracer that created them.") {
+    CHECK(&span1->tracer() == tracer.get());
+  }
 
-static void test_start_span_options() {
-  StartSpanOptions options;
+  SECTION("Ensure basic operations compile.") {
+    auto span2 = tracer->StartSpan("b", {ChildOf(&span1->context())});
+    CHECK(span2);
+    span2->SetOperationName("b1");
+    span2->SetTag("x", true);
+    CHECK(span2->BaggageItem("y").empty());
+    span2->Log({{"event", "xyz"}, {"abc", 123}});
+    span2->Finish();
+  }
 
-  // A reference to null a SpanContext is ignored.
-  ChildOf(nullptr).Apply(options);
-  assert(options.references.size() == 0);
-}
-
-int main() {
-  test_tracer_interface();
-  test_start_span_options();
-  return 0;
+  SECTION("A reference to a null SpanContext is ignored.") {
+    StartSpanOptions options;
+    ChildOf(nullptr).Apply(options);
+    CHECK(options.references.size() == 0);
+  }
 }

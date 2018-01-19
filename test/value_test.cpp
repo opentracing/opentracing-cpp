@@ -1,36 +1,62 @@
 #include <opentracing/value.h>
-#include <cassert>
 using namespace opentracing;
 
-static void test_implicit_construction() {
-  Value v1(123);
-  assert(v1.is<int64_t>());
+#define CATCH_CONFIG_MAIN
+#include <opentracing/catch2/catch.hpp>
 
-  Value v2(123u);
-  assert(v2.is<uint64_t>());
+TEST_CASE("Value") {
+  SECTION("Signed integers get converted to int64_t.") {
+    Value v1(123);
+    CHECK(v1.is<int64_t>());
 
-  Value v3(true);
-  assert(v3.is<bool>());
+    Value v2(static_cast<short>(123));
+    CHECK(v2.is<int64_t>());
+  }
 
-  Value v4(1.0);
-  assert(v4.is<double>());
-  Value v5(1.0f);
-  assert(v5.is<double>());
+  SECTION("Unsigned integers get converted to uint64_t.") {
+    Value v1(123u);
+    CHECK(v1.is<uint64_t>());
 
-  Value v6(std::string("abc"));
-  assert(v6.is<std::string>());
+    Value v2(static_cast<unsigned short>(123));
+    CHECK(v2.is<uint64_t>());
+  }
 
-  Value v7("abc");
-  assert(v7.is<const char*>());
+  SECTION("Bool values are deduced as bool.") {
+    Value v1(true);
+    // Workaround for "disabled expansion of recursive macro" warning.
+    const auto is_bool = v1.is<bool>();
+    CHECK(is_bool);
+  }
 
-  Value v8(Values{Value(1), Value(2)});
-  (void)v8;
+  SECTION("Floating point numbers are converted to double.") {
+    Value v1(1.0);
+    CHECK(v1.is<double>());
+    Value v2(1.0f);
+    CHECK(v2.is<double>());
+  }
 
-  Value v9(Dictionary{{"abc", Value(123)}});
-  (void)v9;
-}
+  SECTION("std::string values are deduced as std::string.") {
+    Value v1(std::string("abc"));
+    CHECK(v1.is<std::string>());
+  }
 
-int main() {
-  test_implicit_construction();
-  return 0;
+  SECTION("c-string values are deduced as c-strings.") {
+    Value v1("abc");
+    CHECK(v1.is<const char*>());
+  }
+
+  SECTION("Complex values are permitted.") {
+    Value v1(Values{Value(1), Value(2)});
+    (void)v1;
+
+    Value v2(Dictionary{{"abc", Value(123)}});
+    (void)v2;
+  }
+
+  SECTION("Value types can be compared for equality.") {
+    Value v1{1}, v2{2}, v3{1.0};
+    CHECK(v1 == v1);
+    CHECK(v1 != v2);
+    CHECK(v1 != v3);
+  }
 }

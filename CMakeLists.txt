@@ -7,7 +7,7 @@ project(opentracing-cpp)
 
 set(OPENTRACING_ABI_VERSION "1")
 set(OPENTRACING_VERSION_MAJOR "1")
-set(OPENTRACING_VERSION_MINOR "2")
+set(OPENTRACING_VERSION_MINOR "3")
 set(OPENTRACING_VERSION_PATCH "0")
 set(OPENTRACING_VERSION_STRING
   "${OPENTRACING_VERSION_MAJOR}.${OPENTRACING_VERSION_MINOR}.${OPENTRACING_VERSION_PATCH}")
@@ -71,6 +71,14 @@ endif()
 include_directories(include)
 include_directories(SYSTEM 3rd_party/include)
 
+option(BUILD_SHARED_LIBS "Build as a shared library" ON)
+option(BUILD_STATIC_LIBS "Build as a static library" ON)
+option(BUILD_MOCKTRACER "Build mocktracer library" ON)
+
+if (NOT BUILD_SHARED_LIBS AND NOT BUILD_STATIC_LIBS)
+    message(FATAL_ERROR "One or both of BUILD_SHARED_LIBS or BUILD_STATIC_LIBS must be set to ON to build")
+endif()
+
 set(SRCS src/propagation.cpp
          src/dynamic_load.cpp
          src/noop.cpp
@@ -85,34 +93,43 @@ else()
   list(APPEND SRCS src/dynamic_load_unsupported.cpp)
 endif()
 
-add_library(opentracing SHARED ${SRCS})
-target_include_directories(opentracing INTERFACE "$<INSTALL_INTERFACE:include/>")
-set_target_properties(opentracing PROPERTIES VERSION ${OPENTRACING_VERSION_STRING}
+
+if (BUILD_SHARED_LIBS)
+  add_library(opentracing SHARED ${SRCS})
+  target_include_directories(opentracing INTERFACE "$<INSTALL_INTERFACE:include/>")
+  set_target_properties(opentracing PROPERTIES VERSION ${OPENTRACING_VERSION_STRING}
                                              SOVERSION ${OPENTRACING_VERSION_MAJOR})
-add_library(opentracing-static STATIC ${SRCS})
-set_target_properties(opentracing-static PROPERTIES OUTPUT_NAME opentracing)
-target_include_directories(opentracing-static INTERFACE "$<INSTALL_INTERFACE:include/>")
-if (UNIX)
-  target_link_libraries(opentracing dl)
-  target_link_libraries(opentracing-static dl)
-elseif(MSVS OR MSYS OR MINGW)
-  # TODO
-endif()
-
-if (CLANG_TIDY_EXE)
-  set_target_properties(opentracing PROPERTIES
+  install(TARGETS opentracing EXPORT OpenTracingTargets
+          LIBRARY DESTINATION lib
+          ARCHIVE DESTINATION lib)
+  if (CLANG_TIDY_EXE)
+    set_target_properties(opentracing PROPERTIES
                                     CXX_CLANG_TIDY "${DO_CLANG_TIDY}")
-endif()
+  endif()
+endif(BUILD_SHARED_LIBS)
+
+if (BUILD_STATIC_LIBS)
+  add_library(opentracing-static STATIC ${SRCS})
+  set_target_properties(opentracing-static PROPERTIES OUTPUT_NAME opentracing)
+  target_include_directories(opentracing-static INTERFACE "$<INSTALL_INTERFACE:include/>")
+  install(TARGETS opentracing-static EXPORT OpenTracingTargets
+          ARCHIVE DESTINATION lib)
+endif(BUILD_STATIC_LIBS)
 
 
-install(DIRECTORY 3rd_party/include/opentracing DESTINATION include
+install(DIRECTORY 3rd_party/include/opentracing/expected DESTINATION include/opentracing
+            FILES_MATCHING PATTERN "*.hpp"
+                           PATTERN "*.h")
+install(DIRECTORY 3rd_party/include/opentracing/variant DESTINATION include/opentracing
             FILES_MATCHING PATTERN "*.hpp"
                            PATTERN "*.h")
 install(DIRECTORY include/opentracing DESTINATION include
             FILES_MATCHING PATTERN "*.h")
-install(TARGETS opentracing opentracing-static EXPORT OpenTracingTargets
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib)
+
+
+if (BUILD_MOCKTRACER)
+  add_subdirectory(mocktracer)
+endif()
 
 # ==============================================================================
 # Package configuration setup
