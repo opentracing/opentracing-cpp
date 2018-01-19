@@ -42,8 +42,8 @@ __declspec(selectany) int (*OpenTracingMakeTracerFactory)(
 #else
 int __attribute((weak))
 OpenTracingMakeTracerFactory(const char* opentracing_version,
-                                const void** error_category,
-                                void** tracer_factory);
+                             const void** error_category,
+                             void** tracer_factory);
 #endif
 }  // extern "C"
 
