@@ -87,8 +87,6 @@ set(SRCS src/propagation.cpp
 
 if (UNIX)
   list(APPEND SRCS src/dynamic_load_unix.cpp)
-elseif(MSVS OR MSYS OR MINGW)
-  list(APPEND SRCS src/dynamic_load_windows.cpp)
 else()
   list(APPEND SRCS src/dynamic_load_unsupported.cpp)
 endif()
