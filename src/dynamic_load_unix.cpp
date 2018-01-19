@@ -16,7 +16,7 @@ class DynamicLibraryHandleUnix : public DynamicLibraryHandle {
 };
 }  // namespace
 
-expected<DynamicTracingLibraryHandle> dynamically_load_tracing_library(
+expected<DynamicTracingLibraryHandle> DynamicallyLoadTracingLibrary(
     const char* shared_library, std::string& error_message) noexcept try {
   dlerror();  // Clear any existing error.
 
@@ -30,8 +30,8 @@ expected<DynamicTracingLibraryHandle> dynamically_load_tracing_library(
       new DynamicLibraryHandleUnix{handle}};
 
   const auto make_tracer_factory =
-      reinterpret_cast<decltype(opentracing_make_tracer_factory)*>(
-          dlsym(handle, "opentracing_make_tracer_factory"));
+      reinterpret_cast<decltype(OpenTracingMakeTracerFactory)*>(
+          dlsym(handle, "OpenTracingMakeTracerFactory"));
   if (make_tracer_factory == nullptr) {
     error_message = dlerror();
     return make_unexpected(dynamic_load_failure_error);

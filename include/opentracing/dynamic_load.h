@@ -6,9 +6,9 @@
 #include <opentracing/version.h>
 #include <system_error>
 
-// opentracing_make_tracer_factory provides common hook that can be used to
+// OpenTracingMakeTracerFactory provides common hook that can be used to
 // create a TracerFactory from a dynamically loaded library. Users should prefer
-// to use the function dynamically_load_tracing_library over calling it
+// to use the function DynamicallyLoadTracingLibrary over calling it
 // directly.
 //
 // It takes the parameter `opentracing_version` representing the version of
@@ -36,12 +36,12 @@
 //   }
 extern "C" {
 #ifdef _MSC_VER
-__declspec(selectany) int (*opentracing_make_tracer_factory)(
+__declspec(selectany) int (*OpenTracingMakeTracerFactory)(
     const char* opentracing_version, const void** error_category,
     void** tracer_factory);
 #else
 int __attribute((weak))
-opentracing_make_tracer_factory(const char* opentracing_version,
+OpenTracingMakeTracerFactory(const char* opentracing_version,
                                 const void** error_category,
                                 void** tracer_factory);
 #endif
@@ -107,7 +107,7 @@ class DynamicTracingLibraryHandle {
 //
 // Example:
 //   std::string error_message;
-//   auto handle_maybe = dynamically_load_tracing_library(
+//   auto handle_maybe = DynamicallyLoadTracingLibrary(
 //                                 "libtracing_vendor.so",
 //                                 error_message);
 //   if (handle_maybe) {
@@ -120,7 +120,7 @@ class DynamicTracingLibraryHandle {
 //   }
 //
 // See DynamicTracingLibraryHandle, TracerFactory
-expected<DynamicTracingLibraryHandle> dynamically_load_tracing_library(
+expected<DynamicTracingLibraryHandle> DynamicallyLoadTracingLibrary(
     const char* shared_library, std::string& error_message) noexcept;
 END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing

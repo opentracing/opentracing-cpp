@@ -2,7 +2,7 @@
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
-expected<DynamicTracingLibraryHandle> dynamically_load_tracing_library(
+expected<DynamicTracingLibraryHandle> DynamicallyLoadTracingLibrary(
     const char* shared_library, std::string& error_message) noexcept {
   return make_unexpected(dynamic_load_not_supported_error);
 }
