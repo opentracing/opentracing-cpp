@@ -15,6 +15,8 @@ struct MockTracerOptions {
   std::unique_ptr<Recorder> recorder;
 };
 
+// MockTracer provides implements the OpenTracing Tracer API. It provides
+// convenient access to finished spans in such a way as to support testing.
 class MockTracer : public Tracer,
                    public std::enable_shared_from_this<MockTracer> {
  public:

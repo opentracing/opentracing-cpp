@@ -1,6 +1,7 @@
 TEST_NAMES = [
     "propagation_test",
     "tracer_test",
+    "json_test",
 ]
 
 [cc_test(

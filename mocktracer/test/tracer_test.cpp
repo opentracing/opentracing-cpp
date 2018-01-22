@@ -1,6 +1,9 @@
 #include <opentracing/mocktracer/in_memory_recorder.h>
+#include <opentracing/mocktracer/json.h>
+#include <opentracing/mocktracer/json_recorder.h>
 #include <opentracing/mocktracer/tracer.h>
 #include <opentracing/noop.h>
+#include <sstream>
 
 #define CATCH_CONFIG_MAIN
 #include <opentracing/catch2/catch.hpp>
@@ -167,5 +170,22 @@ TEST_CASE("tracer") {
     span->Finish();
     std::unordered_map<std::string, Value> expected_tags = {{"abc", 123}};
     CHECK(recorder->top().tags == expected_tags);
+  }
+}
+
+TEST_CASE("json_recorder") {
+  auto oss = new std::ostringstream{};
+  MockTracerOptions tracer_options;
+  tracer_options.recorder = std::unique_ptr<Recorder>{
+      new JsonRecorder{std::unique_ptr<std::ostream>{oss}}};
+  auto tracer =
+      std::shared_ptr<Tracer>{new MockTracer{std::move(tracer_options)}};
+
+  SECTION("Spans are serialized to the stream upon Close.") {
+    auto span = tracer->StartSpan("a");
+    CHECK(span);
+    span->Finish();
+    tracer->Close();
+    CHECK(FromJson(oss->str()).size() == 1);
   }
 }
