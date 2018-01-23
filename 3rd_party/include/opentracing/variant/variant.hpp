@@ -10,6 +10,7 @@
 #include <type_traits>
 #include <typeinfo>
 #include <utility>
+#include <opentracing/version.h>
 
 #include "recursive_wrapper.hpp"
 
@@ -51,6 +52,7 @@
 #define VARIANT_VERSION (VARIANT_MAJOR_VERSION * 100000) + (VARIANT_MINOR_VERSION * 100) + (VARIANT_PATCH_VERSION)
 
 namespace opentracing {
+BEGIN_OPENTRACING_ABI_NAMESPACE
 namespace util {
 
 // XXX This should derive from std::logic_error instead of std::runtime_error.
@@ -896,6 +898,7 @@ ResultType const& get(T const& var)
     return var.template get<ResultType>();
 }
 } // namespace util
+END_OPENTRACING_ABI_NAMESPACE
 } // namespace opentracing
 
 #endif // OPENTRACING_UTIL_VARIANT_HPP

@@ -1,11 +1,14 @@
 include_directories(include)
 include_directories(3rd_party/base64/include)
+include_directories(SYSTEM 3rd_party/nlohmann/include)
 
 set(SRCS 3rd_party/base64/src/base64.cpp
          src/mock_span_context.cpp
          src/mock_span.cpp
          src/in_memory_recorder.cpp
+         src/json_recorder.cpp
          src/propagation.cpp
+         src/json.cpp
          src/tracer.cpp)
 
 if (BUILD_SHARED_LIBS)
@@ -17,7 +20,7 @@ if (BUILD_SHARED_LIBS)
   install(TARGETS opentracing_mocktracer EXPORT OpenTracingTargets
           LIBRARY DESTINATION lib
           ARCHIVE DESTINATION lib)
-endif(BUILD_SHARED_LIBS)
+endif()
 
 if (BUILD_STATIC_LIBS)
   add_library(opentracing_mocktracer-static STATIC ${SRCS})
@@ -26,7 +29,7 @@ if (BUILD_STATIC_LIBS)
   target_link_libraries(opentracing_mocktracer-static opentracing-static)
   install(TARGETS opentracing_mocktracer-static EXPORT OpenTracingTargets
           ARCHIVE DESTINATION lib)
-endif(BUILD_STATIC_LIBS)
+endif()
 
 install(DIRECTORY include/opentracing DESTINATION include
             FILES_MATCHING PATTERN "*.h")

@@ -14,8 +14,10 @@
 
 #include <cassert>
 #include <utility>
+#include <opentracing/version.h>
 
 namespace opentracing {
+BEGIN_OPENTRACING_ABI_NAMESPACE
 namespace util {
 
 template <typename T>
@@ -117,6 +119,7 @@ inline void swap(recursive_wrapper<T>& lhs, recursive_wrapper<T>& rhs) noexcept
     lhs.swap(rhs);
 }
 } // namespace util
+END_OPENTRACING_ABI_NAMESPACE
 } // namespace opentracing
 
 #endif // OPENTRACING_UTIL_RECURSIVE_WRAPPER_HPP
