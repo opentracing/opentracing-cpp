@@ -69,7 +69,7 @@ const std::error_code dynamic_load_not_supported_error(
     2, dynamic_load_error_category());
 
 // `incompatible_library_versions_error` occurs if the tracing library
-// dynamically loaded uses and incompatible version of opentracing.
+// dynamically loaded uses an incompatible version of opentracing.
 const std::error_code incompatible_library_versions_error(
     3, dynamic_load_error_category());
 
