@@ -1,8 +1,8 @@
 #include <opentracing/dynamic_load.h>
 #include <opentracing/mocktracer/tracer_factory.h>
+#include <cstdio>
 #include <cstring>
 #include <exception>
-#include <cstdio>
 
 int OpenTracingMakeTracerFactory(const char* opentracing_version,
                                  const void** error_category,

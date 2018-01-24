@@ -44,18 +44,17 @@ expected<std::shared_ptr<Tracer>> MockTracerFactory::MakeTracer(
       new std::ofstream{tracer_configuration.output_file}};
   if (!ostream->good()) {
     error_message = "failed to open file `";
-    error_message += tracer_configuration.output_file + "`";  
+    error_message += tracer_configuration.output_file + "`";
     return make_unexpected(invalid_configuration_error);
   }
 
   MockTracerOptions tracer_options;
-  tracer_options.recorder = std::unique_ptr<Recorder>{
-    new JsonRecorder{std::move(ostream)}
-  };
+  tracer_options.recorder =
+      std::unique_ptr<Recorder>{new JsonRecorder{std::move(ostream)}};
 
   return std::shared_ptr<Tracer>{new MockTracer{std::move(tracer_options)}};
 } catch (const std::bad_alloc&) {
-    return make_unexpected(std::make_error_code(std::errc::not_enough_memory));
+  return make_unexpected(std::make_error_code(std::errc::not_enough_memory));
 }
 
 }  // namespace mocktracer

@@ -1,8 +1,8 @@
 #include <opentracing/dynamic_load.h>
-#include <random>
+#include <cstdio>
 #include <fstream>
 #include <iterator>
-#include <cstdio>
+#include <random>
 using namespace opentracing;
 
 #define CATCH_CONFIG_RUNNER
@@ -35,13 +35,14 @@ TEST_CASE("dynamic_load") {
   }
 
   SECTION("Creating a tracer from an invalid configuration gives an error.") {
-    auto tracer_maybe =
-        handle_maybe->tracer_factory().MakeTracer(R"({"abc": 123})", error_message);
+    auto tracer_maybe = handle_maybe->tracer_factory().MakeTracer(
+        R"({"abc": 123})", error_message);
     REQUIRE(!tracer_maybe);
     REQUIRE(tracer_maybe.error() == invalid_configuration_error);
   }
 
-  SECTION("We can create spans from an OpenTracing library dynamically loaded.") {
+  SECTION(
+      "We can create spans from an OpenTracing library dynamically loaded.") {
     std::string span_filename{"spans."};
     const auto random_id = std::random_device{}();
     span_filename.append(std::to_string(random_id));
