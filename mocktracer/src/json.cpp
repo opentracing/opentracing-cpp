@@ -14,9 +14,9 @@ struct adl_serializer<SpanContextData> {
   }
 
   static void from_json(const json& j, SpanContextData& span_context_data) {
-    span_context_data.trace_id = j["trace_id"];
-    span_context_data.span_id = j["span_id"];
-    for (auto& element : json::iterator_wrapper(j["baggage"])) {
+    span_context_data.trace_id = j.at("trace_id");
+    span_context_data.span_id = j.at("span_id");
+    for (auto& element : json::iterator_wrapper(j.at("baggage"))) {
       span_context_data.baggage[element.key()] = element.value();
     }
   }
@@ -54,9 +54,9 @@ struct adl_serializer<SpanReferenceData> {
   }
 
   static void from_json(const json& j, SpanReferenceData& span_reference_data) {
-    span_reference_data.reference_type = j["reference_type"];
-    span_reference_data.trace_id = j["trace_id"];
-    span_reference_data.span_id = j["span_id"];
+    span_reference_data.reference_type = j.at("reference_type");
+    span_reference_data.trace_id = j.at("trace_id");
+    span_reference_data.span_id = j.at("span_id");
   }
 };
 
@@ -216,12 +216,12 @@ struct adl_serializer<LogRecord> {
   }
 
   static void from_json(const json& j, LogRecord& log_record) {
-    log_record.timestamp = j["timestamp"];
-    json json_fields = j["fields"];
+    log_record.timestamp = j.at("timestamp");
+    json json_fields = j.at("fields");
     log_record.fields.reserve(json_fields.size());
     for (auto& json_field : json_fields) {
-      std::string key = json_field["key"];
-      Value value = json_field["value"];
+      std::string key = json_field.at("key");
+      Value value = json_field.at("value");
       log_record.fields.emplace_back(std::move(key), std::move(value));
     }
   }
@@ -240,20 +240,20 @@ struct adl_serializer<SpanData> {
   }
 
   static void from_json(const json& j, SpanData& span_data) {
-    span_data.span_context = j["span_context"];
-    json json_references = j["references"];
+    span_data.span_context = j.at("span_context");
+    json json_references = j.at("references");
     span_data.references.reserve(json_references.size());
     for (auto& json_reference : json_references) {
       SpanReferenceData reference = json_reference;
       span_data.references.emplace_back(std::move(reference));
     }
-    span_data.operation_name = j["operation_name"];
-    span_data.start_timestamp = j["start_timestamp"];
-    span_data.duration = j["duration"];
-    for (auto& json_tag : json::iterator_wrapper(j["tags"])) {
+    span_data.operation_name = j.at("operation_name");
+    span_data.start_timestamp = j.at("start_timestamp");
+    span_data.duration = j.at("duration");
+    for (auto& json_tag : json::iterator_wrapper(j.at("tags"))) {
       span_data.tags[json_tag.key()] = json_tag.value();
     }
-    json json_logs = j["logs"];
+    json json_logs = j.at("logs");
     span_data.logs.reserve(json_logs.size());
     for (auto& json_log : json_logs) {
       LogRecord log_record = json_log;

@@ -16,3 +16,12 @@ add_test(value_test value_test)
 
 add_executable(util_test util_test.cpp)
 add_test(util_test util_test)
+
+if (BUILD_SHARED_LIBS AND BUILD_MOCKTRACER)
+  add_executable(dynamic_load_test dynamic_load_test.cpp)
+  target_link_libraries(dynamic_load_test ${OPENTRACING_LIBRARY}) 
+  add_dependencies(dynamic_load_test opentracing_mocktracer)
+  add_test(dynamic_load_test dynamic_load_test 
+    --mocktracer_library 
+    ${CMAKE_BINARY_DIR}/mocktracer/${CMAKE_SHARED_LIBRARY_PREFIX}opentracing_mocktracer${CMAKE_SHARED_LIBRARY_SUFFIX})
+endif()

@@ -16,8 +16,8 @@ struct MockTracerConfiguration {
 
 template <>
 struct adl_serializer<MockTracerConfiguration> {
-  static void from_json(json& j, MockTracerConfiguration& configuration) {
-    configuration.output_file = j["output_file"];
+  static void from_json(const json& j, MockTracerConfiguration& configuration) {
+    configuration.output_file = j.at("output_file");
   }
 };
 
@@ -34,7 +34,7 @@ expected<std::shared_ptr<Tracer>> MockTracerFactory::MakeTracer(
   }
 
   try {
-    tracer_configuration = MockTracerConfiguration{j};
+    tracer_configuration = j;
   } catch (const std::exception& e) {
     error_message = e.what();
     return make_unexpected(invalid_configuration_error);
