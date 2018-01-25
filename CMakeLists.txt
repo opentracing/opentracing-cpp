@@ -26,14 +26,6 @@ SET(CPACK_PACKAGE_VERSION_PATCH ${OPENTRACING_VERSION_PATCH})
 include(CPack)
 
 # ==============================================================================
-# Set up generated version.h
-
-configure_file(version.h.in include/opentracing/version.h)
-include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/opentracing
-        DESTINATION include)
-
-# ==============================================================================
 # Configure compilers
 
 set(CMAKE_CXX_STANDARD 11)
@@ -66,18 +58,48 @@ if(ENABLE_LINTING)
 endif()
 
 # ==============================================================================
-# OpenTracing library targets
+# Check for weak symbol support
 
-include_directories(include)
-include_directories(SYSTEM 3rd_party/include)
+try_compile(
+  SUPPORTS_WEAK_SYMBOLS
+  "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/CMakeTmp"
+  SOURCES ${CMAKE_SOURCE_DIR}/cmake/weak_symbol.cpp)
+
+# ==============================================================================
+# Set up options
 
 option(BUILD_SHARED_LIBS "Build as a shared library" ON)
 option(BUILD_STATIC_LIBS "Build as a static library" ON)
 option(BUILD_MOCKTRACER "Build mocktracer library" ON)
+option(BUILD_DYNAMIC_LOADING "Build with dynamic loading support" ON)
+
+if (BUILD_DYNAMIC_LOADING)
+  if (NOT SUPPORTS_WEAK_SYMBOLS OR NOT UNIX)
+    message(WARNING "Building without dynamic loading support.")
+    set(BUILD_DYNAMIC_LOADING OFF)
+  endif()
+endif()
+
+set(OPENTRACING_BUILD_DYNAMIC_LOADING ${BUILD_DYNAMIC_LOADING})
 
 if (NOT BUILD_SHARED_LIBS AND NOT BUILD_STATIC_LIBS)
     message(FATAL_ERROR "One or both of BUILD_SHARED_LIBS or BUILD_STATIC_LIBS must be set to ON to build")
 endif()
+
+# ==============================================================================
+# Set up generated header files config.h and version.h
+
+configure_file(version.h.in include/opentracing/version.h)
+configure_file(config.h.in include/opentracing/config.h)
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/opentracing
+        DESTINATION include)
+
+# ==============================================================================
+# OpenTracing library targets
+
+include_directories(include)
+include_directories(SYSTEM 3rd_party/include)
 
 set(SRCS src/propagation.cpp
          src/dynamic_load.cpp
@@ -85,7 +107,7 @@ set(SRCS src/propagation.cpp
          src/tracer.cpp
          src/tracer_factory.cpp)
 
-if (UNIX)
+if (BUILD_DYNAMIC_LOADING)
   list(APPEND SRCS src/dynamic_load_unix.cpp)
 else()
   list(APPEND SRCS src/dynamic_load_unsupported.cpp)

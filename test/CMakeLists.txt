@@ -17,7 +17,7 @@ add_test(value_test value_test)
 add_executable(util_test util_test.cpp)
 add_test(util_test util_test)
 
-if (BUILD_SHARED_LIBS AND BUILD_MOCKTRACER)
+if (BUILD_SHARED_LIBS AND BUILD_MOCKTRACER AND BUILD_DYNAMIC_LOADING)
   add_executable(dynamic_load_test dynamic_load_test.cpp)
   target_link_libraries(dynamic_load_test ${OPENTRACING_LIBRARY}) 
   add_dependencies(dynamic_load_test opentracing_mocktracer)

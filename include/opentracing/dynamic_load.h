@@ -4,10 +4,11 @@
 #include <opentracing/tracer.h>
 #include <opentracing/tracer_factory.h>
 #include <opentracing/version.h>
+#include <opentracing/config.h>
 #include <system_error>
 
-// OpenTracingMakeTracerFactory provides common hook that can be used to
-// create a TracerFactory from a dynamically loaded library. Users should prefer
+// OpenTracingMakeTracerFactory provides a common hook that can be used to
+// create an TracerFactory from a dynamically loaded library. Users should prefer
 // to use the function DynamicallyLoadTracingLibrary over calling it
 // directly.
 //
@@ -35,11 +36,7 @@
 //      std::error_code error{rcode, *error_category};
 //   }
 extern "C" {
-#ifdef _MSC_VER
-__declspec(selectany) int (*OpenTracingMakeTracerFactory)(
-    const char* opentracing_version, const void** error_category,
-    void** tracer_factory);
-#else
+#ifdef OPENTRACING_BUILD_DYNAMIC_LOADING
 int __attribute((weak))
 OpenTracingMakeTracerFactory(const char* opentracing_version,
                              const void** error_category,
