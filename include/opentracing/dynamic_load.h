@@ -1,15 +1,15 @@
 #ifndef OPENTRACING_DYNAMIC_LOAD_H
 #define OPENTRACING_DYNAMIC_LOAD_H
 
+#include <opentracing/config.h>
 #include <opentracing/tracer.h>
 #include <opentracing/tracer_factory.h>
 #include <opentracing/version.h>
-#include <opentracing/config.h>
 #include <system_error>
 
 // OpenTracingMakeTracerFactory provides a common hook that can be used to
-// create an TracerFactory from a dynamically loaded library. Users should prefer
-// to use the function DynamicallyLoadTracingLibrary over calling it
+// create an TracerFactory from a dynamically loaded library. Users should
+// prefer to use the function DynamicallyLoadTracingLibrary over calling it
 // directly.
 //
 // It takes the parameter `opentracing_version` representing the version of
