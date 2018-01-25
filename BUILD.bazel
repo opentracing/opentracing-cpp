@@ -1,7 +1,8 @@
 cc_library(
     name = "opentracing",
-    srcs = glob(["src/*.cpp"]),
+    srcs = glob(["src/*.cpp"], exclude=["src/dynamic_load_unsupported.cpp"]),
     hdrs = glob(["include/opentracing/*.h"]) + [
+        ":include/opentracing/config.h",
         ":include/opentracing/version.h",
     ],
     strip_include_prefix = "include",
