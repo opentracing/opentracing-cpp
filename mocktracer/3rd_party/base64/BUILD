@@ -3,6 +3,7 @@ cc_library(
     srcs = glob(["src/*.cpp"]),
     hdrs = glob(["include/opentracing/**/*.h"]),
     strip_include_prefix = "include",
+    linkstatic = True,
     visibility = ["//visibility:public"],
     deps = [
         "//:opentracing",
