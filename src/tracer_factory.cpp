@@ -30,7 +30,7 @@ class TracerFactoryErrorCategory : public std::error_category {
     if (code == invalid_configuration_error.value()) {
       return "opentracing: invalid configuration";
     }
-    return "openracing: unknown tracer factory error";
+    return "opentracing: unknown tracer factory error";
   }
 };
 }  // anonymous namespace

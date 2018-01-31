@@ -29,15 +29,15 @@ class DynamicLoadErrorCategory : public std::error_category {
 
   std::string message(int code) const override {
     if (code == dynamic_load_failure_error.value()) {
-      return "openracing: failed to load dynamic library";
+      return "opentracing: failed to load dynamic library";
     }
     if (code == dynamic_load_not_supported_error.value()) {
-      return "openracing: dynamic library loading is not supported";
+      return "opentracing: dynamic library loading is not supported";
     }
     if (code == incompatible_library_versions_error.value()) {
       return "opentracing: versions of opentracing libraries are incompatible";
     }
-    return "openracing: unknown dynamic load error";
+    return "opentracing: unknown dynamic load error";
   }
 };
 }  // anonymous namespace
