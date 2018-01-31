@@ -2,7 +2,7 @@
  * Envoy
  * Copyright 2016-2017 Lyft Inc.
  *
- * Licensed under Apache License 2.0.  See LICENSE for terms.
+ * Licensed under Apache License 2.0.  See LICENSE.apache for terms.
  */
 
 #include "base64.h"
