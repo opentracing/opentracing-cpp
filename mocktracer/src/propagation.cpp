@@ -1,5 +1,5 @@
 #include "propagation.h"
-#include <opentracing/mocktracer/base64.h>
+#include "base64.h"
 #include <algorithm>
 #include <cctype>
 #include <functional>
