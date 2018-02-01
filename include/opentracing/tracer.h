@@ -205,7 +205,9 @@ class StartTimestamp : public StartSpanOption {
 // referenced SpanContext. See the SpanReferenceType documentation for
 // supported relationships.
 //
-// If the referenced SpanContext is a nullptr, it is ignored.
+// If the referenced SpanContext is a nullptr, it is ignored. The passed
+// SpanContext is copied during Span construction and the pointer is not
+// retained.
 class SpanReference : public StartSpanOption {
  public:
   SpanReference(SpanReferenceType type, const SpanContext* referenced) noexcept
