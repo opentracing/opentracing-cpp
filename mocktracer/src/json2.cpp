@@ -184,7 +184,67 @@ static void ToJson(std::ostream& writer, const LogRecord& log_record) {
   writer << '}';
 }
 
-static void ToJson(std::ostream& writer, const SpanData& span_data) {}
+static void ToJson(std::ostream& writer, const SpanData& span_data) {
+  writer << '{';
+
+  writer << R"("span_context":)";
+  ToJson(writer, span_data.span_context);
+  writer << ',';
+
+  writer << R"("references":)";
+  writer << '[';
+  auto num_references = span_data.references.size();
+  size_t reference_index = 0;
+  for (auto& reference : span_data.references) {
+    ToJson(writer, reference);
+    if (++reference_index < num_references) {
+      writer << ',';
+    }
+  }
+  writer << ']';
+  writer << ',';
+
+  writer << R"("operation_name":)";
+  WriteEscapedString(writer, span_data.operation_name);
+  writer << ',';
+
+  writer << R"("start_timestamp":)";
+  ToJson(writer, span_data.start_timestamp.time_since_epoch());
+  writer << ',';
+
+  writer << R"("duration":)";
+  ToJson(writer, span_data.duration);
+  writer << ',';
+
+  writer << R"("tags":)";
+  writer << '{';
+  auto num_tags = span_data.tags.size();
+  size_t tag_index = 0;
+  for (auto& tag : span_data.tags) {
+    WriteEscapedString(writer, tag.first);
+    writer << ':';
+    ToJson(writer, tag.second);
+    if (++tag_index < num_tags) {
+      writer << ',';
+    }
+  }
+  writer << '}';
+  writer << ',';
+
+  writer << R"("logs":)";
+  writer << '[';
+  auto num_logs = span_data.logs.size();
+  size_t log_index = 0;
+  for (auto& log : span_data.logs) {
+    ToJson(writer, log);
+    if (++log_index < num_logs) {
+      writer << ',';
+    }
+  }
+  writer << ']';
+
+  writer << '}';
+}
 
 static void ToJson(std::ostream& writer,
                    const std::vector<SpanData>& span_data) {}
