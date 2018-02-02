@@ -9,6 +9,7 @@ set(SRCS 3rd_party/base64/src/base64.cpp
          src/json_recorder.cpp
          src/propagation.cpp
          src/json.cpp
+         src/json2.cpp
          src/tracer.cpp)
 
 if (BUILD_SHARED_LIBS)
