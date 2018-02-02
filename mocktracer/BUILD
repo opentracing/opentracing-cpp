@@ -9,3 +9,12 @@ cc_library(
         "//mocktracer/3rd_party/nlohmann:json",
     ],
 )
+
+cc_binary(
+    name = "libmocktracer_plugin.so",
+    linkshared = 1,
+    visibility = ["//visibility:public"],
+    deps = [
+        "//mocktracer:mocktracer"
+    ],
+)
