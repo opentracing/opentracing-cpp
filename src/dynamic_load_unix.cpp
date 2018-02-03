@@ -2,6 +2,10 @@
 #include <opentracing/dynamic_load.h>
 #include <opentracing/version.h>
 
+// Copied from https://gcc.gnu.org/onlinedocs/cpp/Common-Predefined-Macros.html
+#define GCC_VERSION \
+  (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
+
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
 namespace {
@@ -16,7 +20,20 @@ class DynamicLibraryHandleUnix : public DynamicLibraryHandle {
 };
 }  // namespace
 
-expected<DynamicTracingLibraryHandle> DynamicallyLoadTracingLibrary(
+// Undefined behavior sanitizer has a bug where it will produce a false positive
+// when casting the result of dlsym to a function pointer.
+//
+// See https://github.com/envoyproxy/envoy/pull/2252#issuecomment-362668221
+//     https://github.com/google/sanitizers/issues/911
+//
+// Note: undefined behavior sanitizer is supported in clang and gcc > 4.9
+#if defined(__clang__)
+__attribute__((no_sanitize("function")))
+#elif (GCC_VERSION >= 40900)
+__attribute__((no_sanitize_undefined))
+#endif
+expected<DynamicTracingLibraryHandle> 
+DynamicallyLoadTracingLibrary(
     const char* shared_library, std::string& error_message) noexcept try {
   dlerror();  // Clear any existing error.
 
