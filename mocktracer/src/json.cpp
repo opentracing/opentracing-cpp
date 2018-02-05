@@ -64,12 +64,15 @@ template <class Rep, class Period>
 struct adl_serializer<std::chrono::duration<Rep, Period>> {
   static void to_json(json& j,
                       const std::chrono::duration<Rep, Period>& duration) {
-    j = duration.count();
+    j = std::to_string(duration.count());
   }
 
   static void from_json(const json& j,
                         std::chrono::duration<Rep, Period>& duration) {
-    const Rep ticks = j;
+    const std::string ticks_str = j;
+    std::istringstream iss{ticks_str};
+    Rep ticks;
+    iss >> ticks;
     duration = std::chrono::duration<Rep, Period>{ticks};
   }
 };
