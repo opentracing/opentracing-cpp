@@ -1,4 +1,5 @@
 #include <opentracing/mocktracer/json.h>
+#include <cstdlib>
 #include <iostream>
 #include <opentracing/mocktracer/nlohmann/json.hpp>
 
@@ -8,14 +9,16 @@ namespace mocktracer {
 template <>
 struct adl_serializer<SpanContextData> {
   static void to_json(json& j, const SpanContextData& span_context_data) {
-    j["trace_id"] = span_context_data.trace_id;
-    j["span_id"] = span_context_data.span_id;
+    j["trace_id"] = std::to_string(span_context_data.trace_id);
+    j["span_id"] = std::to_string(span_context_data.span_id);
     j["baggage"] = span_context_data.baggage;
   }
 
   static void from_json(const json& j, SpanContextData& span_context_data) {
-    span_context_data.trace_id = j.at("trace_id");
-    span_context_data.span_id = j.at("span_id");
+    std::string trace_id = j.at("trace_id");
+    std::string span_id = j.at("span_id");
+    span_context_data.trace_id = std::strtoull(trace_id.c_str(), nullptr, 10);
+    span_context_data.span_id = std::strtoull(span_id.c_str(), nullptr, 10);
     for (auto& element : json::iterator_wrapper(j.at("baggage"))) {
       span_context_data.baggage[element.key()] = element.value();
     }
