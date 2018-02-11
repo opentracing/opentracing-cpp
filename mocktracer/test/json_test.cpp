@@ -23,20 +23,13 @@ TEST_CASE("json") {
 
   SpanData span_data;
   span_data.span_context = span_context_data;
-  span_data.references = {
-    {SpanReferenceType::ChildOfRef, 123, 457}
-  };
+  span_data.references = {{SpanReferenceType::ChildOfRef, 123, 457}};
   span_data.operation_name = "o1";
   span_data.start_timestamp =
       std::chrono::system_clock::time_point{} + std::chrono::hours{51};
   span_data.duration = std::chrono::microseconds{92};
   span_data.tags = {{"t1", 123}, {"t2", "cat"}};
-  span_data.logs = {
-    {
-     span_data.start_timestamp,
-     {{"l1", 1}, {"l2", 1.5}}
-    }
-  };
+  span_data.logs = {{span_data.start_timestamp, {{"l1", 1}, {"l2", 1.5}}}};
   std::ostringstream oss;
   ToJson(oss, {span_data});
 
