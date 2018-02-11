@@ -1,6 +1,7 @@
 #include <opentracing/mocktracer/json.h>
 #include <opentracing/mocktracer/recorder.h>
 #include <opentracing/string_view.h>
+#include <cmath>
 #include <iomanip>
 #include <sstream>
 
