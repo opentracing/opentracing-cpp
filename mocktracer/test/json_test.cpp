@@ -1,6 +1,8 @@
 #include <opentracing/mocktracer/in_memory_recorder.h>
 #include <opentracing/mocktracer/json.h>
 #include <opentracing/mocktracer/tracer.h>
+#include <algorithm>
+#include <cctype>
 
 #define CATCH_CONFIG_MAIN
 #include <opentracing/catch2/catch.hpp>
@@ -14,56 +16,67 @@ TEST_CASE("json") {
   auto tracer = std::shared_ptr<opentracing::Tracer>{
       new MockTracer{std::move(tracer_options)}};
 
-  SECTION(
-      "Spans serialize/deserialize losslessly (provided Value(const char*) "
-      "isn't used).") {
+  SpanContextData span_context_data;
+  span_context_data.trace_id = 123;
+  span_context_data.span_id = 456;
+  span_context_data.baggage = {{"b1", "v1"}, {"b2", "v2"}};
+
+  SpanData span_data;
+  span_data.span_context = span_context_data;
+  span_data.references = {
+    {SpanReferenceType::ChildOfRef, 123, 457}
+  };
+  span_data.operation_name = "o1";
+  span_data.start_timestamp =
+      std::chrono::system_clock::time_point{} + std::chrono::hours{51};
+  span_data.duration = std::chrono::microseconds{92};
+  span_data.tags = {{"t1", 123}, {"t2", "cat"}};
+  span_data.logs = {
     {
-      auto span_a = tracer->StartSpan("a");
-      CHECK(span_a);
-      span_a->SetBaggageItem("bag1", "123");
-      span_a->SetBaggageItem("bag2", "455");
-
-      auto span_b = tracer->StartSpan("b", {ChildOf(&span_a->context())});
-      CHECK(span_b);
-      span_b->SetTag("nullptr tag", nullptr);
-      span_b->SetTag("string tag", std::string{"x"});
-      span_b->SetTag("bool tag", true);
-      span_b->SetTag("int tag", 123);
-      span_b->SetTag("unsigned int tag", 123u);
-      span_b->SetTag("double tag", 123.0);
-      span_b->SetTag("vector tag", Values{123, 456});
-      span_b->SetTag("dictionary tag", Dictionary{{"abc", 123}, {"xyz", 456}});
-      span_b->SetTag("vector dictionary tag", Values{Dictionary{{"abc", 123}}});
-
-      span_b->Log({{"k1", 1}, {"k2", 2}});
-      span_b->Log({{"k3", 3}, {"k4", 4}});
-
-      auto span_c = tracer->StartSpan(
-          "c", {ChildOf(&span_a->context()), FollowsFrom(&span_b->context())});
-      CHECK(span_c);
+     span_data.start_timestamp,
+     {{"l1", 1}, {"l2", 1.5}}
     }
-    auto spans = recorder->spans();
-    auto j = ToJson(spans);
-    auto spans_from_json = FromJson(j);
-    CHECK(spans == spans_from_json);
-  }
+  };
+  std::ostringstream oss;
+  ToJson(oss, {span_data});
 
-  SECTION("Value(const char*) gets deserialized as a string.") {
-    {
-      auto span_a = tracer->StartSpan("a");
-      CHECK(span_a);
-      span_a->SetTag("const char* tag", "abc");
-    }
-    auto spans = recorder->spans();
-    auto j = ToJson(spans);
-    auto spans_from_json = FromJson(j);
-    CHECK(spans_from_json.at(0).tags ==
-          std::unordered_map<std::string, Value>{
-              {"const char* tag", std::string{"abc"}}});
-  }
-
-  SECTION("If deserialization fails, an exception is thrown.") {
-    const char* s = "invalid serialization";
-    CHECK_THROWS(FromJson(s));
-  }
+  std::string expected_serialization = R"(
+      [{
+      	"span_context": {
+      		"trace_id": 123,
+      		"span_id": 456,
+      		"baggage": {
+      			"b2": "v2",
+      			"b1": "v1"
+      		}
+      	},
+      	"references": [{
+      		"reference_type": "CHILD_OF",
+      		"trace_id": 123,
+      		"span_id": 457
+      	}],
+      	"operation_name": "o1",
+      	"start_timestamp": 183600000000,
+      	"duration": 92,
+      	"tags": {
+      		"t2": "cat",
+      		"t1": 123
+      	},
+      	"logs": [{
+      		"timestamp": 183600000000,
+      		"fields": [{
+      			"key": "l1",
+      			"value": 1
+      		}, {
+      			"key": "l2",
+      			"value": 1.5
+      		}]
+      	}]
+      }])";
+  expected_serialization.erase(
+      std::remove_if(expected_serialization.begin(),
+                     expected_serialization.end(),
+                     [](char c) { return std::isspace(c); }),
+      expected_serialization.end());
+  CHECK(oss.str() == expected_serialization);
 }
