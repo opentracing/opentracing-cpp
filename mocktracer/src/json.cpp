@@ -46,11 +46,27 @@ static void WriteEscapedString(std::ostream& writer,
   writer << '"';
 }
 
+static void WriteId(std::ostream& writer, uint64_t id) {
+  std::ostringstream oss;
+  oss << std::setfill('0') << std::setw(16) << std::hex << id;
+  if (!oss.good()) {
+    writer.setstate(std::ios::failbit);
+    return;
+  }
+  writer << '"' << oss.str() << '"';
+}
+
 static void ToJson(std::ostream& writer,
                    const SpanContextData& span_context_data) {
   writer << '{';
-  writer << R"("trace_id":)" << span_context_data.trace_id << ',';
-  writer << R"("span_id":)" << span_context_data.span_id << ',';
+  writer << R"("trace_id":)";
+  WriteId(writer, span_context_data.trace_id);
+  writer << ',';
+
+  writer << R"("span_id":)";
+  WriteId(writer, span_context_data.span_id);
+  writer << ',';
+
   writer << R"("baggage":{)";
   auto num_baggage = span_context_data.baggage.size();
   size_t baggage_index = 0;
@@ -77,8 +93,11 @@ static void ToJson(std::ostream& writer,
   }
   writer << ',';
 
-  writer << R"("trace_id":)" << span_reference_data.trace_id << ',';
-  writer << R"("span_id":)" << span_reference_data.span_id;
+  writer << R"("trace_id":)";
+  WriteId(writer, span_reference_data.trace_id);
+  writer << ',';
+  writer << R"("span_id":)";
+  WriteId(writer, span_reference_data.span_id);
 
   writer << '}';
 }

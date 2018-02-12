@@ -36,8 +36,8 @@ TEST_CASE("json") {
   std::string expected_serialization = R"(
       [{
       	"span_context": {
-      		"trace_id": 123,
-      		"span_id": 456,
+      		"trace_id": "000000000000007b",
+      		"span_id": "00000000000001c8",
       		"baggage": {
       			"b2": "v2",
       			"b1": "v1"
@@ -45,8 +45,8 @@ TEST_CASE("json") {
       	},
       	"references": [{
       		"reference_type": "CHILD_OF",
-      		"trace_id": 123,
-      		"span_id": 457
+      		"trace_id": "000000000000007b",
+      		"span_id": "00000000000001c9"
       	}],
       	"operation_name": "o1",
       	"start_timestamp": 183600000000,
