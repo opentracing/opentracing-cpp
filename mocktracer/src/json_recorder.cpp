@@ -19,7 +19,7 @@ void JsonRecorder::Close() noexcept try {
     return;
   }
   std::lock_guard<std::mutex> lock_guard{mutex_};
-  *out_ << ToJson(spans_);
+  ToJson(*out_, spans_);
   out_->flush();
   spans_.clear();
 } catch (const std::exception&) {

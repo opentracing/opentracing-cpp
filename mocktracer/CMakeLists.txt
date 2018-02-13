@@ -1,5 +1,4 @@
 include_directories(include)
-include_directories(SYSTEM 3rd_party/nlohmann/include)
 
 set(SRCS src/mock_span_context.cpp
          src/mock_span.cpp

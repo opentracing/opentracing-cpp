@@ -2,41 +2,109 @@
 #include <opentracing/mocktracer/tracer.h>
 #include <opentracing/mocktracer/tracer_factory.h>
 #include <fstream>
-#include <opentracing/mocktracer/nlohmann/json.hpp>
 #include <stdexcept>
 #include <string>
+#include <cstring>
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
 namespace mocktracer {
 
+namespace {
+struct InvalidConfigurationError : public std::exception {
+ public:
+  InvalidConfigurationError(const char* position, std::string&& message)
+      : position_{position}, message_{std::move(message)} {}
+
+  const char* what() const noexcept override { return message_.c_str(); }
+
+  const char* position() const { return position_; }
+
+ private:
+  const char* position_;
+  std::string message_;
+};
+} // namespace
+
+static void Consume(const char*& i, const char* last, string_view s) {
+  if (static_cast<std::size_t>(std::distance(i, last)) < s.size()) {
+    throw InvalidConfigurationError{i,
+                                    std::string{"expected "} + std::string{s}};
+  }
+
+  for (size_t index = 0; index < s.size(); ++index) {
+    if (*i++ != s[index]) {
+      throw InvalidConfigurationError{
+          i, std::string{"expected "} +
+                 std::string{s.data() + index, s.data() + s.size()}};
+    }
+  }
+}
+
+static void ConsumeWhitespace(const char*& i, const char* last) {
+  for (; i != last; ++i) {
+    if (!std::isspace(*i)) {
+      return;
+    }
+  }
+}
+
+static void ConsumeToken(const char*& i, const char* last, string_view token) {
+  ConsumeWhitespace(i, last);
+  Consume(i, last, token);
+}
+
+static std::string ParseFilename(const char*& i, const char* last) {
+  ConsumeToken(i, last, "\"");
+  std::string result;
+  while (i != last) {
+    if (*i == '\"') {
+      ++i;
+      return result;
+    }
+    if (*i == '\\') {
+      throw InvalidConfigurationError{
+          i, "escaped characters are not supported in filename"};
+    }
+    if (std::isprint(*i)) {
+      result.push_back(*i);
+    } else {
+      throw InvalidConfigurationError{i, "invalid character"};
+    }
+    ++i;
+  }
+
+  throw InvalidConfigurationError{i, R"(no matching ")"};
+}
+
+static std::string ParseConfiguration(const char* i, const char* last) {
+  ConsumeToken(i, last, "{");
+  ConsumeToken(i, last, R"("output_file")");
+  ConsumeToken(i, last, ":");
+  auto filename = ParseFilename(i, last);
+  ConsumeToken(i, last, "}");
+  ConsumeWhitespace(i, last);
+  if (i != last) {
+    throw InvalidConfigurationError{i, "expected EOF"};
+  }
+
+  return filename;
+}
+
 struct MockTracerConfiguration {
   std::string output_file;
-};
-
-template <>
-struct adl_serializer<MockTracerConfiguration> {
-  static void from_json(const json& j, MockTracerConfiguration& configuration) {
-    configuration.output_file = j.at("output_file");
-  }
 };
 
 expected<std::shared_ptr<Tracer>> MockTracerFactory::MakeTracer(
     const char* configuration, std::string& error_message) const noexcept try {
   MockTracerConfiguration tracer_configuration;
-  json j;
-
   try {
-    j = json::parse(configuration);
-  } catch (const std::exception& e) {
-    error_message = e.what();
-    return make_unexpected(configuration_parse_error);
-  }
-
-  try {
-    tracer_configuration = j;
-  } catch (const std::exception& e) {
-    error_message = e.what();
+    tracer_configuration.output_file = ParseConfiguration(
+        configuration, configuration + std::strlen(configuration));
+  } catch (const InvalidConfigurationError& e) {
+    error_message = std::string{"Error parsing configuration at position "} +
+                    std::to_string(std::distance(configuration, e.position())) +
+                    ": " + e.what();
     return make_unexpected(invalid_configuration_error);
   }
 

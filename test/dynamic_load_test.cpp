@@ -31,12 +31,18 @@ TEST_CASE("dynamic_load") {
     auto tracer_maybe =
         handle_maybe->tracer_factory().MakeTracer("abc 123", error_message);
     REQUIRE(!tracer_maybe);
-    REQUIRE(tracer_maybe.error() == configuration_parse_error);
   }
 
   SECTION("Creating a tracer from an invalid configuration gives an error.") {
     auto tracer_maybe = handle_maybe->tracer_factory().MakeTracer(
         R"({"abc": 123})", error_message);
+    REQUIRE(!tracer_maybe);
+    REQUIRE(tracer_maybe.error() == invalid_configuration_error);
+  }
+
+  SECTION("Creating a tracer with an invalid output_file gives an error.") {
+    auto tracer_maybe = handle_maybe->tracer_factory().MakeTracer(
+        R"({"output_file": ""})", error_message);
     REQUIRE(!tracer_maybe);
     REQUIRE(tracer_maybe.error() == invalid_configuration_error);
   }
