@@ -1,10 +1,10 @@
 #include "propagation.h"
-#include "base64.h"
 #include <algorithm>
 #include <cctype>
 #include <functional>
 #include <iostream>
 #include <sstream>
+#include "base64.h"
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE

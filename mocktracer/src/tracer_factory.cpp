@@ -1,10 +1,10 @@
 #include <opentracing/mocktracer/json_recorder.h>
 #include <opentracing/mocktracer/tracer.h>
 #include <opentracing/mocktracer/tracer_factory.h>
+#include <cstring>
 #include <fstream>
 #include <stdexcept>
 #include <string>
-#include <cstring>
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
@@ -24,7 +24,7 @@ struct InvalidConfigurationError : public std::exception {
   const char* position_;
   std::string message_;
 };
-} // namespace
+}  // namespace
 
 static void Consume(const char*& i, const char* last, string_view s) {
   if (static_cast<std::size_t>(std::distance(i, last)) < s.size()) {

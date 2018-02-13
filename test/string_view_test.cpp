@@ -44,6 +44,6 @@ TEST_CASE("string_view") {
   SECTION("operator[] can be used to access characters in a string_view") {
     string_view s = "abc123";
     CHECK(&s[0] == s.data());
-    CHECK(&s[1] == s.data()+1);
+    CHECK(&s[1] == s.data() + 1);
   }
 }

@@ -32,9 +32,9 @@ __attribute__((no_sanitize("function")))
 #elif (GCC_VERSION >= 40900)
 __attribute__((no_sanitize_undefined))
 #endif
-expected<DynamicTracingLibraryHandle> 
-DynamicallyLoadTracingLibrary(
-    const char* shared_library, std::string& error_message) noexcept try {
+expected<DynamicTracingLibraryHandle>
+DynamicallyLoadTracingLibrary(const char* shared_library,
+                              std::string& error_message) noexcept try {
   dlerror();  // Clear any existing error.
 
   const auto handle = dlopen(shared_library, RTLD_NOW | RTLD_LOCAL);
