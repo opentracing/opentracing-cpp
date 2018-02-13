@@ -113,9 +113,15 @@ else()
   list(APPEND SRCS src/dynamic_load_unsupported.cpp)
 endif()
 
+list(APPEND LIBRARIES "")
+if (BUILD_DYNAMIC_LOADING)
+  list(APPEND LIBRARIES ${CMAKE_DL_LIBS})
+endif()
+
 
 if (BUILD_SHARED_LIBS)
   add_library(opentracing SHARED ${SRCS})
+  target_link_libraries(opentracing ${LIBRARIES})
   target_include_directories(opentracing INTERFACE "$<INSTALL_INTERFACE:include/>")
   set_target_properties(opentracing PROPERTIES VERSION ${OPENTRACING_VERSION_STRING}
                                              SOVERSION ${OPENTRACING_VERSION_MAJOR})
@@ -130,6 +136,7 @@ endif()
 
 if (BUILD_STATIC_LIBS)
   add_library(opentracing-static STATIC ${SRCS})
+  target_link_libraries(opentracing-static ${LIBRARIES})
   set_target_properties(opentracing-static PROPERTIES OUTPUT_NAME opentracing)
   target_include_directories(opentracing-static INTERFACE "$<INSTALL_INTERFACE:include/>")
   install(TARGETS opentracing-static EXPORT OpenTracingTargets
