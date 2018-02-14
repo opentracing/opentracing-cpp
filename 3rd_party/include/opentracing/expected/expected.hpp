@@ -117,7 +117,7 @@ private:
         return std::move( m_value );
     }
 
-    value_type * value_ptr() const
+    const value_type * value_ptr() const
     {
         return &m_value;
     }
@@ -694,7 +694,7 @@ public:
             : ( error_traits<error_type>::rethrow( contained.error() ), contained.value() );
     }
 
-    constexpr value_type && value() &&
+    value_type && value() &&
     {
         return has_value()
             ? ( contained.value() )
