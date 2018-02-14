@@ -8,11 +8,7 @@ namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
 namespace mocktracer {
 // Serialize provided spans to JSON.
-std::string ToJson(const std::vector<SpanData>& spans);
-
-// Deserialize a JSON representation of spans. Throws exception upon parse
-// error.
-std::vector<SpanData> FromJson(string_view s);
+void ToJson(std::ostream& writer, const std::vector<SpanData>& spans);
 }  // namespace mocktracer
 END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing

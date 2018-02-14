@@ -1,6 +1,5 @@
 include_directories(include)
 include_directories(3rd_party/base64/include)
-include_directories(SYSTEM 3rd_party/nlohmann/include)
 
 set(SRCS 3rd_party/base64/src/base64.cpp
          src/mock_span_context.cpp
