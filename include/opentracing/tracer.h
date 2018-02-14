@@ -34,6 +34,8 @@ struct StartSpanOptions {
 
   // Zero or more causal references to other Spans (via their SpanContext).
   // If empty, start a "root" Span (i.e., start a new trace).
+  //
+  // Any nullptrs provided will be ignored.
   std::vector<std::pair<SpanReferenceType, const SpanContext*>> references;
 
   // Zero or more tags to apply to the newly created span.
@@ -84,7 +86,7 @@ class Tracer {
   //         opentracing::Tag{"user_agent", loggedReq.UserAgent},
   //         opentracing::StartTimestamp(loggedReq.timestamp())})
   //
-  // If StartSpan is called after Close it leaves the Tracer in a valid
+  // If StartSpan is called after Close, it leaves the Tracer in a valid
   // state, but its behavior is unspecified.
   std::unique_ptr<Span> StartSpan(
       string_view operation_name,
@@ -202,6 +204,10 @@ class StartTimestamp : public StartSpanOption {
 // SpanReference is a StartSpanOption that pairs a SpanReferenceType and a
 // referenced SpanContext. See the SpanReferenceType documentation for
 // supported relationships.
+//
+// If the referenced SpanContext is a nullptr, it is ignored. The passed
+// SpanContext is copied during Span construction and the pointer is not
+// retained.
 class SpanReference : public StartSpanOption {
  public:
   SpanReference(SpanReferenceType type, const SpanContext* referenced) noexcept

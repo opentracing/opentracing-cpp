@@ -142,8 +142,8 @@ reference.
           opentracing::string_view, opentracing::string_view)>;
     
       opentracing::expected<void> ForeachKey(F f) const override {
-        // Iterate through all key-value pairs, the tracer use the relevant keys to
-        // extract a span context.
+        // Iterate through all key-value pairs, the tracer will use the relevant keys
+        // to extract a span context.
         for (auto& key_value : data) {
           auto was_successful = f(key_value.first, key_value.second);
           if (!was_successful) {
