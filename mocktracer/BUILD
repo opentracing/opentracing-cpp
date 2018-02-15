@@ -6,7 +6,6 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:opentracing",
-        "//mocktracer/3rd_party/nlohmann:json",
     ],
 )
 
