@@ -188,3 +188,10 @@ include(CTest)
 if(BUILD_TESTING)
   add_subdirectory(test)
 endif()
+
+# ==============================================================================
+# Examples
+
+if(BUILD_TESTING)
+  add_subdirectory(example)
+endif()
