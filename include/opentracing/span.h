@@ -26,6 +26,9 @@ class SpanContext {
   virtual void ForeachBaggageItem(
       std::function<bool(const std::string& key, const std::string& value)> f)
       const = 0;
+
+  // Clone creates a copy of SpanContext.
+  virtual std::unique_ptr<SpanContext> Clone() const = 0;
 };
 
 struct LogRecord {
