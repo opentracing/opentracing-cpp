@@ -8,6 +8,10 @@ class NoopSpanContext : public SpanContext {
   void ForeachBaggageItem(
       std::function<bool(const std::string& key,
                          const std::string& value)> /*f*/) const override {}
+
+  std::unique_ptr<SpanContext> Clone() const noexcept override {
+    return std::unique_ptr<SpanContext>{new (std::nothrow) NoopSpanContext{}};
+  }
 };
 
 class NoopSpan : public Span {
