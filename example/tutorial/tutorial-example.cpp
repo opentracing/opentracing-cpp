@@ -1,5 +1,6 @@
-// tutorial.cpp -- Demonstrates basic usage of the OpenTracing API. Uses
-// OpenTracing's mocktracer to capture all the recorded spans as JSON.
+// Demonstrates basic usage of the OpenTracing API. Uses OpenTracing's
+// mocktracer to capture all the recorded spans as JSON.
+
 #include <opentracing/mocktracer/json_recorder.h>
 #include <opentracing/mocktracer/tracer.h>
 #include <cassert>
