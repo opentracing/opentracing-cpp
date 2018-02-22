@@ -1,7 +1,8 @@
 cc_library(
     name = "opentracing",
-    srcs = glob(["src/*.cpp"]),
+    srcs = glob(["src/*.cpp"], exclude=["src/dynamic_load_unsupported.cpp"]),
     hdrs = glob(["include/opentracing/*.h"]) + [
+        ":include/opentracing/config.h",
         ":include/opentracing/version.h",
     ],
     strip_include_prefix = "include",
@@ -19,14 +20,19 @@ genrule(
         "cmake/*",
         "src/*",
     ]),
-    outs = ["include/opentracing/version.h"],
+    outs = [
+      "include/opentracing/config.h",
+      "include/opentracing/version.h"
+    ],
     cmd = """
     TEMP_DIR=$$(mktemp -d)
-    TARGET=$${PWD}/$@
+    CONFIG_H_OUT=$${PWD}/$(location :include/opentracing/config.h)
+    VERSION_H_OUT=$${PWD}/$(location :include/opentracing/version.h)
     OPENTRACING_ROOT=$$(dirname $${PWD}/$(location :CMakeLists.txt))
     cd $$TEMP_DIR
     cmake -DBUILD_TESTING=OFF -DBUILD_MOCKTRACER=OFF -L $$OPENTRACING_ROOT
-    mv include/opentracing/version.h $$TARGET
+    mv include/opentracing/config.h $$CONFIG_H_OUT
+    mv include/opentracing/version.h $$VERSION_H_OUT
     rm -rf $$TEMP_DIR
     """,
 )

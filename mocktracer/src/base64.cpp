@@ -1,4 +1,11 @@
-#include <opentracing/mocktracer/base64.h>
+/*
+ * Envoy
+ * Copyright 2016-2017 Lyft Inc.
+ *
+ * Licensed under Apache License 2.0.  See LICENSE.apache for terms.
+ */
+
+#include "base64.h"
 
 #include <cstdint>
 #include <string>

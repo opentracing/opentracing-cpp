@@ -1,17 +1,17 @@
 include_directories(include)
-include_directories(3rd_party/base64/include)
 
-set(SRCS 3rd_party/base64/src/base64.cpp
-         src/mock_span_context.cpp
+set(SRCS src/mock_span_context.cpp
          src/mock_span.cpp
          src/in_memory_recorder.cpp
          src/json_recorder.cpp
+         src/base64.cpp
          src/propagation.cpp
          src/json.cpp
-         src/tracer.cpp)
+         src/tracer.cpp
+         src/tracer_factory.cpp)
 
 if (BUILD_SHARED_LIBS)
-  add_library(opentracing_mocktracer SHARED ${SRCS})
+  add_library(opentracing_mocktracer SHARED ${SRCS} src/dynamic_load.cpp)
   target_include_directories(opentracing_mocktracer INTERFACE "$<INSTALL_INTERFACE:include/>")
   set_target_properties(opentracing_mocktracer PROPERTIES VERSION ${OPENTRACING_VERSION_STRING}
                                                SOVERSION ${OPENTRACING_VERSION_MAJOR})
