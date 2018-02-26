@@ -63,7 +63,7 @@ endif()
 try_compile(
   SUPPORTS_WEAK_SYMBOLS
   "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/CMakeTmp"
-  SOURCES ${CMAKE_SOURCE_DIR}/cmake/weak_symbol.cpp)
+  SOURCES ${CMAKE_CURRENT_LIST_DIR}/cmake/weak_symbol.cpp)
 
 # ==============================================================================
 # Set up options
