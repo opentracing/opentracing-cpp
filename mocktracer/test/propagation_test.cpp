@@ -70,8 +70,10 @@ struct HTTPHeadersCarrier : HTTPHeadersReader, HTTPHeadersWriter {
 };
 
 TEST_CASE("propagation") {
+  const char* propagation_key = "propagation-key";
   auto recorder = new InMemoryRecorder{};
   MockTracerOptions tracer_options;
+  tracer_options.propagation_options.propagation_key = propagation_key;
   tracer_options.recorder.reset(recorder);
   auto tracer = std::shared_ptr<opentracing::Tracer>{
       new MockTracer{std::move(tracer_options)}};
@@ -81,6 +83,11 @@ TEST_CASE("propagation") {
   auto span = tracer->StartSpan("a");
   CHECK(span);
   span->SetBaggageItem("abc", "123");
+
+  SECTION("Propagation uses the specified propagation_key.") {
+    CHECK(tracer->Inject(span->context(), text_map_carrier));
+    CHECK(text_map.count(propagation_key) == 1);
+  }
 
   SECTION("Inject, extract, inject yields the same text_map.") {
     CHECK(tracer->Inject(span->context(), text_map_carrier));
@@ -199,5 +206,31 @@ TEST_CASE("propagation") {
     };
     CHECK(std::all_of(value.begin(), value.end(), is_base64_char));
     CHECK(value.size() % 4 == 0);
+  }
+
+  SECTION("Inject fails if inject_error_code is non-zero.") {
+    MockTracerOptions tracer_options_fail;
+    auto error_code = std::make_error_code(std::errc::network_down);
+    tracer_options_fail.propagation_options.inject_error_code = error_code;
+    tracer = std::shared_ptr<opentracing::Tracer>{
+        new MockTracer{std::move(tracer_options_fail)}};
+
+    std::ostringstream oss;
+    auto rcode = tracer->Inject(span->context(), oss);
+    CHECK(!rcode);
+    CHECK(rcode.error() == error_code);
+  }
+
+  SECTION("Extract fails if extract_error_code is non-zero.") {
+    MockTracerOptions tracer_options_fail;
+    auto error_code = std::make_error_code(std::errc::network_down);
+    tracer_options_fail.propagation_options.extract_error_code = error_code;
+    tracer = std::shared_ptr<opentracing::Tracer>{
+        new MockTracer{std::move(tracer_options_fail)}};
+
+    CHECK(tracer->Inject(span->context(), text_map_carrier));
+    auto span_context_maybe = tracer->Extract(text_map_carrier);
+    CHECK(!span_context_maybe);
+    CHECK(span_context_maybe.error() == error_code);
   }
 }
