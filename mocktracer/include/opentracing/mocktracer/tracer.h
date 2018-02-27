@@ -31,6 +31,9 @@ class MockTracer : public Tracer,
 
   const std::vector<SpanData>& spans() const noexcept { return spans_; }
 
+  using Tracer::Inject;
+  using Tracer::Extract;
+
   expected<void> Inject(const SpanContext& sc,
                         std::ostream& writer) const override;
 
