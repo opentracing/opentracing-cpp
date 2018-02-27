@@ -36,15 +36,17 @@ class MockSpanContext : public SpanContext {
   void SetData(SpanContextData& data);
 
   template <class Carrier>
-  expected<void> Inject(Carrier& writer) const {
+  expected<void> Inject(const PropagationOptions& propagation_options,
+                        Carrier& writer) const {
     std::lock_guard<std::mutex> lock_guard{baggage_mutex_};
-    return InjectSpanContext(writer, data_);
+    return InjectSpanContext(propagation_options, writer, data_);
   }
 
   template <class Carrier>
-  expected<bool> Extract(Carrier& reader) {
+  expected<bool> Extract(const PropagationOptions& propagation_options,
+                         Carrier& reader) {
     std::lock_guard<std::mutex> lock_guard{baggage_mutex_};
-    return ExtractSpanContext(reader, data_);
+    return ExtractSpanContext(propagation_options, reader, data_);
   }
 
  private:
