@@ -216,10 +216,12 @@ class SpanReference : public StartSpanOption {
   SpanReference(const SpanReference& other) noexcept
       : StartSpanOption(), type_(other.type_), referenced_(other.referenced_) {}
 
-  void Apply(StartSpanOptions& options) const noexcept override try {
-    if (referenced_) options.references.emplace_back(type_, referenced_);
-  } catch (const std::bad_alloc&) {
-    // Ignore reference if memory can't be allocated for it.
+  void Apply(StartSpanOptions& options) const noexcept override {
+    try {
+      if (referenced_) options.references.emplace_back(type_, referenced_);
+    } catch (const std::bad_alloc&) {
+      // Ignore reference if memory can't be allocated for it.
+    }
   }
 
  private:
@@ -254,10 +256,12 @@ class SetTag : public StartSpanOption {
   SetTag(const SetTag& other) noexcept
       : StartSpanOption(), key_(other.key_), value_(other.value_) {}
 
-  void Apply(StartSpanOptions& options) const noexcept override try {
-    options.tags.emplace_back(key_, value_);
-  } catch (const std::bad_alloc&) {
-    // Ignore tag if memory can't be allocated for it.
+  void Apply(StartSpanOptions& options) const noexcept override {
+    try {
+      options.tags.emplace_back(key_, value_);
+    } catch (const std::bad_alloc&) {
+      // Ignore tag if memory can't be allocated for it.
+    }
   }
 
  private:
