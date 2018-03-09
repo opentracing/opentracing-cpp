@@ -88,9 +88,9 @@ const std::error_code key_not_found_error(4, propagation_error_category());
 const std::error_code lookup_key_not_supported_error(
     5, propagation_error_category());
 
-// TextMapWriter is the Inject() carrier for the TextMap builtin format. With
-// it, the caller can encode a SpanContext for propagation as entries in a map
-// of unicode strings.
+// TextMapReader is the Extract() carrier for the TextMap builtin format. With
+// it, the caller can decode a SpanContext from entries in a propagated map of
+// Unicode strings.
 //
 // See the HTTPHeaders examples.
 class TextMapReader {
@@ -144,9 +144,9 @@ class TextMapWriter {
   virtual expected<void> Set(string_view key, string_view value) const = 0;
 };
 
-// HTTPHeadersReader is the Inject() carrier for the HttpHeaders builtin format.
-// With it, the caller can encode a SpanContext for propagation as entries in
-// http request headers.
+// HTTPHeadersReader is the Extract() carrier for the HttpHeaders builtin
+// format. With it, the caller can decode a SpanContext from entries in HTTP
+// request headers.
 //
 // For example, Extract():
 //
@@ -174,9 +174,8 @@ class HTTPHeadersReader : public TextMapReader {};
 //   }
 class HTTPHeadersWriter : public TextMapWriter {};
 
-// CustomCarrierReader is the Inject() carier for a custom format. With it, the
-// caller can encode a SpanContext for propagation as entries in a custom
-// protocol.
+// CustomCarrierReader is the Extract() carrier for a custom format. With it,
+// the caller can decode a SpanContext from entries in a custom protocol.
 class CustomCarrierReader {
  public:
   virtual ~CustomCarrierReader() = default;
