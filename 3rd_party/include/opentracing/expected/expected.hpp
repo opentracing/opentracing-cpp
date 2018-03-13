@@ -670,6 +670,12 @@ public:
         return assert( has_value() ), std::move( contained.value() );
     }
 
+    value_type && operator *() &&
+    {
+        return assert( has_value() ), std::move( contained.value() );
+    }
+
+
     constexpr explicit operator bool() const noexcept
     {
         return has_value();
