@@ -11,7 +11,7 @@ In order to understand the C++ platform API, one must first be familiar with the
 
 ## Compile and install
 
-```
+```bash
 mkdir .build
 cd .build
 cmake ..
@@ -21,7 +21,7 @@ sudo make install
 
 To test:
 
-```
+```bash
 make test
 ```
 
@@ -46,7 +46,7 @@ The simplest starting point is `opentracing/tracer.h`. As early as possible, cal
     }
 ```
 
-##### Non-Singleton initialization
+#### Non-Singleton initialization
 
 If you prefer direct control to singletons, manage ownership of the
 `opentracing::Tracer` implementation explicitly.
