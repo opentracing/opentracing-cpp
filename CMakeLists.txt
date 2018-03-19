@@ -105,7 +105,8 @@ set(SRCS src/propagation.cpp
          src/dynamic_load.cpp
          src/noop.cpp
          src/tracer.cpp
-         src/tracer_factory.cpp)
+         src/tracer_factory.cpp
+         src/ext/tags.cpp)
 
 if (BUILD_DYNAMIC_LOADING)
   list(APPEND SRCS src/dynamic_load_unix.cpp)
