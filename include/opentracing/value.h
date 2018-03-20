@@ -53,6 +53,7 @@ class Value : public variant_type {
 
   Value(const std::string& s) : variant_type(s) {}
   Value(std::string&& s) : variant_type(std::move(s)) {}
+  Value(opentracing::string_view s) : variant_type(std::string{s}) {}
 
   Value(const Values& values) : variant_type(values) {}
   Value(Values&& values) : variant_type(std::move(values)) {}
