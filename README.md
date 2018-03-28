@@ -200,4 +200,4 @@ people willing to maintain it.
 
 ## License
 
-By contributing to opentracing.cpp, you agree that your contributions will be licensed under its [MIT License](https://github.com/opentracing/opentracing-cpp/blob/master/LICENSE).
+By contributing to opentracing.cpp, you agree that your contributions will be licensed under its [Apache 2.0 License](./LICENSE).
