@@ -90,7 +90,8 @@ MockSpan::MockSpan(std::shared_ptr<const Tracer>&& tracer, Recorder* recorder,
   span_context_data.trace_id =
       data_.references.empty() ? GenerateId() : data_.references[0].trace_id;
   span_context_data.span_id = GenerateId();
-  span_context_ = MockSpanContext{std::move(span_context_data)};
+  span_context_ =
+      std::make_shared<MockSpanContext>(std::move(span_context_data));
 }
 
 MockSpan::~MockSpan() {
@@ -117,7 +118,7 @@ void MockSpan::FinishWithOptions(const FinishSpanOptions& options) noexcept {
 
   data_.duration = finish_timestamp - start_steady_;
 
-  span_context_.SetData(data_.span_context);
+  span_context_->SetData(data_.span_context);
 
   if (recorder_ != nullptr) {
     recorder_->RecordSpan(std::move(data_));
@@ -157,8 +158,8 @@ void MockSpan::Log(
 
 void MockSpan::SetBaggageItem(string_view restricted_key,
                               string_view value) noexcept try {
-  std::lock_guard<std::mutex> lock_guard{span_context_.baggage_mutex_};
-  span_context_.data_.baggage.emplace(restricted_key, value);
+  std::lock_guard<std::mutex> lock_guard{span_context_->baggage_mutex_};
+  span_context_->data_.baggage.emplace(restricted_key, value);
 } catch (const std::exception& e) {
   // Drop baggage item upon error.
   fprintf(stderr, "Failed to set baggage item: %s\n", e.what());
@@ -166,9 +167,9 @@ void MockSpan::SetBaggageItem(string_view restricted_key,
 
 std::string MockSpan::BaggageItem(string_view restricted_key) const
     noexcept try {
-  std::lock_guard<std::mutex> lock_guard{span_context_.baggage_mutex_};
-  auto lookup = span_context_.data_.baggage.find(restricted_key);
-  if (lookup != span_context_.data_.baggage.end()) {
+  std::lock_guard<std::mutex> lock_guard{span_context_->baggage_mutex_};
+  auto lookup = span_context_->data_.baggage.find(restricted_key);
+  if (lookup != span_context_->data_.baggage.end()) {
     return lookup->second;
   }
   return {};

@@ -27,7 +27,7 @@ int main() {
   // Create a child span.
   {
     auto child_span =
-        tracer->StartSpan("childA", {ChildOf(&parent_span->context())});
+        tracer->StartSpan("childA", {ChildOf(parent_span->context().get())});
     assert(child_span);
 
     // Set a simple tag.
@@ -49,8 +49,8 @@ int main() {
 
   // Create a follows from span.
   {
-    auto child_span =
-        tracer->StartSpan("childB", {FollowsFrom(&parent_span->context())});
+    auto child_span = tracer->StartSpan(
+        "childB", {FollowsFrom(parent_span->context().get())});
 
     // child_span's destructor will finish the span if not done so explicitly.
   }
@@ -61,7 +61,7 @@ int main() {
     auto t2 = SteadyClock::now();
     auto span = tracer->StartSpan(
         "useCustomTimestamps",
-        {ChildOf(&parent_span->context()), StartTimestamp(t1)});
+        {ChildOf(parent_span->context().get()), StartTimestamp(t1)});
     assert(span);
     span->Finish({FinishTimestamp(t2)});
   }
@@ -70,7 +70,7 @@ int main() {
   {
     std::unordered_map<std::string, std::string> text_map;
     TextMapCarrier carrier(text_map);
-    auto err = tracer->Inject(parent_span->context(), carrier);
+    auto err = tracer->Inject(*parent_span->context(), carrier);
     assert(err);
     auto span_context_maybe = tracer->Extract(carrier);
     assert(span_context_maybe);

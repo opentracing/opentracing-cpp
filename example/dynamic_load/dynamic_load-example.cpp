@@ -54,7 +54,7 @@ int main(int argc, char* argv[]) {
     assert(span_a != nullptr);
     span_a->SetTag("abc", 123);
     auto span_b =
-        tracer->StartSpan("B", {opentracing::ChildOf(&span_a->context())});
+        tracer->StartSpan("B", {opentracing::ChildOf(span_a->context().get())});
     assert(span_b != nullptr);
     span_b->SetTag("xyz", 987);
   }

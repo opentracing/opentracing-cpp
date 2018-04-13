@@ -41,7 +41,7 @@ TEST_CASE("tracer") {
     auto span_a = tracer->StartSpan("a");
     CHECK(span_a);
     span_a->Finish();
-    auto span_b = tracer->StartSpan("b", {ChildOf(&span_a->context())});
+    auto span_b = tracer->StartSpan("b", {ChildOf(span_a->context().get())});
     CHECK(span_b);
     span_b->Finish();
     auto spans = recorder->spans();
@@ -57,7 +57,8 @@ TEST_CASE("tracer") {
     auto span_a = tracer->StartSpan("a");
     CHECK(span_a);
     span_a->Finish();
-    auto span_b = tracer->StartSpan("b", {FollowsFrom(&span_a->context())});
+    auto span_b =
+        tracer->StartSpan("b", {FollowsFrom(span_a->context().get())});
     CHECK(span_b);
     span_b->Finish();
     auto spans = recorder->spans();
@@ -74,8 +75,9 @@ TEST_CASE("tracer") {
     CHECK(span_a);
     auto span_b = tracer->StartSpan("b");
     CHECK(span_b);
-    auto span_c = tracer->StartSpan(
-        "c", {ChildOf(&span_a->context()), FollowsFrom(&span_b->context())});
+    auto span_c =
+        tracer->StartSpan("c", {ChildOf(span_a->context().get()),
+                                FollowsFrom(span_b->context().get())});
     span_a->Finish();
     span_b->Finish();
     span_c->Finish();
@@ -97,8 +99,8 @@ TEST_CASE("tracer") {
     auto span_b = tracer->StartSpan("b");
     CHECK(span_b);
     span_b->SetBaggageItem("b", "2");
-    auto span_c = tracer->StartSpan(
-        "c", {ChildOf(&span_a->context()), ChildOf(&span_b->context())});
+    auto span_c = tracer->StartSpan("c", {ChildOf(span_a->context().get()),
+                                          ChildOf(span_b->context().get())});
     CHECK(span_c);
     CHECK(span_c->BaggageItem("a") == "1");
     CHECK(span_c->BaggageItem("b") == "2");
@@ -109,8 +111,8 @@ TEST_CASE("tracer") {
     auto noop_span = noop_tracer->StartSpan("noop");
     CHECK(noop_span);
     StartSpanOptions options;
-    options.references.push_back(
-        std::make_pair(SpanReferenceType::ChildOfRef, &noop_span->context()));
+    options.references.push_back(std::make_pair(SpanReferenceType::ChildOfRef,
+                                                noop_span->context().get()));
     options.references.push_back(
         std::make_pair(SpanReferenceType::ChildOfRef, nullptr));
     auto span = tracer->StartSpanWithOptions("a", options);

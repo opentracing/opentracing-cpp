@@ -13,7 +13,8 @@ class NoopSpanContext : public SpanContext {
 class NoopSpan : public Span {
  public:
   explicit NoopSpan(std::shared_ptr<const Tracer>&& tracer) noexcept
-      : tracer_(std::move(tracer)) {}
+      : tracer_(std::move(tracer)),
+        span_context_(std::make_shared<const NoopSpanContext>()) {}
 
   void FinishWithOptions(
       const FinishSpanOptions& /*finish_span_options*/) noexcept override {}
@@ -33,13 +34,15 @@ class NoopSpan : public Span {
   void Log(std::initializer_list<std::pair<string_view, Value>>
            /*fields*/) noexcept override {}
 
-  const SpanContext& context() const noexcept override { return span_context_; }
+  std::shared_ptr<const SpanContext> context() const noexcept override {
+    return span_context_;
+  }
 
   const Tracer& tracer() const noexcept override { return *tracer_; }
 
  private:
   std::shared_ptr<const Tracer> tracer_;
-  NoopSpanContext span_context_;
+  std::shared_ptr<const NoopSpanContext> span_context_;
 };
 
 class NoopTracer : public Tracer,
