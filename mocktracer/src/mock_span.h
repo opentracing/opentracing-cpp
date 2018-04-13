@@ -32,7 +32,9 @@ class MockSpan : public Span {
 
   std::string BaggageItem(string_view restricted_key) const noexcept override;
 
-  const SpanContext& context() const noexcept override { return span_context_; }
+  std::shared_ptr<const SpanContext> context() const noexcept override {
+    return std::static_pointer_cast<const SpanContext>(span_context_);
+  }
 
   const opentracing::Tracer& tracer() const noexcept override {
     return *tracer_;
@@ -41,7 +43,7 @@ class MockSpan : public Span {
  private:
   std::shared_ptr<const Tracer> tracer_;
   Recorder* recorder_;
-  MockSpanContext span_context_;
+  std::shared_ptr<MockSpanContext> span_context_;
   SteadyTime start_steady_;
 
   std::atomic<bool> is_finished_{false};

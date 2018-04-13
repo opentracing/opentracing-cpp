@@ -17,7 +17,7 @@ TEST_CASE("tracer") {
   }
 
   SECTION("Ensure basic operations compile.") {
-    auto span2 = tracer->StartSpan("b", {ChildOf(&span1->context())});
+    auto span2 = tracer->StartSpan("b", {ChildOf(span1->context().get())});
     CHECK(span2);
     span2->SetOperationName("b1");
     span2->SetTag("x", true);

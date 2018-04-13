@@ -152,7 +152,7 @@ class Span {
   // context() yields the SpanContext for this Span. Note that the return
   // value of context() is still valid after a call to Span.Finish(), as is
   // a call to Span.context() after a call to Span.Finish().
-  virtual const SpanContext& context() const noexcept = 0;
+  virtual std::shared_ptr<const SpanContext> context() const noexcept = 0;
 
   // Provides access to the Tracer that created this Span.
   virtual const Tracer& tracer() const noexcept = 0;

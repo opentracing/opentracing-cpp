@@ -85,12 +85,12 @@ TEST_CASE("propagation") {
   span->SetBaggageItem("abc", "123");
 
   SECTION("Propagation uses the specified propagation_key.") {
-    CHECK(tracer->Inject(span->context(), text_map_carrier));
+    CHECK(tracer->Inject(*span->context(), text_map_carrier));
     CHECK(text_map.count(propagation_key) == 1);
   }
 
   SECTION("Inject, extract, inject yields the same text_map.") {
-    CHECK(tracer->Inject(span->context(), text_map_carrier));
+    CHECK(tracer->Inject(*span->context(), text_map_carrier));
     auto injection_map1 = text_map;
     auto span_context_maybe = tracer->Extract(text_map_carrier);
     CHECK((span_context_maybe && span_context_maybe->get()));
@@ -101,7 +101,7 @@ TEST_CASE("propagation") {
 
   SECTION("Inject, extract, inject yields the same binary blob.") {
     std::ostringstream oss(std::ios::binary);
-    CHECK(tracer->Inject(span->context(), oss));
+    CHECK(tracer->Inject(*span->context(), oss));
     auto blob = oss.str();
     std::istringstream iss(blob, std::ios::binary);
     auto span_context_maybe = tracer->Extract(iss);
@@ -124,13 +124,13 @@ TEST_CASE("propagation") {
     auto noop_span = noop_tracer->StartSpan("a");
     CHECK(noop_span);
     auto was_successful =
-        tracer->Inject(noop_span->context(), text_map_carrier);
+        tracer->Inject(*noop_span->context(), text_map_carrier);
     CHECK(!was_successful);
     CHECK(was_successful.error() == opentracing::invalid_span_context_error);
   }
 
   SECTION("Extract is insensitive to changes in case for http header fields") {
-    CHECK(tracer->Inject(span->context(), http_headers_carrier));
+    CHECK(tracer->Inject(*span->context(), http_headers_carrier));
 
     // Change the case of one of the fields.
     auto key_value = *std::begin(text_map);
@@ -146,9 +146,9 @@ TEST_CASE("propagation") {
   SECTION("Extract/Inject fail if a stream has failure bits set.") {
     std::ostringstream oss(std::ios::binary);
     oss.setstate(std::ios_base::failbit);
-    CHECK(!tracer->Inject(span->context(), oss));
+    CHECK(!tracer->Inject(*span->context(), oss));
     oss.clear();
-    CHECK(tracer->Inject(span->context(), oss));
+    CHECK(tracer->Inject(*span->context(), oss));
     auto blob = oss.str();
     std::istringstream iss(blob, std::ios::binary);
     iss.setstate(std::ios_base::failbit);
@@ -173,7 +173,7 @@ TEST_CASE("propagation") {
   }
 
   SECTION("If a carrier supports LookupKey, then ForeachKey won't be called") {
-    CHECK(tracer->Inject(span->context(), text_map_carrier));
+    CHECK(tracer->Inject(*span->context(), text_map_carrier));
     CHECK(text_map.size() == 1);
     text_map_carrier.supports_lookup = true;
     auto span_context_maybe = tracer->Extract(text_map_carrier);
@@ -192,7 +192,7 @@ TEST_CASE("propagation") {
   }
 
   SECTION("Verify only valid base64 characters are used.") {
-    CHECK(tracer->Inject(span->context(), text_map_carrier));
+    CHECK(tracer->Inject(*span->context(), text_map_carrier));
     CHECK(text_map.size() == 1);
     // Follows the guidelines given in RFC-4648 on what characters are
     // permissible. See
@@ -216,7 +216,7 @@ TEST_CASE("propagation") {
         new MockTracer{std::move(tracer_options_fail)}};
 
     std::ostringstream oss;
-    auto rcode = tracer->Inject(span->context(), oss);
+    auto rcode = tracer->Inject(*span->context(), oss);
     CHECK(!rcode);
     CHECK(rcode.error() == error_code);
   }
@@ -228,7 +228,7 @@ TEST_CASE("propagation") {
     tracer = std::shared_ptr<opentracing::Tracer>{
         new MockTracer{std::move(tracer_options_fail)}};
 
-    CHECK(tracer->Inject(span->context(), text_map_carrier));
+    CHECK(tracer->Inject(*span->context(), text_map_carrier));
     auto span_context_maybe = tracer->Extract(text_map_carrier);
     CHECK(!span_context_maybe);
     CHECK(span_context_maybe.error() == error_code);
