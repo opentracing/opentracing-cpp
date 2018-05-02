@@ -117,7 +117,7 @@ void MockSpan::FinishWithOptions(const FinishSpanOptions& options) noexcept {
 
   data_.duration = finish_timestamp - start_steady_;
 
-  span_context_.SetData(data_.span_context);
+  span_context_.CopyData(data_.span_context);
 
   if (recorder_ != nullptr) {
     recorder_->RecordSpan(std::move(data_));

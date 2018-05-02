@@ -33,7 +33,7 @@ class MockSpanContext : public SpanContext {
 
   uint64_t span_id() const noexcept { return data_.span_id; }
 
-  void SetData(SpanContextData& data) const;
+  void CopyData(SpanContextData& data) const;
 
   template <class Carrier>
   expected<void> Inject(Carrier& writer) const {
