@@ -1,5 +1,5 @@
-#ifndef OPENTRACING_MOCKTRACER_BASE64_h
-#define OPENTRACING_MOCKTRACER_BASE64_h
+#ifndef OPENTRACING_MOCKTRACER_BASE64_H
+#define OPENTRACING_MOCKTRACER_BASE64_H
 
 #include <opentracing/version.h>
 #include <cstdint>
@@ -45,4 +45,4 @@ class Base64 {
 END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing
 
-#endif  // OPENTRACING_MOCKTRACER_BASE64_h
+#endif  // OPENTRACING_MOCKTRACER_BASE64_H

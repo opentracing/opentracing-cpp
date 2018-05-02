@@ -11,7 +11,7 @@ In order to understand the C++ platform API, one must first be familiar with the
 
 ## Compile and install
 
-```
+```bash
 mkdir .build
 cd .build
 cmake ..
@@ -21,7 +21,7 @@ sudo make install
 
 To test:
 
-```
+```bash
 make test
 ```
 
@@ -46,7 +46,7 @@ The simplest starting point is `opentracing/tracer.h`. As early as possible, cal
     }
 ```
 
-##### Non-Singleton initialization
+#### Non-Singleton initialization
 
 If you prefer direct control to singletons, manage ownership of the
 `opentracing::Tracer` implementation explicitly.
@@ -197,3 +197,7 @@ This library requires C++11 or later. But if you're interested in a C or C++98
 API contact us on [gitter](https://gitter.im/opentracing/opentracing-cpp?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge).
 We're open to supporting additional APIs in a separate repository if there are
 people willing to maintain it.
+
+## License
+
+By contributing to opentracing.cpp, you agree that your contributions will be licensed under its [MIT License](https://github.com/opentracing/opentracing-cpp/blob/master/LICENSE).

@@ -85,6 +85,9 @@ class string_view {
   // Returns a RandomAccessIterator for the last element.
   const char* end() const noexcept { return data() + length(); }
 
+  // Returns the character in the i-th position.
+  const char& operator[](std::size_t i) { return *(data() + i); }
+
  private:
   const char* data_;  // Pointer to external storage
   size_t length_;     // Length of data pointed to by 'data_'

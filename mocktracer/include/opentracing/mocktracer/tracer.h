@@ -11,8 +11,27 @@ namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
 namespace mocktracer {
 
+struct PropagationOptions {
+  // Specifies what key to use when injecting and extracting span context.
+  std::string propagation_key = "x-ot_span_context";
+
+  // If inject_error_code is non-zero, MockTracer::Inject fails with
+  // inject_error_code.
+  std::error_code inject_error_code;
+
+  // If extract_error_code is non-zero, MockTracer::Extract fails with
+  // extract_error_code.
+  std::error_code extract_error_code;
+};
+
 struct MockTracerOptions {
+  // Recorder is sent spans when they are finished. If nullptr, all finished
+  // spans are dropped.
   std::unique_ptr<Recorder> recorder;
+
+  // PropagationOptions allows you to customize how the mocktracer's SpanContext
+  // is propagated.
+  PropagationOptions propagation_options;
 };
 
 // MockTracer provides implements the OpenTracing Tracer API. It provides
@@ -20,8 +39,7 @@ struct MockTracerOptions {
 class MockTracer : public Tracer,
                    public std::enable_shared_from_this<MockTracer> {
  public:
-  explicit MockTracer(MockTracerOptions&& options)
-      : recorder_{std::move(options.recorder)} {}
+  explicit MockTracer(MockTracerOptions&& options);
 
   std::unique_ptr<Span> StartSpanWithOptions(
       string_view operation_name, const StartSpanOptions& options) const
@@ -30,6 +48,9 @@ class MockTracer : public Tracer,
   void Close() noexcept override;
 
   const std::vector<SpanData>& spans() const noexcept { return spans_; }
+
+  using Tracer::Inject;
+  using Tracer::Extract;
 
   expected<void> Inject(const SpanContext& sc,
                         std::ostream& writer) const override;
@@ -51,6 +72,7 @@ class MockTracer : public Tracer,
 
  private:
   std::unique_ptr<Recorder> recorder_;
+  PropagationOptions propagation_options_;
   std::mutex mutex_;
   std::vector<SpanData> spans_;
 };

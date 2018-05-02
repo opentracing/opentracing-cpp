@@ -1,3 +1,4 @@
+#include <opentracing/ext/tags.h>
 #include <opentracing/noop.h>
 #include <opentracing/tracer.h>
 using namespace opentracing;
@@ -20,6 +21,8 @@ TEST_CASE("tracer") {
     CHECK(span2);
     span2->SetOperationName("b1");
     span2->SetTag("x", true);
+    span2->SetTag(opentracing::ext::span_kind,
+                  opentracing::ext::span_kind_rpc_client);
     CHECK(span2->BaggageItem("y").empty());
     span2->Log({{"event", "xyz"}, {"abc", 123}});
     span2->Finish();
