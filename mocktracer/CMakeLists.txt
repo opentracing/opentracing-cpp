@@ -17,8 +17,8 @@ if (BUILD_SHARED_LIBS)
                                                SOVERSION ${OPENTRACING_VERSION_MAJOR})
   target_link_libraries(opentracing_mocktracer opentracing)
   install(TARGETS opentracing_mocktracer EXPORT OpenTracingTargets
-          LIBRARY DESTINATION lib
-          ARCHIVE DESTINATION lib)
+          LIBRARY DESTINATION ${LIB_INSTALL_DIR}
+          ARCHIVE DESTINATION ${LIB_INSTALL_DIR})
 endif()
 
 if (BUILD_STATIC_LIBS)
@@ -27,7 +27,7 @@ if (BUILD_STATIC_LIBS)
   target_include_directories(opentracing_mocktracer-static INTERFACE "$<INSTALL_INTERFACE:include/>")
   target_link_libraries(opentracing_mocktracer-static opentracing-static)
   install(TARGETS opentracing_mocktracer-static EXPORT OpenTracingTargets
-          ARCHIVE DESTINATION lib)
+	  ARCHIVE DESTINATION ${LIB_INSTALL_DIR})
 endif()
 
 install(DIRECTORY include/opentracing DESTINATION include
