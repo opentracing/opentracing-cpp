@@ -87,6 +87,13 @@ if (NOT BUILD_SHARED_LIBS AND NOT BUILD_STATIC_LIBS)
 endif()
 
 # ==============================================================================
+# Set up libdir
+
+if (NOT DEFINED LIB_INSTALL_DIR)
+    set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib)
+endif()
+
+# ==============================================================================
 # Set up generated header files config.h and version.h
 
 configure_file(version.h.in include/opentracing/version.h)
@@ -127,8 +134,8 @@ if (BUILD_SHARED_LIBS)
   set_target_properties(opentracing PROPERTIES VERSION ${OPENTRACING_VERSION_STRING}
                                              SOVERSION ${OPENTRACING_VERSION_MAJOR})
   install(TARGETS opentracing EXPORT OpenTracingTargets
-          LIBRARY DESTINATION lib
-          ARCHIVE DESTINATION lib)
+          LIBRARY DESTINATION ${LIB_INSTALL_DIR}
+          ARCHIVE DESTINATION ${LIB_INSTALL_DIR})
   if (CLANG_TIDY_EXE)
     set_target_properties(opentracing PROPERTIES
                                     CXX_CLANG_TIDY "${DO_CLANG_TIDY}")
@@ -141,7 +148,7 @@ if (BUILD_STATIC_LIBS)
   set_target_properties(opentracing-static PROPERTIES OUTPUT_NAME opentracing)
   target_include_directories(opentracing-static INTERFACE "$<INSTALL_INTERFACE:include/>")
   install(TARGETS opentracing-static EXPORT OpenTracingTargets
-          ARCHIVE DESTINATION lib)
+	  ARCHIVE DESTINATION ${LIB_INSTALL_DIR})
 endif()
 
 
@@ -172,7 +179,7 @@ export(EXPORT OpenTracingTargets
 configure_file(cmake/OpenTracingConfig.cmake
     "${CMAKE_CURRENT_BINARY_DIR}/OpenTracingConfig.cmake"
     COPYONLY)
-set(ConfigPackageLocation lib/cmake/OpenTracing)
+set(ConfigPackageLocation ${LIB_INSTALL_DIR}/cmake/OpenTracing)
 install(EXPORT OpenTracingTargets
     FILE OpenTracingTargets.cmake
     NAMESPACE OpenTracing::
