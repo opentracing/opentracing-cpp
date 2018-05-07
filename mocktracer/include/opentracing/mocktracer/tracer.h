@@ -13,7 +13,7 @@ namespace mocktracer {
 
 struct PropagationOptions {
   // Specifies what key to use when injecting and extracting span context.
-  std::string propagation_key = "x-ot_span_context";
+  std::string propagation_key = "x-ot-span-context";
 
   // If inject_error_code is non-zero, MockTracer::Inject fails with
   // inject_error_code.
