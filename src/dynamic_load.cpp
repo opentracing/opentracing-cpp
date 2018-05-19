@@ -1,4 +1,3 @@
-#include <dlfcn.h>
 #include <opentracing/dynamic_load.h>
 #include <opentracing/version.h>
 
