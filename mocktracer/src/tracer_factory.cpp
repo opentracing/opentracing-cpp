@@ -5,6 +5,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <string>
+#include <cctype>
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
