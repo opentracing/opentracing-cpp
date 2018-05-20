@@ -90,7 +90,7 @@ endif()
 # Set up libdir
 
 if (NOT DEFINED LIB_INSTALL_DIR)
-    set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib)
+    set(LIB_INSTALL_DIR lib)
 endif()
 
 # ==============================================================================
