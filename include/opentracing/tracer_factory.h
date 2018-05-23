@@ -1,6 +1,7 @@
 #ifndef OPENTRACING_TRACER_FACTORY_H
 #define OPENTRACING_TRACER_FACTORY_H
 
+#include <opentracing/symbols.h>
 #include <opentracing/tracer.h>
 #include <opentracing/version.h>
 
@@ -11,7 +12,7 @@ BEGIN_OPENTRACING_ABI_NAMESPACE
 // See
 //   http://blog.think-async.com/2010/04/system-error-support-in-c0x-part-1.html
 //   https://ned14.github.io/boost.outcome/md_doc_md_03-tutorial_b.html
-const std::error_category& tracer_factory_error_category();
+OPEN_TRACING_API const std::error_category& tracer_factory_error_category();
 
 // `configuration_parse_error` occurs when the configuration string used to
 // construct a tracer does not adhere to the expected format.
@@ -24,7 +25,7 @@ const std::error_code invalid_configuration_error(
     2, tracer_factory_error_category());
 
 // TracerFactory constructs tracers from configuration strings.
-class TracerFactory {
+class OPEN_TRACING_API TracerFactory {
  public:
   virtual ~TracerFactory() = default;
 

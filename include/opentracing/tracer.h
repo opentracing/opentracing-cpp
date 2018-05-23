@@ -1,6 +1,7 @@
 #ifndef OPENTRACING_TRACER_H
 #define OPENTRACING_TRACER_H
 
+#include <opentracing/symbols.h>
 #include <opentracing/propagation.h>
 #include <opentracing/span.h>
 #include <opentracing/string_view.h>
@@ -57,7 +58,7 @@ class StartSpanOption {
 
 // Tracer is a simple, thin interface for Span creation and SpanContext
 // propagation.
-class Tracer {
+class OPEN_TRACING_API Tracer {
  public:
   virtual ~Tracer() = default;
 

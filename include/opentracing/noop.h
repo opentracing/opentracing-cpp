@@ -1,6 +1,7 @@
 #ifndef OPENTRACING_NOOP_H
 #define OPENTRACING_NOOP_H
 
+#include <opentracing/symbols.h>
 #include <opentracing/tracer.h>
 #include <opentracing/version.h>
 #include <memory>
@@ -20,7 +21,7 @@ BEGIN_OPENTRACING_ABI_NAMESPACE
 // (see Tracer::Global and Tracer::InitGlobal functions).
 //
 // WARNING: NoopTracer does not support baggage propagation.
-std::shared_ptr<Tracer> MakeNoopTracer() noexcept;
+OPEN_TRACING_API std::shared_ptr<Tracer> MakeNoopTracer() noexcept;
 END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing
 

@@ -1,6 +1,7 @@
 #ifndef OPENTRACING_MOCKTRACER_RECORDER_H
 #define OPENTRACING_MOCKTRACER_RECORDER_H
 
+#include <opentracing/mocktracer/symbols.h>
 #include <opentracing/tracer.h>
 
 #include <cstdint>
@@ -70,7 +71,7 @@ inline bool operator!=(const SpanData& lhs, const SpanData& rhs) {
 
 std::ostream& operator<<(std::ostream& out, const SpanData& span_data);
 
-class Recorder {
+class OPEN_TRACING_MOCK_TRACER_API Recorder {
  public:
   virtual ~Recorder() = default;
 

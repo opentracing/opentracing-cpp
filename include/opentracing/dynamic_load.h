@@ -1,6 +1,7 @@
 #ifndef OPENTRACING_DYNAMIC_LOAD_H
 #define OPENTRACING_DYNAMIC_LOAD_H
 
+#include <opentracing/symbols.h>
 #include <opentracing/config.h>
 #include <opentracing/tracer.h>
 #include <opentracing/tracer_factory.h>
@@ -37,10 +38,10 @@
 //   }
 extern "C" {
 #ifdef OPENTRACING_BUILD_DYNAMIC_LOADING
-int __attribute((weak))
-OpenTracingMakeTracerFactory(const char* opentracing_version,
-                             const void** error_category,
-                             void** tracer_factory);
+OPEN_TRACING_EXPORT int OPEN_TRACING_ATT
+    OpenTracingMakeTracerFactory(
+    const char* opentracing_version, const void** error_category,
+    void** tracer_factory);
 #endif
 }  // extern "C"
 
@@ -52,7 +53,7 @@ BEGIN_OPENTRACING_ABI_NAMESPACE
 // See
 //   http://blog.think-async.com/2010/04/system-error-support-in-c0x-part-1.html
 //   https://ned14.github.io/boost.outcome/md_doc_md_03-tutorial_b.html
-const std::error_category& dynamic_load_error_category();
+OPEN_TRACING_API const std::error_category& dynamic_load_error_category();
 
 // `dynamic_load_failure_error` occurs when dynamically loading a tracer library
 // fails. Possible reasons could be the library doesn't exist or it is missing
@@ -117,7 +118,8 @@ class DynamicTracingLibraryHandle {
 //   }
 //
 // See DynamicTracingLibraryHandle, TracerFactory
-expected<DynamicTracingLibraryHandle> DynamicallyLoadTracingLibrary(
+OPEN_TRACING_API expected<DynamicTracingLibraryHandle>
+DynamicallyLoadTracingLibrary(
     const char* shared_library, std::string& error_message) noexcept;
 END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing
