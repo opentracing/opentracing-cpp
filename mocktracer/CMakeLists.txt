@@ -6,6 +6,7 @@ set(SRCS src/mock_span_context.cpp
          src/json_recorder.cpp
          src/base64.cpp
          src/propagation.cpp
+         src/utility.cpp
          src/json.cpp
          src/tracer.cpp
          src/tracer_factory.cpp)
