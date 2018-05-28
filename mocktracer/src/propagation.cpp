@@ -5,6 +5,7 @@
 #include <iostream>
 #include <sstream>
 #include "base64.h"
+#include "utility.h"
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
@@ -25,10 +26,11 @@ static void ReadString(std::istream& istream, std::string& s) {
 expected<void> InjectSpanContext(
     const PropagationOptions& /*propagation_options*/, std::ostream& carrier,
     const SpanContextData& span_context_data) {
-  carrier.write(reinterpret_cast<const char*>(&span_context_data.trace_id),
-                sizeof(&span_context_data.trace_id));
-  carrier.write(reinterpret_cast<const char*>(&span_context_data.span_id),
-                sizeof(&span_context_data.span_id));
+  auto trace_id = SwapEndianIfBig(span_context_data.trace_id);
+  carrier.write(reinterpret_cast<const char*>(&trace_id), sizeof(trace_id));
+  auto span_id = SwapEndianIfBig(span_context_data.span_id);
+  carrier.write(reinterpret_cast<const char*>(&span_id), sizeof(span_id));
+
   const uint32_t num_baggage =
       static_cast<uint32_t>(span_context_data.baggage.size());
   carrier.write(reinterpret_cast<const char*>(&num_baggage),
@@ -65,8 +67,10 @@ expected<bool> ExtractSpanContext(
   }
   carrier.read(reinterpret_cast<char*>(&span_context_data.trace_id),
                sizeof(span_context_data.trace_id));
+  span_context_data.trace_id = SwapEndianIfBig(span_context_data.trace_id);
   carrier.read(reinterpret_cast<char*>(&span_context_data.span_id),
                sizeof(span_context_data.span_id));
+  span_context_data.span_id = SwapEndianIfBig(span_context_data.span_id);
   uint32_t num_baggage = 0;
   carrier.read(reinterpret_cast<char*>(&num_baggage), sizeof(num_baggage));
   std::string baggage_key, baggage_value;
