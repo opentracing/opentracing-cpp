@@ -9,22 +9,20 @@ namespace mocktracer {
 //
 // Taken from https://stackoverflow.com/a/105339/4447365
 template <typename T>
-static T SwapEndian(T u)
-{
-    static_assert (CHAR_BIT == 8, "CHAR_BIT != 8");
+static T SwapEndian(T u) {
+  static_assert(CHAR_BIT == 8, "CHAR_BIT != 8");
 
-    union
-    {
-        T u;
-        unsigned char u8[sizeof(T)];
-    } source, dest;
+  union {
+    T u;
+    unsigned char u8[sizeof(T)];
+  } source, dest;
 
-    source.u = u;
+  source.u = u;
 
-    for (size_t k = 0; k < sizeof(T); k++)
-        dest.u8[k] = source.u8[sizeof(T) - k - 1];
+  for (size_t k = 0; k < sizeof(T); k++)
+    dest.u8[k] = source.u8[sizeof(T) - k - 1];
 
-    return dest.u;
+  return dest.u;
 }
 
 // Determines whether the architecture is big endian.

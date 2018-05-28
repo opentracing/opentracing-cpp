@@ -1,11 +1,11 @@
 #include <opentracing/mocktracer/json_recorder.h>
 #include <opentracing/mocktracer/tracer.h>
 #include <opentracing/mocktracer/tracer_factory.h>
+#include <cctype>
 #include <cstring>
 #include <fstream>
 #include <stdexcept>
 #include <string>
-#include <cctype>
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
