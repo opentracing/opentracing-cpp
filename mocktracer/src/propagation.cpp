@@ -32,7 +32,7 @@ expected<void> InjectSpanContext(
   carrier.write(reinterpret_cast<const char*>(&span_id), sizeof(span_id));
 
   const uint32_t num_baggage =
-      static_cast<uint32_t>(span_context_data.baggage.size());
+      SwapEndianIfBig(static_cast<uint32_t>(span_context_data.baggage.size()));
   carrier.write(reinterpret_cast<const char*>(&num_baggage),
                 sizeof(num_baggage));
   for (auto& baggage_item : span_context_data.baggage) {
@@ -73,6 +73,7 @@ expected<bool> ExtractSpanContext(
   span_context_data.span_id = SwapEndianIfBig(span_context_data.span_id);
   uint32_t num_baggage = 0;
   carrier.read(reinterpret_cast<char*>(&num_baggage), sizeof(num_baggage));
+  num_baggage = SwapEndianIfBig(num_baggage);
   std::string baggage_key, baggage_value;
   for (int i = 0; i < static_cast<int>(num_baggage); ++i) {
     ReadString(carrier, baggage_key);

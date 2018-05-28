@@ -39,7 +39,15 @@ static bool IsBigEndian() {
 
 uint64_t SwapEndianIfBig(uint64_t x) {
   if (IsBigEndian()) {
-    return SwapEndian<uint64_t>(x);
+    return SwapEndian(x);
+  } else {
+    return x;
+  }
+}
+
+uint32_t SwapEndianIfBig(uint32_t x) {
+  if (IsBigEndian()) {
+    return SwapEndian(x);
   } else {
     return x;
   }
