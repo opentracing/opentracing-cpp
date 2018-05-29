@@ -11,6 +11,9 @@ cc_library(
       "//3rd_party:expected",
       "//3rd_party:variant",
     ],
+    linkopts = [
+      "-ldl",
+    ],
 )
 
 genrule(
