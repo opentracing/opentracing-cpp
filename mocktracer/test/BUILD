@@ -1,6 +1,7 @@
 TEST_NAMES = [
     "propagation_test",
     "tracer_test",
+    "tracer_factory_test",
     "json_test",
 ]
 

@@ -2,6 +2,7 @@
 #include <opentracing/mocktracer/tracer.h>
 #include <opentracing/mocktracer/tracer_factory.h>
 #include <cctype>
+#include <cerrno>
 #include <cstring>
 #include <fstream>
 #include <stdexcept>
@@ -99,6 +100,10 @@ struct MockTracerConfiguration {
 expected<std::shared_ptr<Tracer>> MockTracerFactory::MakeTracer(
     const char* configuration, std::string& error_message) const noexcept try {
   MockTracerConfiguration tracer_configuration;
+  if (configuration == nullptr) {
+    error_message = "configuration must not be null";
+    return make_unexpected(invalid_configuration_error);
+  }
   try {
     tracer_configuration.output_file = ParseConfiguration(
         configuration, configuration + std::strlen(configuration));
@@ -109,11 +114,14 @@ expected<std::shared_ptr<Tracer>> MockTracerFactory::MakeTracer(
     return make_unexpected(invalid_configuration_error);
   }
 
+  errno = 0;
   std::unique_ptr<std::ostream> ostream{
       new std::ofstream{tracer_configuration.output_file}};
   if (!ostream->good()) {
     error_message = "failed to open file `";
-    error_message += tracer_configuration.output_file + "`";
+    error_message += tracer_configuration.output_file + "` (";
+    error_message += std::strerror(errno);
+    error_message += ")";
     return make_unexpected(invalid_configuration_error);
   }
 

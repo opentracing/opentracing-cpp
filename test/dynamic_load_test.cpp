@@ -33,13 +33,6 @@ TEST_CASE("dynamic_load") {
     REQUIRE(!tracer_maybe);
   }
 
-  SECTION("Creating a tracer from an invalid configuration gives an error.") {
-    auto tracer_maybe = handle_maybe->tracer_factory().MakeTracer(
-        R"({"abc": 123})", error_message);
-    REQUIRE(!tracer_maybe);
-    REQUIRE(tracer_maybe.error() == invalid_configuration_error);
-  }
-
   SECTION("Creating a tracer with an invalid output_file gives an error.") {
     auto tracer_maybe = handle_maybe->tracer_factory().MakeTracer(
         R"({"output_file": ""})", error_message);
@@ -70,7 +63,7 @@ TEST_CASE("dynamic_load") {
     std::string spans_json{std::istreambuf_iterator<char>{istream},
                            std::istreambuf_iterator<char>{}};
     istream.close();
-    CHECK(std::remove(span_filename.c_str()) == 0);
+    std::remove(span_filename.c_str());
     CHECK(!spans_json.empty());
   }
 }
