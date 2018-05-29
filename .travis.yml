@@ -40,6 +40,7 @@ matrix:
 
 
 before_install:
+  - ./ci/setup_${TRAVIS_CI_OS}_environment.sh
   - eval "${MATRIX_EVAL}"
 script:
   - mkdir -p build
@@ -47,3 +48,6 @@ script:
   - cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON ..
   - make
   - make test
+  - cd ..
+  - bazel build //...
+  - bazel test //...
