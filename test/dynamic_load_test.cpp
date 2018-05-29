@@ -63,7 +63,7 @@ TEST_CASE("dynamic_load") {
     std::string spans_json{std::istreambuf_iterator<char>{istream},
                            std::istreambuf_iterator<char>{}};
     istream.close();
-    CHECK(std::remove(span_filename.c_str()) == 0);
+    std::remove(span_filename.c_str());
     CHECK(!spans_json.empty());
   }
 }

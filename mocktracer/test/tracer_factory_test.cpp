@@ -63,6 +63,6 @@ TEST_CASE("tracer_factory") {
         tracer_factory.MakeTracer(configuration.c_str(), error_message);
     REQUIRE(tracer_maybe);
 
-    REQUIRE(std::remove(span_filename.c_str()) == 0);
+    std::remove(span_filename.c_str());
   }
 }
