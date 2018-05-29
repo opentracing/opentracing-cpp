@@ -41,7 +41,7 @@ matrix:
 
 before_install:
   - eval "${MATRIX_EVAL}"
-  - sudo ./ci/setup_${TRAVIS_OS_NAME}_environment.sh
+  - ./ci/setup_${TRAVIS_OS_NAME}_environment.sh
 script:
   - mkdir -p build
   - cd build
