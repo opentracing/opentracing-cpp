@@ -5,7 +5,7 @@ project(opentracing-cpp)
 # ==============================================================================
 # Version information
 
-set(OPENTRACING_ABI_VERSION "1")
+set(OPENTRACING_ABI_VERSION "2")
 set(OPENTRACING_VERSION_MAJOR "1")
 set(OPENTRACING_VERSION_MINOR "4")
 set(OPENTRACING_VERSION_PATCH "2")

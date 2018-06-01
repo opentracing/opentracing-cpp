@@ -12,9 +12,10 @@
 // prefer to use the function DynamicallyLoadTracingLibrary over calling it
 // directly.
 //
-// It takes the parameter `opentracing_version` representing the version of
-// opentracing used by the caller. Upon success it returns the code `0` and
-// sets `tracer_factory` to point to an instance of TracerFactory.
+// It takes the parameter `opentracing_version` and `opentracing_abi_version`
+// representing the version of opentracing used by the caller. Upon success it
+// returns the code `0` and sets `tracer_factory` to point to an instance of
+// TracerFactory.
 //
 // On failure, it returns a non-zero error code and sets `error_category` to
 // point to an std::error_category for the returned error code.
@@ -22,10 +23,13 @@
 // Example usage,
 //
 //   const std::error_category* error_category = nullptr;
+//   std::string error_message;
 //   opentracing::TracerFactory* tracer_factory = nullptr;
-//   int rcode = opentracing_make_factory(
+//   int rcode = OpenTracingMakeTracerFactory(
 //                  OPENTRACING_VERSION,
+//                  OPENTRACING_ABI_VERSION,
 //                  &static_cast<const void*>(error_category),
+//                  static_cast<void*>(&error_message),
 //                  &static_cast<void*>(tracer_factory));
 //   if (rcode == 0) {
 //      // success
@@ -39,7 +43,8 @@ extern "C" {
 #ifdef OPENTRACING_BUILD_DYNAMIC_LOADING
 int __attribute((weak))
 OpenTracingMakeTracerFactory(const char* opentracing_version,
-                             const void** error_category,
+                             const char* opentracing_abi_version,
+                             const void** error_category, void* error_message,
                              void** tracer_factory);
 #endif
 }  // extern "C"

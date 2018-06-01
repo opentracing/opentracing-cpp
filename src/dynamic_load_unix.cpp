@@ -54,8 +54,9 @@ DynamicallyLoadTracingLibrary(const char* shared_library,
 
   const void* error_category = nullptr;
   void* tracer_factory = nullptr;
-  const auto rcode = make_tracer_factory(OPENTRACING_VERSION, &error_category,
-                                         &tracer_factory);
+  const auto rcode = make_tracer_factory(
+      OPENTRACING_VERSION, OPENTRACING_ABI_VERSION, &error_category,
+      static_cast<void*>(&error_message), &tracer_factory);
   if (rcode != 0) {
     if (error_category != nullptr) {
       return make_unexpected(std::error_code{
