@@ -5,7 +5,14 @@ project(opentracing-cpp)
 # ==============================================================================
 # Version information
 
+# Increment ABI version for any ABI-breaking change.
+#
+# Also, whenever the ABI is between versions and in development
+# suffix the ABI version number with "_unstable".
 set(OPENTRACING_ABI_VERSION "2")
+
+# Version number follows semver
+# See https://semver.org/
 set(OPENTRACING_VERSION_MAJOR "1")
 set(OPENTRACING_VERSION_MINOR "4")
 set(OPENTRACING_VERSION_PATCH "2")
