@@ -32,8 +32,7 @@ TEST_CASE("tracer") {
     }
     auto span = recorder->top();
     CHECK(span.operation_name == "a");
-    std::unordered_map<std::string, Value> expected_tags = {{"abc", 123},
-                                                            {"xyz", true}};
+    std::map<std::string, Value> expected_tags = {{"abc", 123}, {"xyz", true}};
     CHECK(span.tags == expected_tags);
   }
 
@@ -168,7 +167,7 @@ TEST_CASE("tracer") {
     CHECK(span);
     span->SetTag("abc", 123);
     span->Finish();
-    std::unordered_map<std::string, Value> expected_tags = {{"abc", 123}};
+    std::map<std::string, Value> expected_tags = {{"abc", 123}};
     CHECK(recorder->top().tags == expected_tags);
   }
 }

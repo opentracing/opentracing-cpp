@@ -38,7 +38,7 @@ static std::tuple<SystemTime, SteadyTime> ComputeStartTimestamps(
 
 static bool SetSpanReference(
     const std::pair<SpanReferenceType, const SpanContext*>& reference,
-    std::unordered_map<std::string, std::string>& baggage,
+    std::map<std::string, std::string>& baggage,
     SpanReferenceData& reference_data) {
   reference_data.reference_type = reference.first;
   if (reference.second == nullptr) {

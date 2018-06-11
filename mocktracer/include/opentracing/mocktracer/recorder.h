@@ -2,8 +2,10 @@
 #define OPENTRACING_MOCKTRACER_RECORDER_H
 
 #include <opentracing/tracer.h>
+
 #include <cstdint>
 #include <iosfwd>
+#include <map>
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
@@ -11,7 +13,7 @@ namespace mocktracer {
 struct SpanContextData {
   uint64_t trace_id;
   uint64_t span_id;
-  std::unordered_map<std::string, std::string> baggage;
+  std::map<std::string, std::string> baggage;
 };
 
 inline bool operator==(const SpanContextData& lhs, const SpanContextData& rhs) {
@@ -49,7 +51,7 @@ struct SpanData {
   std::string operation_name;
   SystemTime start_timestamp;
   SteadyClock::duration duration;
-  std::unordered_map<std::string, Value> tags;
+  std::map<std::string, Value> tags;
   std::vector<LogRecord> logs;
 };
 

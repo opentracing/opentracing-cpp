@@ -3,9 +3,9 @@
 
 #include <opentracing/mocktracer/recorder.h>
 #include <opentracing/tracer.h>
+#include <map>
 #include <memory>
 #include <mutex>
-#include <unordered_map>
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
