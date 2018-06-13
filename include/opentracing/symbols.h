@@ -10,30 +10,25 @@
 
 #ifdef _MSC_VER
 
-#define OPEN_TRACING_EXPORT __declspec(dllexport)
+#define OPENTRACING_EXPORT __declspec(dllexport)
 
 // Export if this is our own source, otherwise import:
 #ifndef OPENTRACING_STATIC
 #ifdef OPENTRACING_EXPORTS
-#define OPEN_TRACING_API __declspec(dllexport)
-#else
-#define OPEN_TRACING_API __declspec(dllimport)
-#endif
-#define OPEN_TRACING_ATT
-#endif
+#define OPENTRACING_API __declspec(dllexport)
+#else  // OPENTRACING_STATIC
+#define OPENTRACING_API __declspec(dllimport)
+#endif // OPENTRACING_EXPORTS
+#endif  // OPENTRACING_STATIC
+
 #endif  // _MSC_VER
 
-#ifndef OPEN_TRACING_EXPORT
-#define OPEN_TRACING_EXPORT
+#ifndef OPENTRACING_EXPORT
+#define OPENTRACING_EXPORT
 #endif
 
-#ifndef OPEN_TRACING_API
-#define OPEN_TRACING_API
-#ifdef _MSC_VER
-#define OPEN_TRACING_ATT
-#else
-#define OPEN_TRACING_ATT __attribute((weak))
-#endif
+#ifndef OPENTRACING_API
+#define OPENTRACING_API
 #endif
 
 #endif  // OPENTRACING_SYMBOLS_H

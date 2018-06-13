@@ -36,14 +36,45 @@
 //      assert(error_category != nullptr);
 //      std::error_code error{rcode, *error_category};
 //   }
-extern "C" {
-#ifdef OPENTRACING_BUILD_DYNAMIC_LOADING
-OPEN_TRACING_EXPORT int OPEN_TRACING_ATT
-    OpenTracingMakeTracerFactory(
-    const char* opentracing_version, const void** error_category,
-    void** tracer_factory);
+
+using OpenTracingMakeTracerFactoryType = int(const char* opentracing_version,
+                                        const void** error_category,
+                                        void** tracer_factory);
+
+#ifdef WIN32
+
+#define OPENTRACING_DECLARE_IMPL_FACTORY(X)                                 \
+  extern "C" {                                                              \
+  \
+__declspec(dllexport) int X(const char* opentracing_version,                \
+                            const void** error_category,                    \
+                            void** tracer_factory);                         \
+  \
+extern __declspec(dllexport)                                                \
+      OpenTracingMakeTracerFactoryType* const OpenTracingMakeTracerFactory; \
+  \
+__declspec(selectany) OpenTracingMakeTracerFactoryType* const               \
+      OpenTracingMakeTracerFactory = X;                                     \
+  }  // extern "C"
+
+#else
+
+#define OPENTRACING_DECLARE_IMPL_FACTORY(X)                                 \
+  extern "C" {                                                              \
+                                                                            \
+  int __attribute((weak))                                                   \
+      X(const char* opentracing_version, const void** error_category,       \
+        void** tracer_factory);                                             \
+  \
+__attribute((weak)) extern OpenTracingMakeTracerFactoryType* const          \
+      OpenTracingMakeTracerFactory;                                         \
+                                                                            \
+  OpenTracingMakeTracerFactoryType* const OpenTracingMakeTracerFactory = X; \
+  }  // extern "C"
+
 #endif
-}  // extern "C"
+
+
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
@@ -53,7 +84,7 @@ BEGIN_OPENTRACING_ABI_NAMESPACE
 // See
 //   http://blog.think-async.com/2010/04/system-error-support-in-c0x-part-1.html
 //   https://ned14.github.io/boost.outcome/md_doc_md_03-tutorial_b.html
-OPEN_TRACING_API const std::error_category& dynamic_load_error_category();
+OPENTRACING_API const std::error_category& dynamic_load_error_category();
 
 // `dynamic_load_failure_error` occurs when dynamically loading a tracer library
 // fails. Possible reasons could be the library doesn't exist or it is missing
@@ -118,7 +149,7 @@ class DynamicTracingLibraryHandle {
 //   }
 //
 // See DynamicTracingLibraryHandle, TracerFactory
-OPEN_TRACING_API expected<DynamicTracingLibraryHandle>
+OPENTRACING_API expected<DynamicTracingLibraryHandle>
 DynamicallyLoadTracingLibrary(
     const char* shared_library, std::string& error_message) noexcept;
 END_OPENTRACING_ABI_NAMESPACE

@@ -32,16 +32,24 @@ DynamicallyLoadTracingLibrary(const char* shared_library,
       new DynamicLibraryHandleWindows{handle}};
 
   const auto make_tracer_factory =
-      reinterpret_cast<decltype(OpenTracingMakeTracerFactory)*>(
+      reinterpret_cast<OpenTracingMakeTracerFactoryType**>(
           GetProcAddress(handle, "OpenTracingMakeTracerFactory"));
+
   if (make_tracer_factory == nullptr) {
-    error_message = "An error occurred whike looking up for OpenTracingMakeTracerFactory : " + GetLastError();
+    error_message = "An error occurred while looking up for OpenTracingMakeTracerFactory : " + GetLastError();
+    return make_unexpected(dynamic_load_failure_error);
+  }
+
+  if (*make_tracer_factory == nullptr) {
+    error_message =
+        "An error occurred while looking up for OpenTracingMakeTracerFactory. "
+        "It seems that it was set to nullptr.";
     return make_unexpected(dynamic_load_failure_error);
   }
 
   const void* error_category = nullptr;
   void* tracer_factory = nullptr;
-  const auto rcode = make_tracer_factory(OPENTRACING_VERSION, &error_category,
+  const auto rcode = (*make_tracer_factory)(OPENTRACING_VERSION, &error_category,
                                          &tracer_factory);
   if (rcode != 0) {
     if (error_category != nullptr) {

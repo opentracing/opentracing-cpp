@@ -58,7 +58,7 @@ class StartSpanOption {
 
 // Tracer is a simple, thin interface for Span creation and SpanContext
 // propagation.
-class OPEN_TRACING_API Tracer {
+class OPENTRACING_API Tracer {
  public:
   virtual ~Tracer() = default;
 

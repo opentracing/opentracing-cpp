@@ -15,7 +15,7 @@ namespace mocktracer {
 // format.
 //
 // See also FromJson.
-class OPEN_TRACING_MOCK_TRACER_API JsonRecorder : public Recorder {
+class OPENTRACING_MOCK_TRACER_API JsonRecorder : public Recorder {
  public:
   explicit JsonRecorder(std::unique_ptr<std::ostream>&& out);
 

@@ -71,7 +71,7 @@ inline bool operator!=(const SpanData& lhs, const SpanData& rhs) {
 
 std::ostream& operator<<(std::ostream& out, const SpanData& span_data);
 
-class OPEN_TRACING_MOCK_TRACER_API Recorder {
+class OPENTRACING_MOCK_TRACER_API Recorder {
  public:
   virtual ~Recorder() = default;
 

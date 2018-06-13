@@ -8,7 +8,7 @@ namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
 namespace mocktracer {
 
-class OPEN_TRACING_MOCK_TRACER_API MockTracerFactory : public TracerFactory {
+class OPENTRACING_MOCK_TRACER_API MockTracerFactory : public TracerFactory {
  public:
   expected<std::shared_ptr<Tracer>> MakeTracer(const char* configuration,
                                                std::string& error_message) const

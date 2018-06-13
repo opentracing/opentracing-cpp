@@ -37,7 +37,7 @@ struct MockTracerOptions {
 
 // MockTracer provides implements the OpenTracing Tracer API. It provides
 // convenient access to finished spans in such a way as to support testing.
-class OPEN_TRACING_MOCK_TRACER_API MockTracer : public Tracer, 
+class OPENTRACING_MOCK_TRACER_API MockTracer : public Tracer, 
     public std::enable_shared_from_this<MockTracer> {
  public:
   explicit MockTracer(MockTracerOptions&& options);

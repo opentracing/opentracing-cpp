@@ -4,7 +4,9 @@
 #include <cstring>
 #include <exception>
 
-int OpenTracingMakeTracerFactory(const char* opentracing_version,
+OPENTRACING_DECLARE_IMPL_FACTORY(OpenTracingMakeTracerFactoryFct);
+
+int OpenTracingMakeTracerFactoryFct(const char* opentracing_version,
                                  const void** error_category,
                                  void** tracer_factory) {
   if (error_category == nullptr || tracer_factory == nullptr) {

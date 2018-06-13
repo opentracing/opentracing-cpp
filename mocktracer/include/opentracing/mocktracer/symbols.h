@@ -7,15 +7,15 @@
 // Export if this is our own source, otherwise import:
 #ifndef OPENTRACING_MOCK_TRACER_STATIC
 #ifdef OPENTRACING_MOCK_TRACER_EXPORTS
-#define OPEN_TRACING_MOCK_TRACER_API __declspec(dllexport)
+#define OPENTRACING_MOCK_TRACER_API __declspec(dllexport)
 #else
-#define OPEN_TRACING_MOCK_TRACER_API __declspec(dllimport)
+#define OPENTRACING_MOCK_TRACER_API __declspec(dllimport)
 #endif
 #endif
 #endif  // _MSC_VER
 
-#ifndef OPEN_TRACING_MOCK_TRACER_API
-#define OPEN_TRACING_MOCK_TRACER_API
+#ifndef OPENTRACING_MOCK_TRACER_API
+#define OPENTRACING_MOCK_TRACER_API
 #endif
 
 #endif  // OPENTRACING_SYMBOLS_H

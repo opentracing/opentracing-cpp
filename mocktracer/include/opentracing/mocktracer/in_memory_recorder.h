@@ -10,7 +10,7 @@ namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
 namespace mocktracer {
 // InMemoryRecorder stores finished spans and provides accessors to them.
-class OPEN_TRACING_MOCK_TRACER_API InMemoryRecorder : public Recorder {
+class OPENTRACING_MOCK_TRACER_API InMemoryRecorder : public Recorder {
  public:
   void RecordSpan(SpanData&& span_data) noexcept override;
 
