@@ -7,6 +7,33 @@ namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
 namespace {
 
+
+
+// Returns the last Win32 error, in string format. Returns an empty string if
+// there is no error.
+inline std::string GetLastErrorAsString() {
+  // Get the error message, if any.
+  DWORD errorMessageID = ::GetLastError();
+  if (errorMessageID == 0)
+    return std::string();  // No error message has been recorded
+
+  LPSTR messageBuffer = nullptr;
+  size_t size = FormatMessageA(
+      FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+          FORMAT_MESSAGE_IGNORE_INSERTS,
+      NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+      (LPSTR)&messageBuffer, 0, NULL);
+
+  std::string message(messageBuffer, size);
+
+  // Free the buffer.
+  LocalFree(messageBuffer);
+
+  return message;
+}
+
+
+
  class DynamicLibraryHandleWindows : public DynamicLibraryHandle {
  public:
    explicit DynamicLibraryHandleWindows(HINSTANCE handle) : handle_{handle} {}
@@ -24,7 +51,7 @@ DynamicallyLoadTracingLibrary(const char* shared_library,
                               std::string& error_message) noexcept try {
   const auto handle = LoadLibrary(shared_library);
   if (handle == nullptr) {
-    error_message = "An error occurred " + GetLastError();
+    error_message = "An error occurred: " + GetLastErrorAsString();
     return make_unexpected(dynamic_load_failure_error);
   }
 
@@ -36,7 +63,10 @@ DynamicallyLoadTracingLibrary(const char* shared_library,
           GetProcAddress(handle, "OpenTracingMakeTracerFactory"));
 
   if (make_tracer_factory == nullptr) {
-    error_message = "An error occurred while looking up for OpenTracingMakeTracerFactory : " + GetLastError();
+    error_message =
+        "An error occurred while looking up for OpenTracingMakeTracerFactory "
+        ": " +
+        GetLastErrorAsString();
     return make_unexpected(dynamic_load_failure_error);
   }
 
