@@ -13,6 +13,11 @@
 #include <iterator>
 #include <string>
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#endif
+
 int main(int argc, char* argv[]) {
   if (argc != 3) {
     std::cerr << "Usage: <tracer_library> <tracer_config_file>\n";

@@ -1,6 +1,7 @@
 #ifndef OPENTRACING_PROPAGATION_H
 #define OPENTRACING_PROPAGATION_H
 
+#include <opentracing/symbols.h>
 #include <opentracing/string_view.h>
 #include <opentracing/util.h>
 #include <opentracing/version.h>
@@ -62,7 +63,7 @@ enum class SpanReferenceType {
 // See
 //   http://blog.think-async.com/2010/04/system-error-support-in-c0x-part-1.html
 //   https://ned14.github.io/boost.outcome/md_doc_md_03-tutorial_b.html
-const std::error_category& propagation_error_category();
+OPENTRACING_API const std::error_category& propagation_error_category();
 
 // `invalid_span_context_error` occurs when Tracer::Inject() is asked to operate
 // on a SpanContext which it is not prepared to handle (for example, since it

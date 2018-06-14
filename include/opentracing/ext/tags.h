@@ -1,6 +1,7 @@
 #ifndef OPENTRACING_EXT_TAGS_H
 #define OPENTRACING_EXT_TAGS_H
 
+#include <opentracing/symbols.h>
 #include <opentracing/string_view.h>
 #include <opentracing/version.h>
 
@@ -19,13 +20,13 @@ namespace ext {
 // ---------------------------------------------------------------------------
 // span_kind hints at relationship between spans, e.g. client/server
 // ---------------------------------------------------------------------------
-extern const opentracing::string_view span_kind;
+OPENTRACING_API extern const opentracing::string_view span_kind;
 
 // Marks a span representing the client-side of an RPC or other remote call
-extern const opentracing::string_view span_kind_rpc_client;
+OPENTRACING_API extern const opentracing::string_view span_kind_rpc_client;
 
 // Marks a span representing the server-side of an RPC or other remote call
-extern const opentracing::string_view span_kind_rpc_server;
+OPENTRACING_API extern const opentracing::string_view span_kind_rpc_server;
 
 // ---------------------------------------------------------------------------
 // error indicates whether a Span ended in an error state.

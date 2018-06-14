@@ -71,5 +71,6 @@ TEST_CASE("json") {
                      expected_serialization.end(),
                      [](char c) { return std::isspace(c); }),
       expected_serialization.end());
+
   CHECK(oss.str() == expected_serialization);
 }
