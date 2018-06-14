@@ -46,10 +46,6 @@ using OpenTracingMakeTracerFactoryType = int(const char* opentracing_version,
 #define OPENTRACING_DECLARE_IMPL_FACTORY(X)                                 \
   extern "C" {                                                              \
   \
-__declspec(dllexport) int X(const char* opentracing_version,                \
-                            const void** error_category,                    \
-                            void** tracer_factory);                         \
-  \
 extern __declspec(dllexport)                                                \
       OpenTracingMakeTracerFactoryType* const OpenTracingMakeTracerFactory; \
   \
@@ -61,10 +57,6 @@ __declspec(selectany) OpenTracingMakeTracerFactoryType* const               \
 
 #define OPENTRACING_DECLARE_IMPL_FACTORY(X)                                 \
   extern "C" {                                                              \
-                                                                            \
-  int __attribute((weak))                                                   \
-      X(const char* opentracing_version, const void** error_category,       \
-        void** tracer_factory);                                             \
   \
 __attribute((weak)) extern OpenTracingMakeTracerFactoryType* const          \
       OpenTracingMakeTracerFactory;                                         \
