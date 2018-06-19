@@ -4,7 +4,7 @@
 
 extern "C" {
 extern OpenTracingMakeTracerFactoryType* const OpenTracingMakeTracerFactory;
-} // extern "C"
+}  // extern "C"
 
 int main() {
   // Call OpenTracingMakeTracerFactory to make sure it's not elided.

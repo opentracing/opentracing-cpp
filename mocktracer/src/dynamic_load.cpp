@@ -4,14 +4,16 @@
 #include <cstring>
 #include <exception>
 
-static int OpenTracingMakeTracerFactoryFct(const char* /*opentracing_version*/,
+static int OpenTracingMakeTracerFactoryFct(const char* opentracing_version,
                                            const char* opentracing_abi_version,
                                            const void** error_category,
                                            void* error_message,
                                            void** tracer_factory) try {
-  if (error_category == nullptr || tracer_factory == nullptr) {
+  if (opentracing_version == nullptr || opentracing_abi_version == nullptr ||
+      error_category == nullptr || tracer_factory == nullptr) {
     fprintf(stderr,
-            "`error_category` and `tracer_factory` must be non-null.\n");
+            "`opentracing_version`, `opentracing_abi_version`, "
+            "`error_category`, and `tracer_factory` must be non-null.\n");
     std::terminate();
   }
 
