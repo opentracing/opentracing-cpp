@@ -65,13 +65,16 @@ DynamicallyLoadTracingLibrary(const char* shared_library,
       OPENTRACING_VERSION, OPENTRACING_ABI_VERSION, &error_category,
       static_cast<void*>(&error_message), &tracer_factory);
   if (rcode != 0) {
-    if (error_category != nullptr) {
-      return make_unexpected(std::error_code{
-          rcode, *static_cast<const std::error_category*>(error_category)});
-    } else {
+    if (error_category == nullptr) {
       error_message = "failed to construct a TracerFactory: unknown error code";
       return make_unexpected(dynamic_load_failure_error);
     }
+    const auto error_code = std::error_code{
+        rcode, *static_cast<const std::error_category*>(error_category)};
+    if (error_message.empty()) {
+      error_message = error_code.message();
+    }
+    return make_unexpected(error_code);
   }
 
   if (tracer_factory == nullptr) {
