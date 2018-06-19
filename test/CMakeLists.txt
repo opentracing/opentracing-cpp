@@ -24,4 +24,9 @@ if (BUILD_SHARED_LIBS AND BUILD_MOCKTRACER AND BUILD_DYNAMIC_LOADING)
   add_test(NAME dynamic_load_test COMMAND dynamic_load_test 
     --mocktracer_library 
     $<TARGET_FILE:opentracing_mocktracer>)
+
+  add_executable(multiple_tracer_link_test multiple_tracer_link_test.cpp
+                                           tracer_a.cpp tracer_b.cpp)
+  target_link_libraries(multiple_tracer_link_test ${OPENTRACING_LIBRARY}) 
+  add_test(NAME multiple_tracer_link_test COMMAND multiple_tracer_link_test)
 endif()
