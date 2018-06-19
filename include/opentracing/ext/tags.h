@@ -1,8 +1,8 @@
 #ifndef OPENTRACING_EXT_TAGS_H
 #define OPENTRACING_EXT_TAGS_H
 
-#include <opentracing/symbols.h>
 #include <opentracing/string_view.h>
+#include <opentracing/symbols.h>
 #include <opentracing/version.h>
 
 namespace opentracing {

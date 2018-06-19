@@ -1,10 +1,10 @@
 #ifndef OPENTRACING_TRACER_H
 #define OPENTRACING_TRACER_H
 
-#include <opentracing/symbols.h>
 #include <opentracing/propagation.h>
 #include <opentracing/span.h>
 #include <opentracing/string_view.h>
+#include <opentracing/symbols.h>
 #include <opentracing/util.h>
 #include <opentracing/version.h>
 #include <chrono>

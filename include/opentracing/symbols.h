@@ -18,7 +18,7 @@
 #define OPENTRACING_API __declspec(dllexport)
 #else  // OPENTRACING_STATIC
 #define OPENTRACING_API __declspec(dllimport)
-#endif // OPENTRACING_EXPORTS
+#endif  // OPENTRACING_EXPORTS
 #endif  // OPENTRACING_STATIC
 
 #endif  // _MSC_VER

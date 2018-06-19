@@ -1,8 +1,8 @@
 #ifndef OPENTRACING_DYNAMIC_LOAD_H
 #define OPENTRACING_DYNAMIC_LOAD_H
 
-#include <opentracing/symbols.h>
 #include <opentracing/config.h>
+#include <opentracing/symbols.h>
 #include <opentracing/tracer.h>
 #include <opentracing/tracer_factory.h>
 #include <opentracing/version.h>
@@ -13,9 +13,10 @@
 // prefer to use the function DynamicallyLoadTracingLibrary over calling it
 // directly.
 //
-// It takes the parameter `opentracing_version` representing the version of
-// opentracing used by the caller. Upon success it returns the code `0` and
-// sets `tracer_factory` to point to an instance of TracerFactory.
+// It takes the parameter `opentracing_version` and `opentracing_abi_version`
+// representing the version of opentracing used by the caller. Upon success it
+// returns the code `0` and sets `tracer_factory` to point to an instance of
+// TracerFactory.
 //
 // On failure, it returns a non-zero error code and sets `error_category` to
 // point to an std::error_category for the returned error code.
@@ -23,10 +24,13 @@
 // Example usage,
 //
 //   const std::error_category* error_category = nullptr;
+//   std::string error_message;
 //   opentracing::TracerFactory* tracer_factory = nullptr;
-//   int rcode = opentracing_make_factory(
+//   int rcode = (*OpenTracingMakeTracerFactory)(
 //                  OPENTRACING_VERSION,
+//                  OPENTRACING_ABI_VERSION,
 //                  &static_cast<const void*>(error_category),
+//                  static_cast<void*>(&error_message),
 //                  &static_cast<void*>(tracer_factory));
 //   if (rcode == 0) {
 //      // success
@@ -36,20 +40,19 @@
 //      assert(error_category != nullptr);
 //      std::error_code error{rcode, *error_category};
 //   }
-
-using OpenTracingMakeTracerFactoryType = int(const char* opentracing_version,
-                                        const void** error_category,
-                                        void** tracer_factory);
+using OpenTracingMakeTracerFactoryType = int(
+    const char* opentracing_version, const char* opentracing_abi_version,
+    const void** error_category, void* error_message, void** tracer_factory);
 
 #ifdef WIN32
 
 #define OPENTRACING_DECLARE_IMPL_FACTORY(X)                                 \
   extern "C" {                                                              \
-  \
-extern __declspec(dllexport)                                                \
+                                                                            \
+  extern __declspec(dllexport)                                              \
       OpenTracingMakeTracerFactoryType* const OpenTracingMakeTracerFactory; \
-  \
-__declspec(selectany) OpenTracingMakeTracerFactoryType* const               \
+                                                                            \
+  __declspec(selectany) OpenTracingMakeTracerFactoryType* const             \
       OpenTracingMakeTracerFactory = X;                                     \
   }  // extern "C"
 
@@ -57,16 +60,14 @@ __declspec(selectany) OpenTracingMakeTracerFactoryType* const               \
 
 #define OPENTRACING_DECLARE_IMPL_FACTORY(X)                                 \
   extern "C" {                                                              \
-  \
-__attribute((weak)) extern OpenTracingMakeTracerFactoryType* const          \
+                                                                            \
+  __attribute((weak)) extern OpenTracingMakeTracerFactoryType* const        \
       OpenTracingMakeTracerFactory;                                         \
                                                                             \
   OpenTracingMakeTracerFactoryType* const OpenTracingMakeTracerFactory = X; \
   }  // extern "C"
 
 #endif
-
-
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
@@ -142,8 +143,8 @@ class DynamicTracingLibraryHandle {
 //
 // See DynamicTracingLibraryHandle, TracerFactory
 OPENTRACING_API expected<DynamicTracingLibraryHandle>
-DynamicallyLoadTracingLibrary(
-    const char* shared_library, std::string& error_message) noexcept;
+DynamicallyLoadTracingLibrary(const char* shared_library,
+                              std::string& error_message) noexcept;
 END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing
 

@@ -1,17 +1,15 @@
 #include <opentracing/dynamic_load.h>
 #include <opentracing/version.h>
 
-#include <windows.h> 
+#include <windows.h>
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
-namespace {
-
-
-
 // Returns the last Win32 error, in string format. Returns an empty string if
 // there is no error.
-inline std::string GetLastErrorAsString() {
+//
+// Taken from https://stackoverflow.com/a/17387176/4447365
+static std::string GetLastErrorAsString() {
   // Get the error message, if any.
   DWORD errorMessageID = ::GetLastError();
   if (errorMessageID == 0)
@@ -32,23 +30,20 @@ inline std::string GetLastErrorAsString() {
   return message;
 }
 
-
-
- class DynamicLibraryHandleWindows : public DynamicLibraryHandle {
+namespace {
+class DynamicLibraryHandleWindows : public DynamicLibraryHandle {
  public:
-   explicit DynamicLibraryHandleWindows(HINSTANCE handle) : handle_{handle} {}
+  explicit DynamicLibraryHandleWindows(HINSTANCE handle) : handle_{handle} {}
 
   ~DynamicLibraryHandleWindows() override { FreeLibrary(handle_); }
 
  private:
   HINSTANCE handle_;
 };
-
 }  // namespace
 
-expected<DynamicTracingLibraryHandle>
-DynamicallyLoadTracingLibrary(const char* shared_library,
-                              std::string& error_message) noexcept try {
+expected<DynamicTracingLibraryHandle> DynamicallyLoadTracingLibrary(
+    const char* shared_library, std::string& error_message) noexcept try {
   const auto handle = LoadLibrary(shared_library);
   if (handle == nullptr) {
     error_message = "An error occurred: " + GetLastErrorAsString();
@@ -79,16 +74,20 @@ DynamicallyLoadTracingLibrary(const char* shared_library,
 
   const void* error_category = nullptr;
   void* tracer_factory = nullptr;
-  const auto rcode = (*make_tracer_factory)(OPENTRACING_VERSION, &error_category,
-                                         &tracer_factory);
+  const auto rcode = (*make_tracer_factory)(
+      OPENTRACING_VERSION, OPENTRACING_ABI_VERSION, &error_category,
+      static_cast<void*>(&error_message), &tracer_factory);
   if (rcode != 0) {
-    if (error_category != nullptr) {
-      return make_unexpected(std::error_code{
-          rcode, *static_cast<const std::error_category*>(error_category)});
-    } else {
+    if (error_category == nullptr) {
       error_message = "failed to construct a TracerFactory: unknown error code";
       return make_unexpected(dynamic_load_failure_error);
     }
+    const auto error_code = std::error_code{
+        rcode, *static_cast<const std::error_category*>(error_category)};
+    if (error_message.empty()) {
+      error_message = error_code.message();
+    }
+    return make_unexpected(error_code);
   }
 
   if (tracer_factory == nullptr) {

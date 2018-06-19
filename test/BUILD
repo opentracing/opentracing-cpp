@@ -13,3 +13,15 @@ TEST_NAMES = [
         "//3rd_party:catch2",
     ],
 ) for test_name in TEST_NAMES]
+
+cc_test(
+    name = "mutiple_tracer_link_test",
+    srcs = [
+        "multiple_tracer_link_test.cpp",
+        "tracer_a.cpp",
+        "tracer_b.cpp",
+    ],
+    deps = [
+        "//:opentracing",
+    ]
+)
