@@ -11,6 +11,8 @@ In order to understand the C++ platform API, one must first be familiar with the
 
 ## Compile and install
 
+#### Linux/MacOS
+
 ```bash
 mkdir .build
 cd .build
@@ -23,6 +25,32 @@ To test:
 
 ```bash
 make test
+```
+
+#### Windows
+
+```bash
+mkdir .build
+cd .build
+cmake -G "Visual Studio 15 2017 Win64" ..
+```
+To build the targets in debug mode
+```bash
+MSBuild.exe opentracing-cpp.sln /p:Configuration=Debug /Target=Build
+```
+To build the targets in release mode
+```bash
+MSBuild.exe opentracing-cpp.sln /p:Configuration=Release /Target=Build
+```
+
+To test:
+Run the below command to run the tests with the debug targets
+```bash
+ctest -C Debug
+```
+Run the below command to run the tests with the release targets
+```bash
+ctest -C Release
 ```
 
 ## API overview for those adding instrumentation

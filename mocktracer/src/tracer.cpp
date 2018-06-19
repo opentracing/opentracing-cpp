@@ -6,6 +6,12 @@
 #include "mock_span_context.h"
 #include "propagation.h"
 
+#include <opentracing/dynamic_load.h>
+#include <opentracing/mocktracer/tracer_factory.h>
+#include <cstdio>
+#include <cstring>
+#include <exception>
+
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
 namespace mocktracer {

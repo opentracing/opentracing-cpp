@@ -4,11 +4,11 @@
 #include <cstring>
 #include <exception>
 
-int OpenTracingMakeTracerFactory(const char* /*opentracing_version*/,
-                                 const char* opentracing_abi_version,
-                                 const void** error_category,
-                                 void* error_message,
-                                 void** tracer_factory) try {
+static int OpenTracingMakeTracerFactoryFct(const char* /*opentracing_version*/,
+                                           const char* opentracing_abi_version,
+                                           const void** error_category,
+                                           void* error_message,
+                                           void** tracer_factory) try {
   if (error_category == nullptr || tracer_factory == nullptr) {
     fprintf(stderr,
             "`error_category` and `tracer_factory` must be non-null.\n");
@@ -33,3 +33,5 @@ int OpenTracingMakeTracerFactory(const char* /*opentracing_version*/,
   *error_category = static_cast<const void*>(&std::generic_category());
   return static_cast<int>(std::errc::not_enough_memory);
 }
+
+OPENTRACING_DECLARE_IMPL_FACTORY(OpenTracingMakeTracerFactoryFct);

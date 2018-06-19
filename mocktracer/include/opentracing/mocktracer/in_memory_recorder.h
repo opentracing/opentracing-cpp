@@ -1,6 +1,7 @@
 #ifndef OPENTRACING_MOCKTRACER_IN_MEMORY_RECORDER_H
 #define OPENTRACING_MOCKTRACER_IN_MEMORY_RECORDER_H
 
+#include <opentracing/mocktracer/symbols.h>
 #include <opentracing/mocktracer/recorder.h>
 #include <mutex>
 #include <vector>
@@ -9,7 +10,7 @@ namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
 namespace mocktracer {
 // InMemoryRecorder stores finished spans and provides accessors to them.
-class InMemoryRecorder : public Recorder {
+class OPENTRACING_MOCK_TRACER_API InMemoryRecorder : public Recorder {
  public:
   void RecordSpan(SpanData&& span_data) noexcept override;
 
