@@ -1,8 +1,8 @@
 #ifndef OPENTRACING_MOCKTRACER_JSON_RECORDER_H
 #define OPENTRACING_MOCKTRACER_JSON_RECORDER_H
 
-#include <opentracing/mocktracer/symbols.h>
 #include <opentracing/mocktracer/recorder.h>
+#include <opentracing/mocktracer/symbols.h>
 #include <iosfwd>
 #include <memory>
 #include <mutex>

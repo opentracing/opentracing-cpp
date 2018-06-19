@@ -1,8 +1,8 @@
 #ifndef OPENTRACING_DYNAMIC_LOAD_H
 #define OPENTRACING_DYNAMIC_LOAD_H
 
-#include <opentracing/symbols.h>
 #include <opentracing/config.h>
+#include <opentracing/symbols.h>
 #include <opentracing/tracer.h>
 #include <opentracing/tracer_factory.h>
 #include <opentracing/version.h>
@@ -48,11 +48,11 @@ using OpenTracingMakeTracerFactoryType = int(
 
 #define OPENTRACING_DECLARE_IMPL_FACTORY(X)                                 \
   extern "C" {                                                              \
-  \
-extern __declspec(dllexport)                                                \
+                                                                            \
+  extern __declspec(dllexport)                                              \
       OpenTracingMakeTracerFactoryType* const OpenTracingMakeTracerFactory; \
-  \
-__declspec(selectany) OpenTracingMakeTracerFactoryType* const               \
+                                                                            \
+  __declspec(selectany) OpenTracingMakeTracerFactoryType* const             \
       OpenTracingMakeTracerFactory = X;                                     \
   }  // extern "C"
 
@@ -60,16 +60,14 @@ __declspec(selectany) OpenTracingMakeTracerFactoryType* const               \
 
 #define OPENTRACING_DECLARE_IMPL_FACTORY(X)                                 \
   extern "C" {                                                              \
-  \
-__attribute((weak)) extern OpenTracingMakeTracerFactoryType* const          \
+                                                                            \
+  __attribute((weak)) extern OpenTracingMakeTracerFactoryType* const        \
       OpenTracingMakeTracerFactory;                                         \
                                                                             \
   OpenTracingMakeTracerFactoryType* const OpenTracingMakeTracerFactory = X; \
   }  // extern "C"
 
 #endif
-
-
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
@@ -145,8 +143,8 @@ class DynamicTracingLibraryHandle {
 //
 // See DynamicTracingLibraryHandle, TracerFactory
 OPENTRACING_API expected<DynamicTracingLibraryHandle>
-DynamicallyLoadTracingLibrary(
-    const char* shared_library, std::string& error_message) noexcept;
+DynamicallyLoadTracingLibrary(const char* shared_library,
+                              std::string& error_message) noexcept;
 END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing
 

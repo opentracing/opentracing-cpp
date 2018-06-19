@@ -1,8 +1,8 @@
 #ifndef OPENTRACING_MOCKTRACER_IN_MEMORY_RECORDER_H
 #define OPENTRACING_MOCKTRACER_IN_MEMORY_RECORDER_H
 
-#include <opentracing/mocktracer/symbols.h>
 #include <opentracing/mocktracer/recorder.h>
+#include <opentracing/mocktracer/symbols.h>
 #include <mutex>
 #include <vector>
 
