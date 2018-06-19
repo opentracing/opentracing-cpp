@@ -2,7 +2,9 @@
 // definition error from OpenTracingMakeTracerFactory.
 #include <opentracing/dynamic_load.h>
 
+extern "C" {
 extern OpenTracingMakeTracerFactoryType* const OpenTracingMakeTracerFactory;
+} // extern "C"
 
 int main() {
   // Call OpenTracingMakeTracerFactory to make sure it's not elided.
