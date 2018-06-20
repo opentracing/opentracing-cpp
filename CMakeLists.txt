@@ -173,7 +173,7 @@ if (BUILD_STATIC_LIBS)
   target_compile_definitions(opentracing-static PRIVATE OPENTRACING_STATIC)
   target_include_directories(opentracing-static INTERFACE "$<INSTALL_INTERFACE:include/>")
   install(TARGETS opentracing-static EXPORT OpenTracingTargets
-	  ARCHIVE DESTINATION ${LIB_INSTALL_DIR})
+         ARCHIVE DESTINATION ${LIB_INSTALL_DIR})
 endif()
 
 
@@ -228,3 +228,7 @@ endif()
 if(BUILD_TESTING)
   add_subdirectory(example)
 endif()
+
+
+add_custom_target(rpm rpmbuild -bb -v --define '_topdir ${CMAKE_SOURCE_DIR}/.build/BUILD' --define '_origdir ${CMAKE_SOURCE_DIR}' --define '_rpmdir ${CMAKE_SOURCE_DIR}/.build/BUILD/RPMS' ${CMAKE_SOURCE_DIR}/opentracing-cpp-devel.spec
+              COMMAND rpmbuild -bb -v --define '_topdir ${CMAKE_SOURCE_DIR}/.build/BUILD' --define '_origdir ${CMAKE_SOURCE_DIR}' --define '_rpmdir ${CMAKE_SOURCE_DIR}/.build/BUILD/RPMS' --define '_version_num ${OPENTRACING_VERSION_STRING}' ${CMAKE_SOURCE_DIR}/opentracing-cpp.spec)
