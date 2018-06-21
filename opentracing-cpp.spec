@@ -1,10 +1,9 @@
-Name:           opentracing-cpp
-Summary:        opentracing library
-Version:        1.0
-Release:        1
+Name:           %{_name}
+Summary:        %{_summary}
+Version:        %{_version}
+Release:        %{_release}
 License:        Apache License 2.0
-Url:            https://github.com/opentracing/opentracing-cpp
-%define _tmppath %(echo $PWD)
+Url:            %{_url}
 
 %description
 opentracing .so files
@@ -12,12 +11,11 @@ opentracing .so files
 %prep
 
 %build
-cd %{_tmppath}/
 
 %install
 mkdir -p ${RPM_BUILD_ROOT}/usr/lib64/
-cp -f %{_tmppath}/output/libopentracing.so.%{_version_num} $RPM_BUILD_ROOT/usr/lib64/
-cp -f %{_tmppath}/output/libopentracing_mocktracer.so.%{_version_num} $RPM_BUILD_ROOT/usr/lib64/
+cp -f %{_binary_dir}/output/libopentracing.so.%{_version_num} $RPM_BUILD_ROOT/usr/lib64/
+cp -f %{_binary_dir}/output/libopentracing_mocktracer.so.%{_version_num} $RPM_BUILD_ROOT/usr/lib64/
 
 %post
 # post-install

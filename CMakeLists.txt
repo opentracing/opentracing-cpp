@@ -173,7 +173,7 @@ if (BUILD_STATIC_LIBS)
   target_compile_definitions(opentracing-static PRIVATE OPENTRACING_STATIC)
   target_include_directories(opentracing-static INTERFACE "$<INSTALL_INTERFACE:include/>")
   install(TARGETS opentracing-static EXPORT OpenTracingTargets
-         ARCHIVE DESTINATION ${LIB_INSTALL_DIR})
+      ARCHIVE DESTINATION ${LIB_INSTALL_DIR})
 endif()
 
 
@@ -230,5 +230,35 @@ if(BUILD_TESTING)
 endif()
 
 
-add_custom_target(rpm rpmbuild -bb -v --define '_topdir ${CMAKE_SOURCE_DIR}/.build/BUILD' --define '_origdir ${CMAKE_SOURCE_DIR}' --define '_rpmdir ${CMAKE_SOURCE_DIR}/.build/BUILD/RPMS' ${CMAKE_SOURCE_DIR}/opentracing-cpp-devel.spec
-              COMMAND rpmbuild -bb -v --define '_topdir ${CMAKE_SOURCE_DIR}/.build/BUILD' --define '_origdir ${CMAKE_SOURCE_DIR}' --define '_rpmdir ${CMAKE_SOURCE_DIR}/.build/BUILD/RPMS' --define '_version_num ${OPENTRACING_VERSION_STRING}' ${CMAKE_SOURCE_DIR}/opentracing-cpp.spec)
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Headers for Opengtracing")
+set(CPACK_RPM_PACKAGE_NAME "opentracing-cpp")
+set(CPACK_RPM_PACKAGE_NAME_DEVEL "opentracing-cpp-devel")
+set(CPACK_RPM_PACKAGE_VERSION ${OPENTRACING_VERSION_STRING})
+set(CPACK_RPM_PACKAGE_RELEASE 1)
+set(CPACK_BINARY_DIR ${CMAKE_BINARY_DIR})
+set(CPACK_RPM_ROOTDIR ${CPACK_BINARY_DIR}/BUILD)
+set(CPACK_RPM_DIRECTORY ${CPACK_RPM_ROOTDIR}/RPMS)
+set(CPACK_TOPLEVEL_DIRECTORY ${CMAKE_SOURCE_DIR})
+set(CPACK_URL "https://github.com/rnburn/opentracing-cpp")
+
+
+add_custom_target(rpm rpmbuild -bb -v --define '_name ${CPACK_RPM_PACKAGE_NAME_DEVEL}'
+    --define '_summary ${CPACK_RPM_DESCRIPTION_SUMMARY}'
+    --define '_version ${CPACK_RPM_PACKAGE_VERSION}'
+    --define '_release ${CPACK_RPM_PACKAGE_RELEASE}'
+    --define '_url ${CPACK_URL}'
+    --define '_topdir ${CPACK_RPM_ROOTDIR}'
+    --define '_origdir ${CPACK_TOPLEVEL_DIRECTORY}'
+    --define '_rpmdir ${CPACK_RPM_DIRECTORY}'
+    ${CPACK_TOPLEVEL_DIRECTORY}/opentracing-cpp-devel.spec
+
+    COMMAND rpmbuild -bb -v --define '_name ${CPACK_RPM_PACKAGE_NAME}'
+    --define '_summary ${CPACK_RPM_DESCRIPTION_SUMMARY}'
+    --define '_version ${CPACK_RPM_PACKAGE_VERSION}'
+    --define '_release ${CPACK_RPM_PACKAGE_RELEASE}'
+    --define '_url ${CPACK_URL}'
+    --define '_topdir ${CPACK_RPM_ROOTDIR}'
+    --define '_version_num ${CPACK_RPM_PACKAGE_VERSION}'
+    --define '_binary_dir ${CPACK_BINARY_DIR}'
+    --define '_rpmdir ${CPACK_RPM_DIRECTORY}'
+    ${CPACK_TOPLEVEL_DIRECTORY}/opentracing-cpp.spec)

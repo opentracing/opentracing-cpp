@@ -1,9 +1,9 @@
-Name:           opentracing-cpp-devel
-Summary:        opentracing headers
-Version:        1.0
-Release:        1
+Name:           %{_name}
+Summary:        %{_summary}
+Version:        %{_version}
+Release:        %{_release}
 License:        Apache License 2.0
-URL:            https://github.com/rnburn/opentracing-cpp
+URL:            %{_url}
 
 %description
 header files for opentracing
