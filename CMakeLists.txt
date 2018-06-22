@@ -229,10 +229,7 @@ if(BUILD_TESTING)
   add_subdirectory(example)
 endif()
 
-
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Headers for Opengtracing")
-set(CPACK_RPM_PACKAGE_NAME "opentracing-cpp")
-set(CPACK_RPM_PACKAGE_NAME_DEVEL "opentracing-cpp-devel")
 set(CPACK_RPM_PACKAGE_VERSION ${OPENTRACING_VERSION_STRING})
 set(CPACK_RPM_PACKAGE_RELEASE 1)
 set(CPACK_BINARY_DIR ${CMAKE_BINARY_DIR})
@@ -241,24 +238,37 @@ set(CPACK_RPM_DIRECTORY ${CPACK_RPM_ROOTDIR}/RPMS)
 set(CPACK_TOPLEVEL_DIRECTORY ${CMAKE_SOURCE_DIR})
 set(CPACK_URL "https://github.com/rnburn/opentracing-cpp")
 
+set(CPACK_RPM_COMPONENT_INSTALL ON)
+set(CPACK_COMPONENTS_IGNORE_GROUPS 1)
+set(CPACK_COMPONENTS_GROUPING ONE_PER_GROUP)
+set(CPACK_COMPONENT_DIST_DISPLAY_NAME "dist")
+set(CPACK_COMPONENT_DEVEL_DISPLAY_NAME "devel")
+set(CPACK_RPM_DIST_PACKAGE_NAME "opentracing-cpp${OPENTRACING_VERSION_STRING}")
+set(CPACK_RPM_DEVEL_PACKAGE_NAME "opentracing-cpp-devel${OPENTRACING_VERSION_STRING}")
 
-add_custom_target(rpm rpmbuild -bb -v --define '_name ${CPACK_RPM_PACKAGE_NAME_DEVEL}'
-    --define '_summary ${CPACK_RPM_DESCRIPTION_SUMMARY}'
-    --define '_version ${CPACK_RPM_PACKAGE_VERSION}'
-    --define '_release ${CPACK_RPM_PACKAGE_RELEASE}'
-    --define '_url ${CPACK_URL}'
-    --define '_topdir ${CPACK_RPM_ROOTDIR}'
-    --define '_origdir ${CPACK_TOPLEVEL_DIRECTORY}'
-    --define '_rpmdir ${CPACK_RPM_DIRECTORY}'
-    ${CPACK_TOPLEVEL_DIRECTORY}/opentracing-cpp-devel.spec
+set(CPACK_COMPONENT_DIST_DESCRIPTION "shared object libraries for opentracing")
+set(CPACK_COMPONENT_DEVEL_DESCRIPTION "headers for opentracing")
+set(CPACK_RPM_DIST_SPEC_POSTINSTALL "/sbin/ldconfig")
+set(CPACK_RPM_DIST_SPEC_POSTUNINSTALL "/sbin/ldconfig")
+set(CPACK_RPM_DIST_INSTALL_FILES "/usr/lib64/libopentracing.so.${OPENTRACING_VERSION_STRING}
+/usr/lib64/libopentracing_mocktracer.so.${OPENTRACING_VERSION_STRING}")
+set(CPACK_RPM_DEVEL_INSTALL_FILES "/usr/include/opentracing/noop.h
+/usr/include/opentracing/propagation.h
+/usr/include/opentracing/span.h
+/usr/include/opentracing/string_view.h
+/usr/include/opentracing/symbols.h
+/usr/include/opentracing/tracer.h
+/usr/include/opentracing/util.h
+/usr/include/opentracing/config.h
+/usr/include/opentracing/value.h
+/usr/include/opentracing/version.h
+/usr/include/opentracing/expected/expected.hpp
+/usr/include/opentracing/variant/variant.hpp
+/usr/include/opentracing/variant/recursive_wrapper.hpp")
+set(CPACK_COMPONENT_DIST_REQUIRED TRUE)
+set(CPACK_COMPONENT_DEVEL_REQUIRED TRUE)
 
-    COMMAND rpmbuild -bb -v --define '_name ${CPACK_RPM_PACKAGE_NAME}'
-    --define '_summary ${CPACK_RPM_DESCRIPTION_SUMMARY}'
-    --define '_version ${CPACK_RPM_PACKAGE_VERSION}'
-    --define '_release ${CPACK_RPM_PACKAGE_RELEASE}'
-    --define '_url ${CPACK_URL}'
-    --define '_topdir ${CPACK_RPM_ROOTDIR}'
-    --define '_version_num ${CPACK_RPM_PACKAGE_VERSION}'
-    --define '_binary_dir ${CPACK_BINARY_DIR}'
-    --define '_rpmdir ${CPACK_RPM_DIRECTORY}'
-    ${CPACK_TOPLEVEL_DIRECTORY}/opentracing-cpp.spec)
+cpack_add_component(DIST)
+cpack_add_component(DEVEL)
+
+set(CPACK_COMPONENTS_ALL DIST DEVEL)
