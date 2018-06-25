@@ -1,3 +1,4 @@
+set(CPACK_RPM_COMPONENT_INSTALL ON)
 cmake_minimum_required(VERSION 3.1)
 
 project(opentracing-cpp)
@@ -229,46 +230,38 @@ if(BUILD_TESTING)
   add_subdirectory(example)
 endif()
 
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Headers for Opengtracing")
+
+cpack_add_component(DIST
+        DISPLAY_NAME "opendist")
+cpack_add_component(DEVEL
+        DISPLAY_NAME "opendevel")
+
+set(CPACK_BUILD_SOURCE_DIRS ${CMAKE_SOURCE_DIR})
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Headers for Opentracing")
 set(CPACK_RPM_PACKAGE_VERSION ${OPENTRACING_VERSION_STRING})
 set(CPACK_RPM_PACKAGE_RELEASE 1)
 set(CPACK_BINARY_DIR ${CMAKE_BINARY_DIR})
 set(CPACK_RPM_ROOTDIR ${CPACK_BINARY_DIR}/BUILD)
 set(CPACK_RPM_DIRECTORY ${CPACK_RPM_ROOTDIR}/RPMS)
 set(CPACK_TOPLEVEL_DIRECTORY ${CMAKE_SOURCE_DIR})
-set(CPACK_URL "https://github.com/rnburn/opentracing-cpp")
+set(CPACK_RPM_URL "https://github.com/rnburn/opentracing-cpp")
 
-set(CPACK_RPM_COMPONENT_INSTALL ON)
+set(CPACK_RPM_DIST_PACKAGE_NAME opentracing-cpp${OPENTRACING_VERSION_STRING})
+set(CPACK_RPM_DEVEL_PACKAGE_NAME opentracing-cpp-devel${OPENTRACING_VERSION_STRING})
+
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/opentracing/
+        DESTINATION ${CMAKE_BINARY_DIR}/_CPack_Packages/Linux/RPM/opentracing-cpp-1.5.0-Linux/Devel/usr/lib/cmake/OpenTracing/
+        COMPONENT DEVEL)
+install(FILES ${CMAKE_BINARY_DIR}/output/libopentracing_mocktracer.so.1.5.0
+        DESTINATION ${CMAKE_BINARY_DIR}/usr/lib64/
+        COMPONENT DIST)
+install(FILES ${CMAKE_BINARY_DIR}/output/libopentracing.so.1.5.0
+        DESTINATION ${CMAKE_BINARY_DIR}/usr/lib64/
+        COMPONENT DIST)
+set(CPACK_COMPONENTS_ALL DIST DEVEL)
+set(CPACK_GENERATOR "RPM")
 set(CPACK_COMPONENTS_IGNORE_GROUPS 1)
 set(CPACK_COMPONENTS_GROUPING ONE_PER_GROUP)
-set(CPACK_COMPONENT_DIST_DISPLAY_NAME "dist")
-set(CPACK_COMPONENT_DEVEL_DISPLAY_NAME "devel")
-set(CPACK_RPM_DIST_PACKAGE_NAME "opentracing-cpp${OPENTRACING_VERSION_STRING}")
-set(CPACK_RPM_DEVEL_PACKAGE_NAME "opentracing-cpp-devel${OPENTRACING_VERSION_STRING}")
 
-set(CPACK_COMPONENT_DIST_DESCRIPTION "shared object libraries for opentracing")
-set(CPACK_COMPONENT_DEVEL_DESCRIPTION "headers for opentracing")
-set(CPACK_RPM_DIST_SPEC_POSTINSTALL "/sbin/ldconfig")
-set(CPACK_RPM_DIST_SPEC_POSTUNINSTALL "/sbin/ldconfig")
-set(CPACK_RPM_DIST_INSTALL_FILES "/usr/lib64/libopentracing.so.${OPENTRACING_VERSION_STRING}
-/usr/lib64/libopentracing_mocktracer.so.${OPENTRACING_VERSION_STRING}")
-set(CPACK_RPM_DEVEL_INSTALL_FILES "/usr/include/opentracing/noop.h
-/usr/include/opentracing/propagation.h
-/usr/include/opentracing/span.h
-/usr/include/opentracing/string_view.h
-/usr/include/opentracing/symbols.h
-/usr/include/opentracing/tracer.h
-/usr/include/opentracing/util.h
-/usr/include/opentracing/config.h
-/usr/include/opentracing/value.h
-/usr/include/opentracing/version.h
-/usr/include/opentracing/expected/expected.hpp
-/usr/include/opentracing/variant/variant.hpp
-/usr/include/opentracing/variant/recursive_wrapper.hpp")
 set(CPACK_COMPONENT_DIST_REQUIRED TRUE)
 set(CPACK_COMPONENT_DEVEL_REQUIRED TRUE)
-
-cpack_add_component(DIST)
-cpack_add_component(DEVEL)
-
-set(CPACK_COMPONENTS_ALL DIST DEVEL)
