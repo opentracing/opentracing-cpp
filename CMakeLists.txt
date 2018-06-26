@@ -27,10 +27,18 @@ SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "C++ implementation of the OpenTracing API
 SET(CPACK_PACKAGE_VENDOR "opentracing.io")
 SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+SET(CPACK_RPM_PACKAGE_GROUP "Development/Libraries")
 
 SET(CPACK_PACKAGE_VERSION_MAJOR ${OPENTRACING_VERSION_MAJOR})
 SET(CPACK_PACKAGE_VERSION_MINOR ${OPENTRACING_VERSION_MINOR})
 SET(CPACK_PACKAGE_VERSION_PATCH ${OPENTRACING_VERSION_PATCH})
+set(CPACK_RPM_DIST_POST_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/cmake/runldconfig)
+set(CPACK_RPM_DIST_POST_UNINSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/cmake/runldconfig)
+set(CPACK_COMPONENTS_ALL DIST DEVEL)
+set(CPACK_COMPONENTS_GROUPING ONE_PER_GROUP)
+set(CPACK_GENERATOR "RPM")
+set(CPACK_COMPONENTS_IGNORE_GROUPS 1)
+
 include(CPack)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
@@ -116,7 +124,8 @@ configure_file(version.h.in include/opentracing/version.h)
 configure_file(config.h.in include/opentracing/config.h)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/opentracing
-        DESTINATION include)
+        DESTINATION include
+        COMPONENT DEVEL)
 
 # ==============================================================================
 # OpenTracing library targets
@@ -155,9 +164,11 @@ if (BUILD_SHARED_LIBS)
                                              SOVERSION ${OPENTRACING_VERSION_MAJOR})
   target_compile_definitions(opentracing PRIVATE OPENTRACING_EXPORTS)
   install(TARGETS opentracing EXPORT OpenTracingTargets
+          COMPONENT DIST
           RUNTIME DESTINATION ${LIB_INSTALL_DIR}
           LIBRARY DESTINATION ${LIB_INSTALL_DIR}
-          ARCHIVE DESTINATION ${LIB_INSTALL_DIR})
+          ARCHIVE DESTINATION ${LIB_INSTALL_DIR}
+          )
   if (CLANG_TIDY_EXE)
     set_target_properties(opentracing PROPERTIES
                                     CXX_CLANG_TIDY "${DO_CLANG_TIDY}")
@@ -178,10 +189,14 @@ if (BUILD_STATIC_LIBS)
 endif()
 
 
-install(DIRECTORY 3rd_party/include/opentracing/expected DESTINATION include/opentracing
+install(DIRECTORY 3rd_party/include/opentracing/expected
+            COMPONENT DEVEL
+            DESTINATION include/opentracing
             FILES_MATCHING PATTERN "*.hpp"
                            PATTERN "*.h")
-install(DIRECTORY 3rd_party/include/opentracing/variant DESTINATION include/opentracing
+install(DIRECTORY 3rd_party/include/opentracing/variant
+            COMPONENT DEVEL
+            DESTINATION include/opentracing
             FILES_MATCHING PATTERN "*.hpp"
                            PATTERN "*.h")
 install(DIRECTORY include/opentracing DESTINATION include
@@ -230,37 +245,4 @@ if(BUILD_TESTING)
   add_subdirectory(example)
 endif()
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/opentracing/
-        DESTINATION include/opentracing/
-        COMPONENT DEVEL)
-install(FILES ${CMAKE_SOURCE_DIR}/3rd_party/include/opentracing/expected/expected.hpp
-        DESTINATION include/opentracing/
-        COMPONENT DEVEL)
-install(FILES ${CMAKE_SOURCE_DIR}/3rd_party/include/opentracing/variant/variant.hpp
-        DESTINATION include/opentracing/
-        COMPONENT DEVEL)
-install(FILES ${CMAKE_SOURCE_DIR}/3rd_party/include/opentracing/variant/recursive_wrapper.hpp
-        DESTINATION include/opentracing/
-        COMPONENT DEVEL)
-install(FILES ${CMAKE_BINARY_DIR}/include/opentracing/config.h
-        DESTINATION include/opentracing/
-        COMPONENT DEVEL)
-install(FILES ${CMAKE_BINARY_DIR}/include/opentracing/version.h
-        DESTINATION include/opentracing/
-        COMPONENT DEVEL)
-install(FILES ${CMAKE_BINARY_DIR}/output/libopentracing_mocktracer.so.1.5.0
-        DESTINATION lib64/
-        COMPONENT DIST)
-install(FILES ${CMAKE_BINARY_DIR}/output/libopentracing.so.1.5.0
-        DESTINATION lib64/
-        COMPONENT DIST)
-cpack_add_component(DIST)
 cpack_add_component(DEVEL)
-
-set(CPACK_COMPONENTS_ALL DIST DEVEL)
-set(CPACK_COMPONENTS_GROUPING ONE_PER_GROUP)
-set(CPACK_GENERATOR "RPM")
-set(CPACK_COMPONENTS_IGNORE_GROUPS 1)
-
-set(CPACK_COMPONENT_DIST_REQUIRED TRUE)
-set(CPACK_COMPONENT_DEVEL_REQUIRED TRUE)
