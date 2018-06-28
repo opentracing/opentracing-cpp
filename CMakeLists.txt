@@ -199,7 +199,9 @@ install(DIRECTORY 3rd_party/include/opentracing/variant
             DESTINATION include/opentracing
             FILES_MATCHING PATTERN "*.hpp"
                            PATTERN "*.h")
-install(DIRECTORY include/opentracing DESTINATION include
+install(DIRECTORY include/opentracing
+            COMPONENT DEVEL
+            DESTINATION include
             FILES_MATCHING PATTERN "*.h")
 
 
@@ -244,5 +246,3 @@ endif()
 if(BUILD_TESTING)
   add_subdirectory(example)
 endif()
-
-cpack_add_component(DEVEL)
