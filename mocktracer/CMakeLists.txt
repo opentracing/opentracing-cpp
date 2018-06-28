@@ -18,7 +18,9 @@ if (BUILD_SHARED_LIBS)
                                                SOVERSION ${OPENTRACING_VERSION_MAJOR})
   target_link_libraries(opentracing_mocktracer PUBLIC opentracing)
   target_compile_definitions(opentracing_mocktracer PRIVATE OPENTRACING_MOCK_TRACER_EXPORTS)
-  install(TARGETS opentracing_mocktracer EXPORT OpenTracingTargets
+  install(TARGETS opentracing_mocktracer
+          COMPONENT DIST
+          EXPORT OpenTracingTargets
           LIBRARY DESTINATION ${LIB_INSTALL_DIR}
           ARCHIVE DESTINATION ${LIB_INSTALL_DIR})
 

@@ -1,0 +1,4 @@
+#!/bin/bash
+/sbin/ldconfig
+
+#This sets up the links between shared libraries after installation and uninstallation of RPMs.

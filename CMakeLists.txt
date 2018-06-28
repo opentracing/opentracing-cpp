@@ -1,3 +1,4 @@
+set(CPACK_RPM_COMPONENT_INSTALL ON)
 cmake_minimum_required(VERSION 3.1)
 
 project(opentracing-cpp)
@@ -26,10 +27,18 @@ SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "C++ implementation of the OpenTracing API
 SET(CPACK_PACKAGE_VENDOR "opentracing.io")
 SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+SET(CPACK_RPM_PACKAGE_GROUP "Development/Libraries")
 
 SET(CPACK_PACKAGE_VERSION_MAJOR ${OPENTRACING_VERSION_MAJOR})
 SET(CPACK_PACKAGE_VERSION_MINOR ${OPENTRACING_VERSION_MINOR})
 SET(CPACK_PACKAGE_VERSION_PATCH ${OPENTRACING_VERSION_PATCH})
+set(CPACK_RPM_DIST_POST_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/cmake/runldconfig)
+set(CPACK_RPM_DIST_POST_UNINSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/cmake/runldconfig)
+set(CPACK_COMPONENTS_ALL DIST DEVEL)
+set(CPACK_COMPONENTS_GROUPING ONE_PER_GROUP)
+set(CPACK_GENERATOR "RPM")
+set(CPACK_COMPONENTS_IGNORE_GROUPS 1)
+
 include(CPack)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
@@ -115,7 +124,8 @@ configure_file(version.h.in include/opentracing/version.h)
 configure_file(config.h.in include/opentracing/config.h)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/opentracing
-        DESTINATION include)
+        DESTINATION include
+        COMPONENT DEVEL)
 
 # ==============================================================================
 # OpenTracing library targets
@@ -154,9 +164,11 @@ if (BUILD_SHARED_LIBS)
                                              SOVERSION ${OPENTRACING_VERSION_MAJOR})
   target_compile_definitions(opentracing PRIVATE OPENTRACING_EXPORTS)
   install(TARGETS opentracing EXPORT OpenTracingTargets
+          COMPONENT DIST
           RUNTIME DESTINATION ${LIB_INSTALL_DIR}
           LIBRARY DESTINATION ${LIB_INSTALL_DIR}
-          ARCHIVE DESTINATION ${LIB_INSTALL_DIR})
+          ARCHIVE DESTINATION ${LIB_INSTALL_DIR}
+          )
   if (CLANG_TIDY_EXE)
     set_target_properties(opentracing PROPERTIES
                                     CXX_CLANG_TIDY "${DO_CLANG_TIDY}")
@@ -173,17 +185,23 @@ if (BUILD_STATIC_LIBS)
   target_compile_definitions(opentracing-static PRIVATE OPENTRACING_STATIC)
   target_include_directories(opentracing-static INTERFACE "$<INSTALL_INTERFACE:include/>")
   install(TARGETS opentracing-static EXPORT OpenTracingTargets
-	  ARCHIVE DESTINATION ${LIB_INSTALL_DIR})
+      ARCHIVE DESTINATION ${LIB_INSTALL_DIR})
 endif()
 
 
-install(DIRECTORY 3rd_party/include/opentracing/expected DESTINATION include/opentracing
+install(DIRECTORY 3rd_party/include/opentracing/expected
+            COMPONENT DEVEL
+            DESTINATION include/opentracing
             FILES_MATCHING PATTERN "*.hpp"
                            PATTERN "*.h")
-install(DIRECTORY 3rd_party/include/opentracing/variant DESTINATION include/opentracing
+install(DIRECTORY 3rd_party/include/opentracing/variant
+            COMPONENT DEVEL
+            DESTINATION include/opentracing
             FILES_MATCHING PATTERN "*.hpp"
                            PATTERN "*.h")
-install(DIRECTORY include/opentracing DESTINATION include
+install(DIRECTORY include/opentracing
+            COMPONENT DEVEL
+            DESTINATION include
             FILES_MATCHING PATTERN "*.h")
 
 
