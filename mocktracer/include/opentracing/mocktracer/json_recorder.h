@@ -2,6 +2,7 @@
 #define OPENTRACING_MOCKTRACER_JSON_RECORDER_H
 
 #include <opentracing/mocktracer/recorder.h>
+#include <opentracing/mocktracer/symbols.h>
 #include <iosfwd>
 #include <memory>
 #include <mutex>
@@ -14,7 +15,7 @@ namespace mocktracer {
 // format.
 //
 // See also FromJson.
-class JsonRecorder : public Recorder {
+class OPENTRACING_MOCK_TRACER_API JsonRecorder : public Recorder {
  public:
   explicit JsonRecorder(std::unique_ptr<std::ostream>&& out);
 

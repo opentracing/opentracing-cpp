@@ -1,6 +1,6 @@
 cc_library(
     name = "opentracing",
-    srcs = glob(["src/**/*.cpp"], exclude=["src/dynamic_load_unsupported.cpp"]),
+    srcs = glob(["src/**/*.cpp"], exclude=["src/dynamic_load_unsupported.cpp", "src/dynamic_load_windows.cpp"]),
     hdrs = glob(["include/opentracing/**/*.h"]) + [
         ":include/opentracing/config.h",
         ":include/opentracing/version.h",
@@ -10,6 +10,9 @@ cc_library(
     deps = [
       "//3rd_party:expected",
       "//3rd_party:variant",
+    ],
+    linkopts = [
+      "-ldl",
     ],
 )
 

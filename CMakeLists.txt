@@ -1,3 +1,4 @@
+set(CPACK_RPM_COMPONENT_INSTALL ON)
 cmake_minimum_required(VERSION 3.1)
 
 project(opentracing-cpp)
@@ -5,9 +6,16 @@ project(opentracing-cpp)
 # ==============================================================================
 # Version information
 
-set(OPENTRACING_ABI_VERSION "1")
+# Increment ABI version for any ABI-breaking change.
+#
+# Also, whenever the ABI is between versions and in development
+# suffix the ABI version number with "_unstable".
+set(OPENTRACING_ABI_VERSION "2")
+
+# Version number follows semver
+# See https://semver.org/
 set(OPENTRACING_VERSION_MAJOR "1")
-set(OPENTRACING_VERSION_MINOR "4")
+set(OPENTRACING_VERSION_MINOR "5")
 set(OPENTRACING_VERSION_PATCH "0")
 set(OPENTRACING_VERSION_STRING
   "${OPENTRACING_VERSION_MAJOR}.${OPENTRACING_VERSION_MINOR}.${OPENTRACING_VERSION_PATCH}")
@@ -19,11 +27,23 @@ SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "C++ implementation of the OpenTracing API
 SET(CPACK_PACKAGE_VENDOR "opentracing.io")
 SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+SET(CPACK_RPM_PACKAGE_GROUP "Development/Libraries")
 
 SET(CPACK_PACKAGE_VERSION_MAJOR ${OPENTRACING_VERSION_MAJOR})
 SET(CPACK_PACKAGE_VERSION_MINOR ${OPENTRACING_VERSION_MINOR})
 SET(CPACK_PACKAGE_VERSION_PATCH ${OPENTRACING_VERSION_PATCH})
+set(CPACK_RPM_DIST_POST_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/cmake/runldconfig)
+set(CPACK_RPM_DIST_POST_UNINSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/cmake/runldconfig)
+set(CPACK_COMPONENTS_ALL DIST DEVEL)
+set(CPACK_COMPONENTS_GROUPING ONE_PER_GROUP)
+set(CPACK_GENERATOR "RPM")
+set(CPACK_COMPONENTS_IGNORE_GROUPS 1)
+
 include(CPack)
+
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 
 # ==============================================================================
 # Configure compilers
@@ -40,6 +60,8 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
     -Wno-padded")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_RELEASE} -D_SCL_SECURE_NO_WARNINGS")
 endif()
 
 # ==============================================================================
@@ -74,9 +96,11 @@ option(BUILD_MOCKTRACER "Build mocktracer library" ON)
 option(BUILD_DYNAMIC_LOADING "Build with dynamic loading support" ON)
 
 if (BUILD_DYNAMIC_LOADING)
-  if (NOT SUPPORTS_WEAK_SYMBOLS OR NOT UNIX)
-    message(WARNING "Building without dynamic loading support.")
-    set(BUILD_DYNAMIC_LOADING OFF)
+  if (NOT WIN32)
+    if (NOT SUPPORTS_WEAK_SYMBOLS OR NOT UNIX)
+      message(WARNING "Building without dynamic loading support.")
+      set(BUILD_DYNAMIC_LOADING OFF)
+    endif()
   endif()
 endif()
 
@@ -90,7 +114,7 @@ endif()
 # Set up libdir
 
 if (NOT DEFINED LIB_INSTALL_DIR)
-    set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib)
+    set(LIB_INSTALL_DIR lib)
 endif()
 
 # ==============================================================================
@@ -100,7 +124,8 @@ configure_file(version.h.in include/opentracing/version.h)
 configure_file(config.h.in include/opentracing/config.h)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/opentracing
-        DESTINATION include)
+        DESTINATION include
+        COMPONENT DEVEL)
 
 # ==============================================================================
 # OpenTracing library targets
@@ -116,7 +141,11 @@ set(SRCS src/propagation.cpp
          src/ext/tags.cpp)
 
 if (BUILD_DYNAMIC_LOADING)
-  list(APPEND SRCS src/dynamic_load_unix.cpp)
+  if (WIN32)
+    list(APPEND SRCS src/dynamic_load_windows.cpp)
+  else()
+    list(APPEND SRCS src/dynamic_load_unix.cpp)
+  endif()
 else()
   list(APPEND SRCS src/dynamic_load_unsupported.cpp)
 endif()
@@ -133,9 +162,13 @@ if (BUILD_SHARED_LIBS)
   target_include_directories(opentracing INTERFACE "$<INSTALL_INTERFACE:include/>")
   set_target_properties(opentracing PROPERTIES VERSION ${OPENTRACING_VERSION_STRING}
                                              SOVERSION ${OPENTRACING_VERSION_MAJOR})
+  target_compile_definitions(opentracing PRIVATE OPENTRACING_EXPORTS)
   install(TARGETS opentracing EXPORT OpenTracingTargets
+          COMPONENT DIST
+          RUNTIME DESTINATION ${LIB_INSTALL_DIR}
           LIBRARY DESTINATION ${LIB_INSTALL_DIR}
-          ARCHIVE DESTINATION ${LIB_INSTALL_DIR})
+          ARCHIVE DESTINATION ${LIB_INSTALL_DIR}
+          )
   if (CLANG_TIDY_EXE)
     set_target_properties(opentracing PROPERTIES
                                     CXX_CLANG_TIDY "${DO_CLANG_TIDY}")
@@ -145,20 +178,30 @@ endif()
 if (BUILD_STATIC_LIBS)
   add_library(opentracing-static STATIC ${SRCS})
   target_link_libraries(opentracing-static ${LIBRARIES})
-  set_target_properties(opentracing-static PROPERTIES OUTPUT_NAME opentracing)
+  # Windows generates a lib and dll files for a shared library. using the same name will override the lib file generated by the shared target
+  if (NOT WIN32)
+    set_target_properties(opentracing-static PROPERTIES OUTPUT_NAME opentracing)
+  endif()
+  target_compile_definitions(opentracing-static PRIVATE OPENTRACING_STATIC)
   target_include_directories(opentracing-static INTERFACE "$<INSTALL_INTERFACE:include/>")
   install(TARGETS opentracing-static EXPORT OpenTracingTargets
-	  ARCHIVE DESTINATION ${LIB_INSTALL_DIR})
+      ARCHIVE DESTINATION ${LIB_INSTALL_DIR})
 endif()
 
 
-install(DIRECTORY 3rd_party/include/opentracing/expected DESTINATION include/opentracing
+install(DIRECTORY 3rd_party/include/opentracing/expected
+            COMPONENT DEVEL
+            DESTINATION include/opentracing
             FILES_MATCHING PATTERN "*.hpp"
                            PATTERN "*.h")
-install(DIRECTORY 3rd_party/include/opentracing/variant DESTINATION include/opentracing
+install(DIRECTORY 3rd_party/include/opentracing/variant
+            COMPONENT DEVEL
+            DESTINATION include/opentracing
             FILES_MATCHING PATTERN "*.hpp"
                            PATTERN "*.h")
-install(DIRECTORY include/opentracing DESTINATION include
+install(DIRECTORY include/opentracing
+            COMPONENT DEVEL
+            DESTINATION include
             FILES_MATCHING PATTERN "*.h")
 
 

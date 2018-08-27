@@ -1,54 +1,67 @@
-#include <dlfcn.h>
 #include <opentracing/dynamic_load.h>
 #include <opentracing/version.h>
 
+#include <windows.h>
+
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
-namespace {
-class DynamicLibraryHandleUnix : public DynamicLibraryHandle {
- public:
-  explicit DynamicLibraryHandleUnix(void* handle) : handle_{handle} {}
+// Returns the last Win32 error, in string format. Returns an empty string if
+// there is no error.
+//
+// Taken from https://stackoverflow.com/a/17387176/4447365
+static std::string GetLastErrorAsString() {
+  // Get the error message, if any.
+  DWORD errorMessageID = ::GetLastError();
+  if (errorMessageID == 0)
+    return std::string();  // No error message has been recorded
 
-  ~DynamicLibraryHandleUnix() override { dlclose(handle_); }
+  LPSTR messageBuffer = nullptr;
+  size_t size = FormatMessageA(
+      FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+          FORMAT_MESSAGE_IGNORE_INSERTS,
+      NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+      (LPSTR)&messageBuffer, 0, NULL);
+
+  std::string message(messageBuffer, size);
+
+  // Free the buffer.
+  LocalFree(messageBuffer);
+
+  return message;
+}
+
+namespace {
+class DynamicLibraryHandleWindows : public DynamicLibraryHandle {
+ public:
+  explicit DynamicLibraryHandleWindows(HINSTANCE handle) : handle_{handle} {}
+
+  ~DynamicLibraryHandleWindows() override { FreeLibrary(handle_); }
 
  private:
-  void* handle_;
+  HINSTANCE handle_;
 };
 }  // namespace
 
-// Undefined behavior sanitizer has a bug where it will produce a false positive
-// when casting the result of dlsym to a function pointer.
-//
-// See https://github.com/envoyproxy/envoy/pull/2252#issuecomment-362668221
-//     https://github.com/google/sanitizers/issues/911
-//
-// Note: undefined behavior sanitizer is supported in clang and gcc > 4.9
-#if defined(__clang__)
-__attribute__((no_sanitize("function")))
-// Copied from https://gcc.gnu.org/onlinedocs/cpp/Common-Predefined-Macros.html
-#elif defined(__GNUC__) && \
-    ((__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) >= 40900)
-__attribute__((no_sanitize_undefined))
-#endif
-expected<DynamicTracingLibraryHandle>
-DynamicallyLoadTracingLibrary(const char* shared_library,
-                              std::string& error_message) noexcept try {
-  dlerror();  // Clear any existing error.
-
-  const auto handle = dlopen(shared_library, RTLD_NOW | RTLD_LOCAL);
+expected<DynamicTracingLibraryHandle> DynamicallyLoadTracingLibrary(
+    const char* shared_library, std::string& error_message) noexcept try {
+  const auto handle = LoadLibrary(shared_library);
   if (handle == nullptr) {
-    error_message = dlerror();
+    error_message = "An error occurred: " + GetLastErrorAsString();
     return make_unexpected(dynamic_load_failure_error);
   }
 
   std::unique_ptr<DynamicLibraryHandle> dynamic_library_handle{
-      new DynamicLibraryHandleUnix{handle}};
+      new DynamicLibraryHandleWindows{handle}};
 
   const auto make_tracer_factory =
       reinterpret_cast<OpenTracingMakeTracerFactoryType**>(
-          dlsym(handle, "OpenTracingMakeTracerFactory"));
+          GetProcAddress(handle, "OpenTracingMakeTracerFactory"));
+
   if (make_tracer_factory == nullptr) {
-    error_message = dlerror();
+    error_message =
+        "An error occurred while looking up for OpenTracingMakeTracerFactory "
+        ": " +
+        GetLastErrorAsString();
     return make_unexpected(dynamic_load_failure_error);
   }
 

@@ -39,8 +39,8 @@ TEST_CASE("json") {
       		"trace_id": "000000000000007b",
       		"span_id": "00000000000001c8",
       		"baggage": {
-      			"b2": "v2",
-      			"b1": "v1"
+      			"b1": "v1",
+      			"b2": "v2"
       		}
       	},
       	"references": [{
@@ -52,8 +52,8 @@ TEST_CASE("json") {
       	"start_timestamp": 183600000000,
       	"duration": 92,
       	"tags": {
-      		"t2": "cat",
-      		"t1": 123
+      		"t1": 123,
+      		"t2": "cat"
       	},
       	"logs": [{
       		"timestamp": 183600000000,
@@ -71,5 +71,6 @@ TEST_CASE("json") {
                      expected_serialization.end(),
                      [](char c) { return std::isspace(c); }),
       expected_serialization.end());
+
   CHECK(oss.str() == expected_serialization);
 }
