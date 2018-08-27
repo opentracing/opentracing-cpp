@@ -21,11 +21,19 @@ void MockSpanContext::ForeachBaggageItem(
   }
 }
 
-void MockSpanContext::SetData(SpanContextData& data) {
+void MockSpanContext::CopyData(SpanContextData& data) const {
   data.trace_id = data_.trace_id;
   data.span_id = data_.span_id;
   std::lock_guard<std::mutex> lock_guard{baggage_mutex_};
   data.baggage = data_.baggage;
+}
+
+std::unique_ptr<SpanContext> MockSpanContext::Clone() const noexcept try {
+  auto result = std::unique_ptr<MockSpanContext>{new MockSpanContext{}};
+  CopyData(result->data_);
+  return std::unique_ptr<SpanContext>{result.release()};
+} catch (const std::exception& /*e*/) {
+  return nullptr;
 }
 }  // namespace mocktracer
 END_OPENTRACING_ABI_NAMESPACE

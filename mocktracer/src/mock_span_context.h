@@ -33,7 +33,7 @@ class MockSpanContext : public SpanContext {
 
   uint64_t span_id() const noexcept { return data_.span_id; }
 
-  void SetData(SpanContextData& data);
+  void CopyData(SpanContextData& data) const;
 
   template <class Carrier>
   expected<void> Inject(const PropagationOptions& propagation_options,
@@ -48,6 +48,8 @@ class MockSpanContext : public SpanContext {
     std::lock_guard<std::mutex> lock_guard{baggage_mutex_};
     return ExtractSpanContext(propagation_options, reader, data_);
   }
+
+  std::unique_ptr<SpanContext> Clone() const noexcept override;
 
  private:
   friend MockSpan;
