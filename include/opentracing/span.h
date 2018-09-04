@@ -7,6 +7,7 @@
 #include <opentracing/version.h>
 #include <chrono>
 #include <functional>
+#include <memory>
 #include <string>
 #include <vector>
 
