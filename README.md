@@ -14,6 +14,10 @@ In order to understand the C++ platform API, one must first be familiar with the
 #### Linux/MacOS
 
 ```bash
+# set up environment for compilation
+./ci/setup_linux_environment.sh
+# or setup_osx_environment.sh
+
 mkdir .build
 cd .build
 cmake ..
