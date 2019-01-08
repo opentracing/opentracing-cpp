@@ -74,7 +74,7 @@ DynamicallyLoadTracingLibrary(const char* shared_library,
     if (error_message.empty()) {
       error_message = error_code.message();
     }
-    return make_unexpected(error_code);
+    return make_unexpected(dynamic_load_failure_error);
   }
 
   if (tracer_factory == nullptr) {
