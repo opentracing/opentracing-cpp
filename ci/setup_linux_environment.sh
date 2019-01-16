@@ -8,3 +8,8 @@ sudo apt-get update -o Dir::Etc::sourcelist="sources.list.d/bazel.list" \
     -o Dir::Etc::sourceparts="-" \
     -o APT::Get::List-Cleanup="0"
 sudo apt-get install openjdk-8-jdk bazel
+sudo apt-get install software-properties-common
+
+sudo add-apt-repository ppa:george-edison55/cmake-3.x -y
+sudo apt-get update
+sudo apt-get install cmake
