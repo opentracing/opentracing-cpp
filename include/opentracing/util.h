@@ -36,6 +36,13 @@ class option_wrapper {
   const T *ptr_;
 };
 
+template <class SameClock, class Duration>
+typename SameClock::time_point convert_time_point(
+    std::chrono::time_point<SameClock, Duration> from_time_point) {
+  return std::chrono::duration_cast<typename ToClock::duration>(
+      from_time_point);
+}
+ 
 // Support conversion between time_points from different clocks. There's no
 // standard way to get the difference in epochs between clocks, so this uses
 // an approximation suggested by Howard Hinnant.
