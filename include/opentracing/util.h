@@ -39,7 +39,7 @@ class option_wrapper {
 template <class SameClock, class Duration>
 typename SameClock::time_point convert_time_point(
     std::chrono::time_point<SameClock, Duration> from_time_point) {
-  return std::chrono::duration_cast<typename ToClock::duration>(
+  return std::chrono::duration_cast<typename SameClock::duration>(
       from_time_point);
 }
  
