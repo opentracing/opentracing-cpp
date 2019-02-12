@@ -61,7 +61,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_RELEASE} -D_SCL_SECURE_NO_WARNINGS")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_SCL_SECURE_NO_WARNINGS")
 endif()
 
 # ==============================================================================
@@ -182,7 +182,7 @@ if (BUILD_STATIC_LIBS)
   if (NOT WIN32)
     set_target_properties(opentracing-static PROPERTIES OUTPUT_NAME opentracing)
   endif()
-  target_compile_definitions(opentracing-static PRIVATE OPENTRACING_STATIC)
+  target_compile_definitions(opentracing-static PUBLIC OPENTRACING_STATIC)
   target_include_directories(opentracing-static INTERFACE "$<INSTALL_INTERFACE:include/>")
   install(TARGETS opentracing-static EXPORT OpenTracingTargets
       ARCHIVE DESTINATION ${LIB_INSTALL_DIR})
