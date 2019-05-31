@@ -51,8 +51,8 @@ class OPENTRACING_MOCK_TRACER_API MockTracer
 
   const std::vector<SpanData>& spans() const noexcept { return spans_; }
 
-  using Tracer::Inject;
   using Tracer::Extract;
+  using Tracer::Inject;
 
   expected<void> Inject(const SpanContext& sc,
                         std::ostream& writer) const override;

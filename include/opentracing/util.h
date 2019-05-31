@@ -1,6 +1,7 @@
 #ifndef OPENTRACING_UTIL_H
 #define OPENTRACING_UTIL_H
 
+#include <opentracing/string_view.h>
 #include <opentracing/version.h>
 #include <chrono>
 #include <system_error>
@@ -49,6 +50,23 @@ typename ToClock::time_point convert_time_point(
   return to_now + std::chrono::duration_cast<typename ToClock::duration>(
                       from_time_point - from_now);
 }
+
+// std::error_code's have default comparison operators; however, they make use
+// of singleton addresses which can cause comparisons to fail when multiple
+// versions of the opentracing library are linked in. Since this is a common
+// deployment scenario when making OpenTracing plugins, we add this utility
+// function to make comparing std::error_code across libraries easier.
+//
+// Note: There's a proposed change to the C++ standard that addresses this
+// issue. See
+// http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1196r0.html
+inline bool are_errors_equal(std::error_code lhs,
+                             std::error_code rhs) noexcept {
+  return opentracing::string_view{lhs.category().name()} ==
+             opentracing::string_view{rhs.category().name()} &&
+         lhs.value() == rhs.value();
+}
+
 END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing
 
