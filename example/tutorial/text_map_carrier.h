@@ -5,10 +5,10 @@
 #include <string>
 #include <unordered_map>
 
-using opentracing::TextMapReader;
-using opentracing::TextMapWriter;
 using opentracing::expected;
 using opentracing::string_view;
+using opentracing::TextMapReader;
+using opentracing::TextMapWriter;
 
 class TextMapCarrier : public TextMapReader, public TextMapWriter {
  public:
