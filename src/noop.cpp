@@ -37,6 +37,14 @@ class NoopSpan : public Span {
   void Log(std::initializer_list<std::pair<string_view, Value>>
            /*fields*/) noexcept override {}
 
+  void Log(SystemTime /*timestamp*/,
+           std::initializer_list<
+               std::pair<string_view, Value>> /*fields*/) noexcept override {}
+
+  void Log(SystemTime /*timestamp*/,
+           const std::vector<
+               std::pair<string_view, Value>>& /*fields*/) noexcept override {}
+
   const SpanContext& context() const noexcept override { return span_context_; }
 
   const Tracer& tracer() const noexcept override { return *tracer_; }

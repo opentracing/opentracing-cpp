@@ -155,6 +155,14 @@ class Span {
   virtual void Log(
       std::initializer_list<std::pair<string_view, Value>> fields) noexcept = 0;
 
+  virtual void Log(
+      SystemTime timestamp,
+      std::initializer_list<std::pair<string_view, Value>> fields) noexcept = 0;
+
+  virtual void Log(
+      SystemTime timestamp,
+      const std::vector<std::pair<string_view, Value>>& fields) noexcept = 0;
+
   // context() yields the SpanContext for this Span. Note that the return
   // value of context() is still valid after a call to Span.Finish(), as is
   // a call to Span.context() after a call to Span.Finish().
