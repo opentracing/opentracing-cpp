@@ -167,7 +167,10 @@ void MockSpan::Log(
     const std::vector<std::pair<string_view, Value>>& fields) noexcept try {
   LogRecord log_record;
   log_record.timestamp = timestamp;
-  log_record.fields = fields;
+  log_record.fields.reserve(fields.size());
+  for (auto& field : fields) {
+    log_record.fields.emplace_back(field.first, field.second);
+  }
   std::lock_guard<std::mutex> lock_guard{mutex_};
   data_.logs.emplace_back(std::move(log_record));
 } catch (const std::exception& e) {
