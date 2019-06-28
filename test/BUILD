@@ -23,5 +23,11 @@ cc_test(
     ],
     deps = [
         "//:opentracing",
-    ]
+    ],
+    # when on Windows, we need to pass /DWIN32 to the compiler so that
+    # we use the Windows-compatible version of dynamic_load.h
+    copts = select({
+      "@bazel_tools//src/conditions:windows": [ "/DWIN32" ],
+      "//conditions:default": [ ]
+    })
 )
