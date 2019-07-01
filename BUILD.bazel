@@ -51,6 +51,7 @@ cc_posix_binary(
   name = "libopentracing.so",
   srcs = glob(["src/**/*.cpp"], exclude = ["src/dynamic_load_unsupported.cpp", "src/dynamic_load_windows.cpp"]) + hdrs,
   linkshared = 1,
+  includes = includes,
   deps = deps,
 )
 
