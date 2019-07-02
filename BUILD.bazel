@@ -1,66 +1,67 @@
-load(
-    "//bazel:cross_platform.bzl",
-    "cc_posix_binary",
-    "cc_windows_binary",
-)
-
-
-hdrs = glob(["include/opentracing/**/*.h"]) + [
-    ":include/opentracing/config.h",
-    ":include/opentracing/version.h",
-]
-
-includes = ["include"]
-
-deps = [
-  "//3rd_party:expected",
-  "//3rd_party:variant",
-  ":opentracing"
-]
+# load(
+#     "//bazel:cross_platform.bzl",
+#     "cc_posix_binary",
+#     "cc_windows_binary",
+# )
+#
+#
+# hdrs = glob(["include/opentracing/**/*.h"]) + [
+#     ":include/opentracing/config.h",
+#     ":include/opentracing/version.h",
+# ]
+#
+# includes = ["include"]
+#
+# deps = [
+#   "//3rd_party:expected",
+#   "//3rd_party:variant",
+#   ":opentracing"
+# ]
 
 ## WINDOWS ##
 
-cc_windows_binary(
-  # must include .dll extension in a shared library name on Windows
-  name = "opentracing.dll",
-  srcs = glob(["src/**/*.cpp"], exclude = ["src/dynamic_load_unsupported.cpp", "src/dynamic_load_unix.cpp"]) + hdrs,
-  # when this binary is included by other programs, it will be dynamically linked
-  linkshared = 1,
-  includes = includes,
-  deps = deps,
-  # let the preprocessor know to include special Windows dll export symbols
-  defines = ["OPENTRACING_EXPORTS"],
-)
-
-# filegroup is a windows-specific quirk
-filegroup(
-  name = "opentracing_import_lib",
-  srcs = [":opentracing.dll"],
-  output_group = "interface_library",
-)
-
-cc_import(
-  visibility = ["//visibility:public"],
-  name = "opentracing_dll_import",
-  interface_library = ":opentracing_import_lib",
-  shared_library = ":opentracing.dll",
-)
-
-## POSIX ##
-
-cc_posix_binary(
-  # must include .so extension in a shared library name for posix
-  name = "libopentracing.so",
-  srcs = glob(["src/**/*.cpp"], exclude = ["src/dynamic_load_unsupported.cpp", "src/dynamic_load_windows.cpp"]) + hdrs,
-  linkshared = 1,
-  includes = includes,
-  deps = deps,
-)
-
-cc_import(
-  name = "opentracing_so_import",
-  shared_library = ":libopentracing.so",
-)
+# cc_windows_binary(
+#   # must include .dll extension in a shared library name on Windows
+#   name = "opentracing.dll",
+#   visibility = ["//visibility:public"],
+#   srcs = glob(["src/**/*.cpp"], exclude = ["src/dynamic_load_unsupported.cpp", "src/dynamic_load_unix.cpp"]) + hdrs,
+#   # when this binary is included by other programs, it will be dynamically linked
+#   linkshared = 1,
+#   includes = includes,
+#   deps = deps,
+#   # let the preprocessor know to include special Windows dll export symbols
+#   defines = ["OPENTRACING_EXPORTS"],
+# )
+#
+# # filegroup is a windows-specific quirk
+# filegroup(
+#   name = "opentracing_import_lib",
+#   srcs = [":opentracing.dll"],
+#   output_group = "interface_library",
+# )
+#
+# cc_import(
+#   name = "opentracing_dll_import",
+#   interface_library = ":opentracing_import_lib",
+#   shared_library = ":opentracing.dll",
+# )
+#
+# ## POSIX ##
+#
+# cc_posix_binary(
+#   # must include .so extension in a shared library name for posix
+#   name = "libopentracing.so",
+#   visibility = ["//visibility:public"],
+#   srcs = glob(["src/**/*.cpp"], exclude = ["src/dynamic_load_unsupported.cpp", "src/dynamic_load_windows.cpp"]) + hdrs,
+#   linkshared = 1,
+#   includes = includes,
+#   deps = deps,
+# )
+#
+# cc_import(
+#   name = "opentracing_so_import",
+#   shared_library = ":libopentracing.so",
+# )
 
 ## SHARED ##
 
@@ -71,14 +72,18 @@ cc_library(
     visibility = ["//visibility:public"], # this is the only one that needs to be public
     hdrs = hdrs,
     strip_include_prefix = "include",
+    srcs = select({
+        "@bazel_tools//src/conditions:windows": glob(["src/**/*.cpp"], exclude = ["src/dynamic_load_unsupported.cpp", "src/dynamic_load_unix.cpp"]),
+        "//conditions:default": glob(["src/**/*.cpp"], exclude = ["src/dynamic_load_unsupported.cpp", "src/dynamic_load_windows.cpp"]),
+    }),
     deps = [
       "//3rd_party:expected",
       "//3rd_party:variant",
     ],
     linkopts = select({
-        "@bazel_tools//src/conditions:windows": [],
-        "//conditions:default": ["-ldl"],
-    })
+      "@bazel_tools//src/conditions:windows": [],
+      "//conditions:default": ["-ldl"],
+    }),
 )
 
 genrule(

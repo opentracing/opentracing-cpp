@@ -31,3 +31,19 @@ cc_test(
       "//conditions:default": [ ]
     })
 )
+
+
+cc_test(
+  name = "dynamic_load_test",
+  srcs = ["dynamic_load_test.cpp"],
+
+  deps = [
+    # depend on opentracing shared library
+    "//:opentracing",
+    "//mocktracer:mocktracer",
+    # depend on mocktracer shared library
+    "//mocktracer:libmocktracer_plugin.so",
+    "//3rd_party:catch2", # for catch.hhp
+  ],
+  args = ["--mocktracer_library /Users/isaaczinda/opentracing-cpp-personal/bazel-bin/mocktracer/libmocktracer_plugin.so"]
+)
