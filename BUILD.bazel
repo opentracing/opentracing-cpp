@@ -15,6 +15,7 @@ includes = ["include"]
 deps = [
   "//3rd_party:expected",
   "//3rd_party:variant",
+  ":opentracing"
 ]
 
 ## WINDOWS ##
@@ -39,6 +40,7 @@ filegroup(
 )
 
 cc_import(
+  visibility = ["//visibility:public"],
   name = "opentracing_dll_import",
   interface_library = ":opentracing_import_lib",
   shared_library = ":opentracing.dll",
@@ -62,6 +64,8 @@ cc_import(
 
 ## SHARED ##
 
+# this will be a thin archive (meaning that downstream will be statical link
+# opentracing but some upstream are dynamically linked)
 cc_library(
     name = "opentracing",
     visibility = ["//visibility:public"], # this is the only one that needs to be public
@@ -70,13 +74,11 @@ cc_library(
     deps = [
       "//3rd_party:expected",
       "//3rd_party:variant",
-    ] + select({
-        "@bazel_tools//src/conditions:windows": [":opentracing_dll_import"],
-        "//conditions:default": [":opentracing_so_import"],
-    }),
-    # linkopts = [
-    #   "-ldl",
-    # ],
+    ],
+    linkopts = select({
+        "@bazel_tools//src/conditions:windows": [],
+        "//conditions:default": ["-ldl"],
+    })
 )
 
 genrule(
