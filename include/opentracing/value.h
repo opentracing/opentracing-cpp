@@ -16,9 +16,10 @@ class Value;
 
 typedef std::unordered_map<std::string, Value> Dictionary;
 typedef std::vector<Value> Values;
-typedef util::variant<
-    bool, double, int64_t, uint64_t, std::string, std::nullptr_t, const char*,
-    util::recursive_wrapper<Values>, util::recursive_wrapper<Dictionary>>
+typedef util::variant<bool, double, int64_t, uint64_t, std::string,
+                      opentracing::string_view, std::nullptr_t, const char*,
+                      util::recursive_wrapper<Values>,
+                      util::recursive_wrapper<Dictionary>>
     variant_type;
 
 class Value : public variant_type {
@@ -53,7 +54,7 @@ class Value : public variant_type {
 
   Value(const std::string& s) : variant_type(s) {}
   Value(std::string&& s) : variant_type(std::move(s)) {}
-  Value(opentracing::string_view s) : variant_type(std::string{s}) {}
+  Value(opentracing::string_view s) noexcept : variant_type(s) {}
 
   Value(const Values& values) : variant_type(values) {}
   Value(Values&& values) : variant_type(std::move(values)) {}
