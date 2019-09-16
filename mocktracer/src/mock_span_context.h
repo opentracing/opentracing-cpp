@@ -30,11 +30,11 @@ class MockSpanContext : public SpanContext {
       std::function<bool(const std::string& key, const std::string& value)> f)
       const override;
 
-  std::string ToTraceId() const noexcept override {
+  std::string ToTraceID() const noexcept override {
     return std::to_string(data_.trace_id);
   }
 
-  std::string ToSpanId() const noexcept override {
+  std::string ToSpanID() const noexcept override {
     return std::to_string(data_.span_id);
   }
 
