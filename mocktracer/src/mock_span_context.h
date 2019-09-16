@@ -3,6 +3,7 @@
 
 #include <opentracing/mocktracer/tracer.h>
 #include <mutex>
+#include <string>
 #include "propagation.h"
 
 namespace opentracing {
@@ -28,6 +29,14 @@ class MockSpanContext : public SpanContext {
   void ForeachBaggageItem(
       std::function<bool(const std::string& key, const std::string& value)> f)
       const override;
+
+  std::string ToTraceId() const noexcept override {
+    return std::to_string(data_.trace_id);
+  }
+
+  std::string ToSpanId() const noexcept override {
+    return std::to_string(data_.span_id);
+  }
 
   uint64_t trace_id() const noexcept { return data_.trace_id; }
 

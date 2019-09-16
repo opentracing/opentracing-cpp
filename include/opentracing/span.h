@@ -32,6 +32,25 @@ class SpanContext {
   //
   // Returns nullptr on failure.
   virtual std::unique_ptr<SpanContext> Clone() const noexcept = 0;
+
+  // Return the ID of the trace.
+  //
+  // Should be globally unique. Every span in a trace shares this ID.
+  //
+  // An empty string will be returned if the tracer does not support this
+  // functionality or an error occurs (this is the case for no-op traces, for
+  // example).
+  virtual std::string ToTraceID() const noexcept { return {}; }
+
+  // Return the ID of the associated Span.
+  //
+  // Should be unique within a trace. Each span within a trace contains a
+  // different ID.
+  //
+  // An empty string will be returned if the tracer does not support this
+  // functionality or an error occurs (this is the case for no-op traces, for
+  // example).
+  virtual std::string ToSpanID() const noexcept { return {}; }
 };
 
 struct LogRecord {
