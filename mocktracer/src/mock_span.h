@@ -27,6 +27,14 @@ class MockSpan : public Span {
   void Log(std::initializer_list<std::pair<string_view, Value>>
                fields) noexcept override;
 
+  void Log(SystemTime timestamp,
+           std::initializer_list<std::pair<string_view, Value>>
+               fields) noexcept override;
+
+  void Log(SystemTime timestamp,
+           const std::vector<std::pair<string_view, Value>>&
+               fields) noexcept override;
+
   void SetBaggageItem(string_view restricted_key,
                       string_view value) noexcept override;
 

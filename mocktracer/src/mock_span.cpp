@@ -142,13 +142,36 @@ void MockSpan::SetTag(string_view key,
 }
 
 void MockSpan::Log(
+    std::initializer_list<std::pair<string_view, Value>> fields) noexcept {
+  Log(SystemClock::now(), fields);
+}
+
+void MockSpan::Log(
+    SystemTime timestamp,
     std::initializer_list<std::pair<string_view, Value>> fields) noexcept try {
-  std::lock_guard<std::mutex> lock_guard{mutex_};
   LogRecord log_record;
-  log_record.timestamp = SystemClock::now();
+  log_record.timestamp = timestamp;
+  log_record.fields.reserve(fields.size());
   for (auto& field : fields) {
     log_record.fields.emplace_back(field.first, field.second);
   }
+  std::lock_guard<std::mutex> lock_guard{mutex_};
+  data_.logs.emplace_back(std::move(log_record));
+} catch (const std::exception& e) {
+  // Drop log record upon error.
+  fprintf(stderr, "Failed to log: %s\n", e.what());
+}
+
+void MockSpan::Log(
+    SystemTime timestamp,
+    const std::vector<std::pair<string_view, Value>>& fields) noexcept try {
+  LogRecord log_record;
+  log_record.timestamp = timestamp;
+  log_record.fields.reserve(fields.size());
+  for (auto& field : fields) {
+    log_record.fields.emplace_back(field.first, field.second);
+  }
+  std::lock_guard<std::mutex> lock_guard{mutex_};
   data_.logs.emplace_back(std::move(log_record));
 } catch (const std::exception& e) {
   // Drop log record upon error.
