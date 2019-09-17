@@ -42,13 +42,24 @@ class option_wrapper {
 // an approximation suggested by Howard Hinnant.
 //
 // See https://stackoverflow.com/a/35282833/4447365
-template <class ToClock, class FromClock, class Duration>
+template <class ToClock, class FromClock, class Duration,
+          typename std::enable_if<
+              !std::is_same<FromClock, ToClock>::value>::type * = nullptr>
 typename ToClock::time_point convert_time_point(
     std::chrono::time_point<FromClock, Duration> from_time_point) {
   auto from_now = FromClock::now();
   auto to_now = ToClock::now();
   return to_now + std::chrono::duration_cast<typename ToClock::duration>(
                       from_time_point - from_now);
+}
+
+template <class ToClock, class FromClock, class Duration,
+          typename std::enable_if<std::is_same<FromClock, ToClock>::value>::type
+              * = nullptr>
+typename ToClock::time_point convert_time_point(
+    std::chrono::time_point<FromClock, Duration> from_time_point) {
+  return std::chrono::time_point_cast<typename ToClock::time_point::duration>(
+      from_time_point);
 }
 
 // std::error_code's have default comparison operators; however, they make use
