@@ -31,42 +31,42 @@ OPENTRACING_API extern const opentracing::string_view span_kind_rpc_server;
 // ---------------------------------------------------------------------------
 // error indicates whether a Span ended in an error state.
 // ---------------------------------------------------------------------------
-extern const opentracing::string_view error;
+OPENTRACING_API extern const opentracing::string_view error;
 
 // ---------------------------------------------------------------------------
 // component (string) ia s low-cardinality identifier of the module, library,
 // or package that is generating a span.
 // ---------------------------------------------------------------------------
-extern const opentracing::string_view component;
+OPENTRACING_API extern const opentracing::string_view component;
 
 // ---------------------------------------------------------------------------
 // sampling_priority (uint16) determines the priority of sampling this Span.
 // ---------------------------------------------------------------------------
-extern const opentracing::string_view sampling_priority;
+OPENTRACING_API extern const opentracing::string_view sampling_priority;
 
 // ---------------------------------------------------------------------------
 // peer_* tags can be emitted by either client-side of server-side to describe
 // the other side/service in a peer-to-peer communications, like an RPC call.
 // ---------------------------------------------------------------------------
 // peer_service (string) records the service name of the peer
-extern const opentracing::string_view peer_service;
+OPENTRACING_API extern const opentracing::string_view peer_service;
 
 // peer_hostname (string) records the host name of the peer
-extern const opentracing::string_view peer_hostname;
+OPENTRACING_API extern const opentracing::string_view peer_hostname;
 
 // peer_address (string) suitable for use in a networking client library.
 // This may be a "ip:port", a bare "hostname", a FQDN, or even a
 // JDBC substring like "mysql://prod-db:3306"
-extern const opentracing::string_view peer_address;
+OPENTRACING_API extern const opentracing::string_view peer_address;
 
 // peer_host_ipv4 (uint32) records IP v4 host address of the peer
-extern const opentracing::string_view peer_host_ipv4;
+OPENTRACING_API extern const opentracing::string_view peer_host_ipv4;
 
 // peer_host_ipv6 (string) records IP v6 host address of the peer
-extern const opentracing::string_view peer_host_ipv6;
+OPENTRACING_API extern const opentracing::string_view peer_host_ipv6;
 
 // peer_port (uint16) records port number of the peer
-extern const opentracing::string_view peer_port;
+OPENTRACING_API extern const opentracing::string_view peer_port;
 
 // ---------------------------------------------------------------------------
 // HTTP tags
@@ -74,15 +74,15 @@ extern const opentracing::string_view peer_port;
 
 // http_url (string) should be the URL of the request being handled in this
 // segment of the trace, in standard URI format. The protocol is optional.
-extern const opentracing::string_view http_url;
+OPENTRACING_API extern const opentracing::string_view http_url;
 
 // http_method (string) is the HTTP method of the request.
 // Both upper/lower case values are allowed.
-extern const opentracing::string_view http_method;
+OPENTRACING_API extern const opentracing::string_view http_method;
 
 // http_status_code (int) is the numeric HTTP status code (200, 404, etc)
 // of the HTTP response.
-extern const opentracing::string_view http_status_code;
+OPENTRACING_API extern const opentracing::string_view http_status_code;
 
 // ---------------------------------------------------------------------------
 // DATABASE tags
@@ -91,20 +91,20 @@ extern const opentracing::string_view http_status_code;
 // database_instance (string) The database instance name. E.g., In java, if
 // the jdbc.url="jdbc:mysql://127.0.0.1:3306/customers", the instance
 // name is "customers"
-extern const opentracing::string_view database_instance;
+OPENTRACING_API extern const opentracing::string_view database_instance;
 
 // database_statement (string) A database statement for the given database
 // type. E.g., for db.type="SQL", "SELECT * FROM user_table";
 // for db.type="redis", "SET mykey 'WuValue'".
-extern const opentracing::string_view database_statement;
+OPENTRACING_API extern const opentracing::string_view database_statement;
 
 // database_type (string) For any SQL database, "sql". For others,
 // the lower-case database category, e.g. "cassandra", "hbase", or "redis".
-extern const opentracing::string_view database_type;
+OPENTRACING_API extern const opentracing::string_view database_type;
 
 // database_user (string) Username for accessing database. E.g.,
 // "readonly_user" or "reporting_user"
-extern const opentracing::string_view database_user;
+OPENTRACING_API extern const opentracing::string_view database_user;
 
 // ---------------------------------------------------------------------------
 // message_bus tags
@@ -114,7 +114,7 @@ extern const opentracing::string_view database_user;
 // exchanged. E.g. A Kafka record has an associated "topic name" that can
 // be extracted by the instrumented producer or consumer and stored
 // using this tag.
-extern const opentracing::string_view message_bus_destination;
+OPENTRACING_API extern const opentracing::string_view message_bus_destination;
 }  // namespace ext
 END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing
