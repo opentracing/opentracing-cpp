@@ -161,6 +161,8 @@ class OPENTRACING_API Tracer {
   // former global tracer value.
   static std::shared_ptr<Tracer> InitGlobal(
       std::shared_ptr<Tracer> tracer) noexcept;
+
+  static bool IsGlobalTracerRegistered() noexcept;
 };
 
 // StartTimestamp is a StartSpanOption that sets an explicit start timestamp for
