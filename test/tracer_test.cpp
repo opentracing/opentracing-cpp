@@ -34,3 +34,10 @@ TEST_CASE("tracer") {
     CHECK(options.references.size() == 0);
   }
 }
+
+TEST_CASE("A tracer can be globally registered") {
+  CHECK(!Tracer::IsGlobalTracerRegistered());
+  auto tracer = MakeNoopTracer();
+  CHECK(Tracer::InitGlobal(tracer) != nullptr);
+  CHECK(Tracer::IsGlobalTracerRegistered());
+}
