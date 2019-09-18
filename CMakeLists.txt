@@ -10,13 +10,13 @@ project(opentracing-cpp)
 #
 # Also, whenever the ABI is between versions and in development
 # suffix the ABI version number with "_unstable".
-set(OPENTRACING_ABI_VERSION "3_unstable")
+set(OPENTRACING_ABI_VERSION "3")
 
 # Version number follows semver
 # See https://semver.org/
 set(OPENTRACING_VERSION_MAJOR "1")
-set(OPENTRACING_VERSION_MINOR "5")
-set(OPENTRACING_VERSION_PATCH "1")
+set(OPENTRACING_VERSION_MINOR "6")
+set(OPENTRACING_VERSION_PATCH "0")
 set(OPENTRACING_VERSION_STRING
   "${OPENTRACING_VERSION_MAJOR}.${OPENTRACING_VERSION_MINOR}.${OPENTRACING_VERSION_PATCH}")
 
