@@ -2,6 +2,7 @@
 #define OPENTRACING_MOCKTRACER_SPAN_CONTEXT_H
 
 #include <opentracing/mocktracer/tracer.h>
+#include <exception>
 #include <mutex>
 #include <string>
 #include "propagation.h"
@@ -30,12 +31,16 @@ class MockSpanContext : public SpanContext {
       std::function<bool(const std::string& key, const std::string& value)> f)
       const override;
 
-  std::string ToTraceID() const noexcept override {
+  std::string ToTraceID() const noexcept override try {
     return std::to_string(data_.trace_id);
+  } catch (const std::exception& /*e*/) {
+    return {};
   }
 
-  std::string ToSpanID() const noexcept override {
+  std::string ToSpanID() const noexcept override try {
     return std::to_string(data_.span_id);
+  } catch (const std::exception& /*e*/) {
+    return {};
   }
 
   uint64_t trace_id() const noexcept { return data_.trace_id; }
