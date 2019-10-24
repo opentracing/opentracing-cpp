@@ -7,11 +7,13 @@ cc_library(
     deps = [
         "//:opentracing",
     ],
+    alwayslink = 1,
 )
 
 cc_binary(
     name = "libmocktracer_plugin.so",
     linkshared = 1,
+    linkstatic = 1,
     visibility = ["//visibility:public"],
     deps = [
         "//mocktracer:mocktracer"
