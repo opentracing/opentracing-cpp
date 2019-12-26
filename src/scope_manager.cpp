@@ -3,19 +3,12 @@
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
-namespace {
 
-thread_local Span* active = nullptr;
+Scope::Scope(ScopeManager& manager, std::shared_ptr<Span> span) {}
 
-}  // anonymous namespace
+Scope::Scope(Scope&& scope) noexcept {}
 
-Scope::Scope(Span& span) noexcept {}
-
-Scope::~Scope() noexcept {}
-
-Scope ScopeManager::Activate(Span& span) noexcept { return {span}; }
-
-Span& ScopeManager::ActiveSpan() noexcept { return *active; }
+Scope::~Scope() {}
 
 END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing

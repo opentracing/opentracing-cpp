@@ -7,20 +7,21 @@ namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
 
 class Span;
+class ScopeManager;
 
 // Scope is returned by the ScopeManager when activating a span
 //
 // The lifetime of the Scope instance represends the duration of the
-// activation. A Scope cannot be created and can only be returned by
-// the ScopeManager.
+// activation. A Scope will be returned when Activate is called on the
+// the ScopeManager. Its lifetime can not exist beyond that of the
+// ScopeManager.
 class Scope {
- private:
-  // Create an activation Scope for the given Span.
-  Scope(Span& span) noexcept;
-  ~Scope() noexcept;
+  Scope(ScopeManager& manager, std::shared_ptr<Span> span);
+  Scope(Scope&& scope) noexcept;
+  ~Scope();
 
-  Scope(const Scope&) = delete;
-  Scope(Scope&&) = delete;
+ private:
+  Scope(const Scope& scope) = delete;
   Scope& operator=(const Scope&) = delete;
   Scope& operator=(Scope&&) = delete;
 
@@ -33,14 +34,26 @@ class Scope {
 // executed within the lifetime of the scope and the same thread only.
 class ScopeManager {
  public:
+  virtual ~ScopeManager() = default;
+
   // Activate the given Span, returning a Scope to track its duration.
-  static Scope Activate(Span& span) noexcept;
+  //
+  // A Span MUST be upgraded to a shared_ptr as consumers of the span
+  // via the ScopeManager may take ownership over it beyond the
+  // duration of the Scope.
+  virtual Scope Activate(std::shared_ptr<Span> span) noexcept = 0;
 
   // Return a reference to the current active Span.
   //
   // A span is always guaranteed to be returned. If there is no span
   // active, then a default noop span instance will be returned.
-  static Span& ActiveSpan() noexcept;
+  virtual std::shared_ptr<Span> ActiveSpan() noexcept = 0;
+
+ private:
+  // Set the active Span, used by the Scope class.
+  virtual void SetActiveSpan(std::shared_ptr<Span> span) noexcept = 0;
+
+  friend class Scope;
 };
 
 END_OPENTRACING_ABI_NAMESPACE
