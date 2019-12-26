@@ -16,6 +16,7 @@ class ScopeManager;
 // the ScopeManager. Its lifetime can not exist beyond that of the
 // ScopeManager.
 class Scope {
+ public:
   Scope(ScopeManager& manager, std::shared_ptr<Span> span);
   Scope(Scope&& scope) noexcept;
   ~Scope();
