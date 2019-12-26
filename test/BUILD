@@ -1,4 +1,5 @@
 TEST_NAMES = [
+    "scope_manager_test",
     "string_view_test",
     "tracer_test",
     "util_test",

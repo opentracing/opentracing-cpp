@@ -17,6 +17,14 @@ class Scope {
  private:
   // Create an activation Scope for the given Span.
   Scope(Span& span) noexcept;
+  ~Scope() noexcept;
+
+  Scope(const Scope&) = delete;
+  Scope(Scope&&) = delete;
+  Scope& operator=(const Scope&) = delete;
+  Scope& operator=(Scope&&) = delete;
+
+  friend class ScopeManager;
 };
 
 // ScopeManager allows a Span to be activated for a specific scope.

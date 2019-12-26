@@ -17,6 +17,10 @@ add_test(NAME value_test COMMAND value_test)
 add_executable(util_test util_test.cpp)
 add_test(NAME util_test COMMAND util_test)
 
+add_executable(scope_manager_test scope_manager_test.cpp)
+target_link_libraries(scope_manager_test ${OPENTRACING_LIBRARY})
+add_test(NAME scope_manager_test COMMAND scope_manager_test)
+
 if (BUILD_SHARED_LIBS AND BUILD_MOCKTRACER AND BUILD_DYNAMIC_LOADING)
   add_executable(dynamic_load_test dynamic_load_test.cpp)
   target_link_libraries(dynamic_load_test ${OPENTRACING_LIBRARY}) 
