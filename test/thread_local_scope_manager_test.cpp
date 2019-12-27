@@ -10,12 +10,9 @@ using namespace opentracing;
 
 TEST_CASE("thread_local_scope_manager") {
   ThreadLocalScopeManager sm;
-  std::shared_ptr<Span> default_span;
+  std::shared_ptr<Span> default_span = sm.ActiveSpan();
 
-  SECTION("Returns noop span with no activations") {
-    default_span = sm.ActiveSpan();
-    CHECK(default_span);
-  }
+  SECTION("Returns noop span with no activations") { CHECK(default_span); }
 
   auto tracer = MakeNoopTracer();
 
