@@ -6,6 +6,7 @@
 #include <opentracing/span.h>
 #include <opentracing/string_view.h>
 #include <opentracing/symbols.h>
+#include <opentracing/thread_local_scope_manager.h>
 #include <opentracing/util.h>
 #include <opentracing/version.h>
 #include <chrono>
@@ -171,6 +172,12 @@ class OPENTRACING_API Tracer {
       std::shared_ptr<Tracer> tracer) noexcept;
 
   static bool IsGlobalTracerRegistered() noexcept;
+
+ private:
+  // The default ScopeManager to use if the Tracer doesn't provide their own.
+  //
+  // This is also required for backwards compatiblity.
+  mutable ThreadLocalScopeManager scope_manager_;
 };
 
 // StartTimestamp is a StartSpanOption that sets an explicit start timestamp for
