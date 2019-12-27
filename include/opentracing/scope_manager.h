@@ -15,7 +15,9 @@ class ScopeManager;
 //
 // The lifetime of the Scope instance represents the duration of the
 // activation. Its lifetime can not exist beyond that of the
-// ScopeManager.
+// ScopeManager. The specific implementation of ScopeManager may
+// enforce additional constraints for the Scope object, please defer
+// to the documentation of the ScopeManager for further information.
 class Scope {
  public:
   using Callback = std::function<void()>;

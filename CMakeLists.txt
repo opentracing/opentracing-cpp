@@ -137,6 +137,7 @@ set(SRCS src/propagation.cpp
          src/dynamic_load.cpp
          src/noop.cpp
          src/scope_manager.cpp
+         src/thread_local_scope_manager.cpp
          src/tracer.cpp
          src/tracer_factory.cpp
          src/ext/tags.cpp)

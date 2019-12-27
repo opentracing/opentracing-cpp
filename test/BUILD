@@ -1,6 +1,7 @@
 TEST_NAMES = [
     "scope_manager_test",
     "string_view_test",
+    "thread_local_scope_manager_test",
     "tracer_test",
     "util_test",
     "value_test",
