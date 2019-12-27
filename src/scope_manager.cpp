@@ -4,11 +4,15 @@
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
 
-Scope::Scope(Callback cb) noexcept {}
+Scope::Scope(Callback callback) noexcept : callback_(callback) {}
 
-Scope::Scope(Scope&& scope) noexcept {}
+Scope::Scope(Scope&& scope) noexcept { std::swap(callback_, scope.callback_); }
 
-Scope::~Scope() {}
+Scope::~Scope() {
+  if (callback_) {
+    callback_();
+  }
+}
 
 END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing

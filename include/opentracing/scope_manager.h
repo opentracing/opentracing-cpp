@@ -10,17 +10,18 @@ BEGIN_OPENTRACING_ABI_NAMESPACE
 class Span;
 class ScopeManager;
 
-// Scope is returned by the ScopeManager when activating a span
+// Scope is returned by the ScopeManager when activating a span.
 //
-// The lifetime of the Scope instance represends the duration of the
-// activation. A Scope will be returned when Activate is called on the
-// the ScopeManager. Its lifetime can not exist beyond that of the
+// The lifetime of the Scope instance represents the duration of the
+// activation. Its lifetime can not exist beyond that of the
 // ScopeManager.
 class Scope {
  public:
   using Callback = std::function<void()>;
 
-  Scope(Callback cb) noexcept;
+  // Create a Scope that will invoke callback on destruction.
+  Scope(Callback callback) noexcept;
+
   Scope(Scope&& scope) noexcept;
   ~Scope();
 
@@ -28,6 +29,8 @@ class Scope {
   Scope(const Scope& scope) = delete;
   Scope& operator=(const Scope&) = delete;
   Scope& operator=(Scope&&) = delete;
+
+  Callback callback_;
 };
 
 // ScopeManager allows a Span to be activated for a specific scope.
