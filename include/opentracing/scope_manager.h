@@ -3,6 +3,7 @@
 
 #include <opentracing/version.h>
 #include <functional>
+#include <memory>
 
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
