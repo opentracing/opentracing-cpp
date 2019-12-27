@@ -33,6 +33,10 @@ TEST_CASE("tracer") {
     ChildOf(nullptr).Apply(options);
     CHECK(options.references.size() == 0);
   }
+
+  SECTION("Tracer provides a valid ScopeManager") {
+    tracer.ScopeManager().Activate(span1);
+  }
 }
 
 TEST_CASE("A tracer can be globally registered") {
