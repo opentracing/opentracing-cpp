@@ -4,7 +4,7 @@
 namespace opentracing {
 BEGIN_OPENTRACING_ABI_NAMESPACE
 
-Scope::Scope(ScopeManager& manager, std::shared_ptr<Span> span) {}
+Scope::Scope(Callback cb) noexcept {}
 
 Scope::Scope(Scope&& scope) noexcept {}
 

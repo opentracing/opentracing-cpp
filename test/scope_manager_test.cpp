@@ -1,4 +1,3 @@
-#include <opentracing/noop.h>
 #include <opentracing/scope_manager.h>
 
 using namespace opentracing;
@@ -6,40 +5,23 @@ using namespace opentracing;
 #define CATCH_CONFIG_MAIN
 #include <opentracing/catch2/catch.hpp>
 
-class MockScopeManager : public ScopeManager {
- public:
-  MockScopeManager()
-      : default_span_(MakeNoopTracer()->StartSpan("")), set_span_() {}
-
-  Scope Activate(std::shared_ptr<Span> span) noexcept override {
-    return Scope(*this, span);
-  }
-
-  std::shared_ptr<Span> ActiveSpan() noexcept override { return default_span_; }
-
-  std::shared_ptr<Span> default_span_;
-  std::shared_ptr<Span> set_span_;
-
- private:
-  void SetActiveSpan(std::shared_ptr<Span> span) noexcept override {
-    set_span_ = span;
-  }
-};
-
 TEST_CASE("scope") {
-  MockScopeManager manager;
-  auto tracer = MakeNoopTracer();
-  auto span = std::shared_ptr<Span>{tracer->StartSpan("a")};
-
-  // Validate that the test mock is sane
-  CHECK(manager.ActiveSpan() == manager.default_span_);
-  CHECK(manager.set_span_ == nullptr);
-
-  SECTION("Check that Scope calls SetActiveSpan correctly.") {
+  SECTION("Scope invokes callback on destruction") {
+    int called = 0;
     {
-      auto Scope = manager.Activate(span);
-      CHECK(manager.set_span_ == span);
+      Scope scope{[&called]() { ++called; }};
+      CHECK(called == 0);
     }
-    CHECK(manager.set_span_ == manager.default_span_);
+    CHECK(called == 1);
+  }
+
+  SECTION("Scope can be moved") {
+    int called = 0;
+    {
+      Scope scope{[&called]() { ++called; }};
+      { Scope scope2{std::move(scope)}; }
+      CHECK(called == 1);
+    }
+    CHECK(called == 1);  // check for double calls
   }
 }
