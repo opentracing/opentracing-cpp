@@ -2,6 +2,7 @@
 #define OPENTRACING_TRACER_H
 
 #include <opentracing/propagation.h>
+#include <opentracing/scope_manager.h>
 #include <opentracing/span.h>
 #include <opentracing/string_view.h>
 #include <opentracing/symbols.h>
@@ -146,6 +147,13 @@ class OPENTRACING_API Tracer {
       const CustomCarrierReader& reader) const {
     return reader.Extract(*this);
   }
+
+  // Return a referene to the tracer's ScopeManager
+  //
+  // If not overriden, the default ThreadLocalScopeManager will be returned.
+  // The ScopeManager is merged with the Tracer for convenience so as not to
+  // require users to manage ownership themselves.
+  virtual ScopeManager& ScopeManager() const;
 
   // Close is called when a tracer is finished processing spans. It is not
   // required to be called and its effect is unspecified. For example, an
