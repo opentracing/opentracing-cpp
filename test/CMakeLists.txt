@@ -4,6 +4,8 @@ else()
   set(OPENTRACING_LIBRARY opentracing-static)
 endif()
 
+find_package(Threads)
+
 add_executable(tracer_test tracer_test.cpp)
 target_link_libraries(tracer_test ${OPENTRACING_LIBRARY}) 
 add_test(NAME tracer_test COMMAND tracer_test)
@@ -22,7 +24,7 @@ target_link_libraries(scope_manager_test ${OPENTRACING_LIBRARY})
 add_test(NAME scope_manager_test COMMAND scope_manager_test)
 
 add_executable(thread_local_scope_manager_test thread_local_scope_manager_test.cpp)
-target_link_libraries(thread_local_scope_manager_test ${OPENTRACING_LIBRARY})
+target_link_libraries(thread_local_scope_manager_test ${OPENTRACING_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
 add_test(NAME thread_local_scope_manager_test COMMAND thread_local_scope_manager_test)
 
 if (BUILD_SHARED_LIBS AND BUILD_MOCKTRACER AND BUILD_DYNAMIC_LOADING)

@@ -57,7 +57,7 @@ bool Tracer::IsGlobalTracerRegistered() noexcept {
   return TracerRegistry::instance().is_registered();
 }
 
-ScopeManager& Tracer::ScopeManager() const { return scope_manager_; }
+opentracing::ScopeManager& Tracer::ScopeManager() const { return scope_manager_; }
 
 END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing
