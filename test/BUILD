@@ -1,7 +1,6 @@
 TEST_NAMES = [
     "scope_manager_test",
     "string_view_test",
-    "thread_local_scope_manager_test",
     "tracer_test",
     "util_test",
     "value_test",
@@ -15,6 +14,20 @@ TEST_NAMES = [
         "//3rd_party:catch2",
     ],
 ) for test_name in TEST_NAMES]
+
+cc_test(
+    name = "thread_local_scope_manager_test",
+    srcs = [
+        "thread_local_scope_manager_test.cpp"
+    ],
+    deps = [
+        "//:opentracing",
+        "//3rd_party:catch2",
+    ],
+    linkopts = [
+      "-lpthread",
+    ]
+)
 
 cc_test(
     name = "mutiple_tracer_link_test",
