@@ -18,6 +18,17 @@ matrix:
     env:
     - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
   - os: linux
+    arch: ppc64le
+    addons:
+      apt:
+        sources:
+        - ubuntu-toolchain-r-test
+        packages:
+        - g++-6
+        - cmake
+    env:
+    - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+  - os: linux
     addons:
       apt:
         sources:
