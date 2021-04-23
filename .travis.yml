@@ -1,6 +1,6 @@
 language: cpp
 sudo: true
-dist: trusty
+dist: xenial
 matrix:
   include:
   - os: osx
