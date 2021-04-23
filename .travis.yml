@@ -4,7 +4,7 @@ dist: xenial
 matrix:
   include:
   - os: osx
-    osx_image: xcode9
+    osx_image: xcode12.2
     env:
     - MATRIX_EVAL="CC=clang && CXX=clang++"
   - os: linux
