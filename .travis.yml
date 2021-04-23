@@ -1,13 +1,24 @@
 language: cpp
 sudo: true
-dist: trusty
+dist: xenial
 matrix:
   include:
   - os: osx
-    osx_image: xcode9
+    osx_image: xcode12.2
     env:
     - MATRIX_EVAL="CC=clang && CXX=clang++"
   - os: linux
+    addons:
+      apt:
+        sources:
+        - ubuntu-toolchain-r-test
+        packages:
+        - g++-6
+        - cmake
+    env:
+    - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+  - os: linux
+    arch: ppc64le
     addons:
       apt:
         sources:
