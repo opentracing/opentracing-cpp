@@ -5,12 +5,12 @@ set -e
 ARCH=`arch`
 
 if [[ "$ARCH" = "ppc64le" ]]; then
-apt install gnupg2 apt-transport-https -y
+sudo apt install gnupg2 apt-transport-https -y
 echo "deb https://oplab9.parqtec.unicamp.br/pub/repository/debian/ ./" | sudo tee /etc/apt/sources.list.d/bazel_ppc64le.list
-curl --silent  https://oplab9.parqtec.unicamp.br/pub/key/openpower-gpgkey-public.asc  -o openpower-gpgkey-public.asc
-apt-key add openpower-gpgkey-public.asc
-rm -f openpower-gpgkey-public.asc 
-apt update	
+curl --silent  https://oplab9.parqtec.unicamp.br/pub/key/openpower-gpgkey-public.asc  -o /tmp/openpower-gpgkey-public.asc
+sudo apt-key add /tmp/openpower-gpgkey-public.asc
+sudo rm -f /tmp/openpower-gpgkey-public.asc 
+sudo apt update	
 
 else
 
