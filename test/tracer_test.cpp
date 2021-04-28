@@ -1,6 +1,7 @@
 #include <opentracing/ext/tags.h>
 #include <opentracing/noop.h>
 #include <opentracing/tracer.h>
+#include <memory>
 using namespace opentracing;
 
 #define CATCH_CONFIG_MAIN
@@ -32,6 +33,11 @@ TEST_CASE("tracer") {
     StartSpanOptions options;
     ChildOf(nullptr).Apply(options);
     CHECK(options.references.size() == 0);
+  }
+
+  SECTION("Tracer provides a valid ScopeManager") {
+    std::shared_ptr<Span> span{tracer->StartSpan("s")};
+    tracer->ScopeManager().Activate(span);
   }
 }
 
