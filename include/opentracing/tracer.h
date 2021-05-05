@@ -84,7 +84,7 @@ class OPENTRACING_API Tracer {
   //     auto span = tracer.StartSpan(
   //         "GetFeed",
   //         {opentracing::ChildOf(&parentSpan.context()),
-  //         opentracing::Tag{"user_agent", loggedReq.UserAgent},
+  //         opentracing::SetTag{"user_agent", loggedReq.UserAgent},
   //         opentracing::StartTimestamp(loggedReq.timestamp())})
   //
   // If StartSpan is called after Close, it leaves the Tracer in a valid
