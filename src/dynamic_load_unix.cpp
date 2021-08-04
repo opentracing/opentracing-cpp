@@ -35,7 +35,13 @@ DynamicallyLoadTracingLibrary(const char* shared_library,
                               std::string& error_message) noexcept try {
   dlerror();  // Clear any existing error.
 
-  const auto handle = dlopen(shared_library, RTLD_NOW | RTLD_LOCAL);
+  const auto handle = dlopen(shared_library, RTLD_NOW | RTLD_LOCAL
+#if defined(__has_feature)
+#if __has_feature(address_sanitizer)
+      | RTLD_NODELETE
+#endif
+#endif
+  );
   if (handle == nullptr) {
     error_message = dlerror();
     return make_unexpected(dynamic_load_failure_error);
