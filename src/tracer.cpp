@@ -56,5 +56,8 @@ std::shared_ptr<Tracer> Tracer::InitGlobal(
 bool Tracer::IsGlobalTracerRegistered() noexcept {
   return TracerRegistry::instance().is_registered();
 }
+
+opentracing::ScopeManager& Tracer::ScopeManager() const { return scope_manager_; }
+
 END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing

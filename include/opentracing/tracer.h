@@ -2,9 +2,11 @@
 #define OPENTRACING_TRACER_H
 
 #include <opentracing/propagation.h>
+#include <opentracing/scope_manager.h>
 #include <opentracing/span.h>
 #include <opentracing/string_view.h>
 #include <opentracing/symbols.h>
+#include <opentracing/thread_local_scope_manager.h>
 #include <opentracing/util.h>
 #include <opentracing/version.h>
 #include <chrono>
@@ -147,6 +149,13 @@ class OPENTRACING_API Tracer {
     return reader.Extract(*this);
   }
 
+  // Return a reference to the tracer's ScopeManager.
+  //
+  // If not overriden, the default ThreadLocalScopeManager will be returned.
+  // The ScopeManager is merged with the Tracer for convenience so as not to
+  // require users to manage ownership themselves.
+  virtual opentracing::ScopeManager& ScopeManager() const;
+
   // Close is called when a tracer is finished processing spans. It is not
   // required to be called and its effect is unspecified. For example, an
   // implementation might use this function to flush buffered spans to its
@@ -163,6 +172,12 @@ class OPENTRACING_API Tracer {
       std::shared_ptr<Tracer> tracer) noexcept;
 
   static bool IsGlobalTracerRegistered() noexcept;
+
+ private:
+  // The default ScopeManager to use if the Tracer doesn't provide their own.
+  //
+  // This is also required for backwards compatiblity.
+  mutable ThreadLocalScopeManager scope_manager_;
 };
 
 // StartTimestamp is a StartSpanOption that sets an explicit start timestamp for
