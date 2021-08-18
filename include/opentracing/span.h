@@ -82,6 +82,8 @@ struct FinishSpanOptions {
   // (or SystemTime::now() if finish_steady_timestamp is default-constructed).
   // Otherwise the behavior of FinishWithOptions() is unspecified.
   std::vector<LogRecord> log_records;
+
+  std::vector<std::pair<std::string, Value>> tags;
 };
 
 // FinishSpanOption instances (zero or more) may be passed to Span.Finish.
@@ -221,6 +223,26 @@ class FinishTimestamp : public FinishSpanOption {
 
  private:
   SteadyTime steady_when_;
+};
+
+class SetTagWhenFinish : public FinishSpanOption {
+ public:
+  SetTagWhenFinish(string_view key, const Value& value) noexcept
+      : key_(key), value_(value) {}
+
+  SetTagWhenFinish(const SetTagWhenFinish& other) noexcept
+      : FinishSpanOption(), key_(other.key_), value_(other.value_) {}
+
+  void Apply(FinishSpanOptions& options) const noexcept override {
+    try {
+      options.tags.emplace_back(key_, value_);
+    } catch (const std::bad_alloc&) {
+    }
+  }
+
+ private:
+  const string_view key_;
+  const Value& value_;
 };
 END_OPENTRACING_ABI_NAMESPACE
 }  // namespace opentracing
