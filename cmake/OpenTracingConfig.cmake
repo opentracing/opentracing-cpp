@@ -9,4 +9,4 @@
 # Linking to these libraries will also add the approprate interface header path to your compilation line.
 # e.g. target_link_libraries(newtarget OpenTracing::opentracing)
 
-include("${CMAKE_CURRENT_LIST_DIR}/OpenTracingTargets.cmake")
+include("${CMAKE_CURRENT_BINARY_DIR}/OpenTracingTargets.cmake")
