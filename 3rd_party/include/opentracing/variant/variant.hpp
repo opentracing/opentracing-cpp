@@ -167,7 +167,11 @@ struct enable_if_type
 template <typename F, typename V, typename Enable = void>
 struct result_of_unary_visit
 {
-    using type = typename std::result_of<F(V&)>::type;
+#ifdef __cpp_lib_is_invocable
+                using type = typename std::invoke_result<F, V&>::type;
+#else
+                using type = typename std::result_of<F(V&)>::type;
+#endif
 };
 
 template <typename F, typename V>
@@ -179,7 +183,11 @@ struct result_of_unary_visit<F, V, typename enable_if_type<typename F::result_ty
 template <typename F, typename V, typename Enable = void>
 struct result_of_binary_visit
 {
-    using type = typename std::result_of<F(V&, V&)>::type;
+#ifdef __cpp_lib_is_invocable
+                using type = typename std::invoke_result<F, V&, V&>::type;
+#else
+                using type = typename std::result_of<F(V&, V&)>::type;
+#endif
 };
 
 template <typename F, typename V>
