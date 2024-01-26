@@ -1,3 +1,5 @@
+🛑 This library is DEPRECATED! https://github.com/opentracing/specification/issues/163
+
 # OpenTracing API for C++
 C++ implementation of the OpenTracing API http://opentracing.io
 
