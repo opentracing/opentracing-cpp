@@ -44,7 +44,7 @@ class DynamicLibraryHandleWindows : public DynamicLibraryHandle {
 
 expected<DynamicTracingLibraryHandle> DynamicallyLoadTracingLibrary(
     const char* shared_library, std::string& error_message) noexcept try {
-  const auto handle = LoadLibrary(shared_library);
+  const auto handle = LoadLibraryA(shared_library);
   if (handle == nullptr) {
     error_message = "An error occurred: " + GetLastErrorAsString();
     return make_unexpected(dynamic_load_failure_error);
